@@ -13434,8 +13434,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   _ghostTransform: {fileID: 1638376041}
-  offset: {x: 0, y: 5, z: 0}
+  offset: {x: 0, y: 7.14, z: 0}
   smoothSpeed: 5
+  clampToMap: 1
+  mapMinX: -6.98
+  mapMaxX: 5.02
+  mapMinZ: -5
+  mapMaxZ: 12
 --- !u!1 &1125836843
 GameObject:
   m_ObjectHideFlags: 0
