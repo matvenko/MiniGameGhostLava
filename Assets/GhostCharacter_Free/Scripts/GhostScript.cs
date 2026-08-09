@@ -31,8 +31,9 @@ public class GhostScript : MonoBehaviour
     {
         Anim = this.GetComponent<Animator>();
         Ctrl = this.GetComponent<CharacterController>();
-        HP_text = GameObject.Find("Canvas/HP").GetComponent<Text>();
-        HP_text.text = "HP " + HP.ToString();
+        var hpObj = GameObject.Find("Canvas/HP");
+        if (hpObj != null) HP_text = hpObj.GetComponent<Text>();
+        if (HP_text != null) HP_text.text = "HP " + HP.ToString();
     }
 
     void Update()
@@ -185,24 +186,21 @@ public class GhostScript : MonoBehaviour
     private void MOVE ()
     {
         // velocity
-        if(Anim.GetCurrentAnimatorStateInfo(0).fullPathHash == MoveState)
+        if (Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
         {
-            if (Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
-            {
-                MOVE_Velocity(new Vector3(0, 0, -Speed), new Vector3(0, 180, 0));
-            }
-            else if (Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
-            {
-                MOVE_Velocity(new Vector3(0, 0, Speed), new Vector3(0, 0, 0));
-            }
-            else if (Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.RightArrow))
-            {
-                MOVE_Velocity(new Vector3(Speed, 0, 0), new Vector3(0, 90, 0));
-            }
-            else if (Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow))
-            {
-                MOVE_Velocity(new Vector3(-Speed, 0, 0), new Vector3(0, 270, 0));
-            }
+            MOVE_Velocity(new Vector3(0, 0, -Speed), new Vector3(0, 180, 0));
+        }
+        else if (Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
+        {
+            MOVE_Velocity(new Vector3(0, 0, Speed), new Vector3(0, 0, 0));
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.RightArrow))
+        {
+            MOVE_Velocity(new Vector3(Speed, 0, 0), new Vector3(0, 90, 0));
+        }
+        else if (Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow))
+        {
+            MOVE_Velocity(new Vector3(-Speed, 0, 0), new Vector3(0, 270, 0));
         }
         KEY_DOWN();
         KEY_UP();
@@ -287,7 +285,7 @@ public class GhostScript : MonoBehaviour
         {
             Anim.CrossFade(SurprisedState, 0.1f, 0, 0);
             HP--;
-            HP_text.text = "HP " + HP.ToString();
+            if (HP_text != null) HP_text.text = "HP " + HP.ToString();
         }
     }
     //---------------------------------------------------------------------
