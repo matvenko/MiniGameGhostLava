@@ -139,7 +139,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -159,3 +159,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed60e2f4e136217478670697f7861f14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  pickupSound: {fileID: 8300000, guid: a57fe974cf59a4f4b96b7a336a3b63cc, type: 3}
+  pickupDuration: 0.3
