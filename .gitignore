@@ -1,0 +1,55 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Visual Studio / VS Code cache
+.vs/
+.vscode/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Asset meta backups
+*.orig
+
+# Unity crash logs
+sysinfo.txt
+*.stackdump
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics
+crashlytics-build.properties
+
+# Packages (Unity Package Manager local cache, keep manifest/lock)
+/[Pp]ackages/*
+!/[Pp]ackages/manifest.json
+!/[Pp]ackages/packages-lock.json
+
+# Local addressables
+/[Aa]ddressables.log
