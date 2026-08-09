@@ -15,10 +15,18 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private float mapMaxZ;
 
     private Camera _cam;
+    private bool _controlEnabled = true;
 
     private void Awake()
     {
         _cam = GetComponent<Camera>();
+    }
+
+    // Lets GameOverManager take manual control of the camera transform
+    // (e.g. to zoom in on death) without fighting the normal follow logic.
+    public void SetControlEnabled(bool enabled)
+    {
+        _controlEnabled = enabled;
     }
 
     // Called by the level generator after building a map so the zoom and
@@ -39,7 +47,7 @@ public class CameraFollow : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (_ghostTransform == null) return;
+        if (!_controlEnabled || _ghostTransform == null) return;
 
         Vector3 desiredPosition = _ghostTransform.position + offset;
         Vector3 newPos = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);

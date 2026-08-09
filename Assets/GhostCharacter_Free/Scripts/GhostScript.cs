@@ -23,9 +23,12 @@ public class GhostScript : MonoBehaviour
     private const int maxHP = 3;
     private int HP = maxHP;
     private Text HP_text;
+    private Vector3 spawnPosition;
+    private bool isDead;
 
     // moving speed
     [SerializeField] private float Speed = 4;
+    [SerializeField] private float deathAnimDuration = 1.2f;
 
     void Start()
     {
@@ -34,10 +37,66 @@ public class GhostScript : MonoBehaviour
         var hpObj = GameObject.Find("Canvas/HP");
         if (hpObj != null) HP_text = hpObj.GetComponent<Text>();
         if (HP_text != null) HP_text.text = "HP " + HP.ToString();
+        spawnPosition = transform.position;
+    }
+
+    //---------------------------------------------------------------------
+    // called by LavaHazard when the character walks into lava - every
+    // touch is instantly fatal and hands off to GameOverManager
+    //---------------------------------------------------------------------
+    public void FallIntoLava()
+    {
+        if (isDead) return;
+        isDead = true;
+        Ctrl.enabled = false;
+        if (GameOverManager.Instance != null)
+            GameOverManager.Instance.TriggerGameOver(this);
+    }
+
+    // plays the dissolve-away animation over deathAnimDuration; the caller
+    // (GameOverManager) awaits this before showing the Game Over popup
+    public IEnumerator PlayDeathAnimation()
+    {
+        Anim.CrossFade(DissolveState, 0.1f, 0, 0);
+        float t = 0f;
+        while (t < deathAnimDuration)
+        {
+            t += Time.deltaTime;
+            Dissolve_value = 1f - Mathf.Clamp01(t / deathAnimDuration);
+            for (int i = 0; i < MeshR.Length; i++)
+            {
+                MeshR[i].material.SetFloat("_Dissolve", Dissolve_value);
+            }
+            yield return null;
+        }
+    }
+
+    // called by GameOverManager when the player presses Continue; the Y
+    // component is always taken from the original spawn height so callers
+    // only need to supply a valid X/Z tile position
+    public void RespawnAt(Vector3 position)
+    {
+        HP = maxHP;
+        if (HP_text != null) HP_text.text = "HP " + HP.ToString();
+
+        Ctrl.enabled = false;
+        transform.position = new Vector3(position.x, spawnPosition.y, position.z);
+        transform.rotation = Quaternion.identity;
+        Ctrl.enabled = true;
+
+        Dissolve_value = 1f;
+        for (int i = 0; i < MeshR.Length; i++)
+        {
+            MeshR[i].material.SetFloat("_Dissolve", Dissolve_value);
+        }
+        DissolveFlg = false;
+        Anim.CrossFade(IdleState, 0.1f, 0, 0);
+        isDead = false;
     }
 
     void Update()
     {
+        if (isDead) return;
         STATUS();
         GRAVITY();
         Respawn();
@@ -144,7 +203,7 @@ public class GhostScript : MonoBehaviour
     // play a animation of Attack
     private void PlayerAttack ()
     {
-        if(Input.GetKeyDown(KeyCode.A))
+        if(Input.GetKeyDown(KeyCode.Q))
         {
             Anim.CrossFade(AttackState,0.1f,0,0);
         }
@@ -178,30 +237,29 @@ public class GhostScript : MonoBehaviour
         }
         Ray ray = new Ray(this.transform.position + Vector3.up * 0.1f, Vector3.down);
         float range = 0.2f;
-        return Physics.Raycast(ray, range);
+        return Physics.Raycast(ray, range, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
     }
     //---------------------------------------------------------------------
     // for slime moving
     //---------------------------------------------------------------------
     private void MOVE ()
     {
-        // velocity
-        if (Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
+        // velocity - combine held keys so opposite pairs cancel out and
+        // adjacent pairs (e.g. W+A) move/face diagonally
+        float x = 0f;
+        float z = 0f;
+        if (Input.GetKey(KeyCode.W)) z -= 1f;
+        if (Input.GetKey(KeyCode.S)) z += 1f;
+        if (Input.GetKey(KeyCode.A)) x += 1f;
+        if (Input.GetKey(KeyCode.D)) x -= 1f;
+
+        if (x != 0f || z != 0f)
         {
-            MOVE_Velocity(new Vector3(0, 0, -Speed), new Vector3(0, 180, 0));
+            Vector3 dir = new Vector3(x, 0f, z).normalized;
+            Vector3 rot = Quaternion.LookRotation(dir).eulerAngles;
+            MOVE_Velocity(dir * Speed, rot);
         }
-        else if (Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
-        {
-            MOVE_Velocity(new Vector3(0, 0, Speed), new Vector3(0, 0, 0));
-        }
-        else if (Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.RightArrow))
-        {
-            MOVE_Velocity(new Vector3(Speed, 0, 0), new Vector3(0, 90, 0));
-        }
-        else if (Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow))
-        {
-            MOVE_Velocity(new Vector3(-Speed, 0, 0), new Vector3(0, 270, 0));
-        }
+
         KEY_DOWN();
         KEY_UP();
     }
@@ -224,19 +282,19 @@ public class GhostScript : MonoBehaviour
     //---------------------------------------------------------------------
     private void KEY_DOWN ()
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKeyDown(KeyCode.W))
         {
             Anim.CrossFade(MoveState, 0.1f, 0, 0);
         }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        else if (Input.GetKeyDown(KeyCode.S))
         {
             Anim.CrossFade(MoveState, 0.1f, 0, 0);
         }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        else if (Input.GetKeyDown(KeyCode.A))
         {
             Anim.CrossFade(MoveState, 0.1f, 0, 0);
         }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        else if (Input.GetKeyDown(KeyCode.D))
         {
             Anim.CrossFade(MoveState, 0.1f, 0, 0);
         }
@@ -246,30 +304,30 @@ public class GhostScript : MonoBehaviour
     //---------------------------------------------------------------------
     private void KEY_UP ()
     {
-        if (Input.GetKeyUp(KeyCode.UpArrow))
+        if (Input.GetKeyUp(KeyCode.W))
         {
-            if(!Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
+            if(!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
             {
                 Anim.CrossFade(IdleState, 0.1f, 0, 0);
             }
         }
-        else if (Input.GetKeyUp(KeyCode.DownArrow))
+        else if (Input.GetKeyUp(KeyCode.S))
         {
-            if(!Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow))
+            if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
             {
                 Anim.CrossFade(IdleState, 0.1f, 0, 0);
             }
         }
-        else if (Input.GetKeyUp(KeyCode.LeftArrow))
+        else if (Input.GetKeyUp(KeyCode.A))
         {
-            if(!Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.RightArrow))
+            if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.D))
             {
                 Anim.CrossFade(IdleState, 0.1f, 0, 0);
             }
         }
-        else if (Input.GetKeyUp(KeyCode.RightArrow))
+        else if (Input.GetKeyUp(KeyCode.D))
         {
-            if(!Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow))
+            if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A))
             {
                 Anim.CrossFade(IdleState, 0.1f, 0, 0);
             }
@@ -281,7 +339,7 @@ public class GhostScript : MonoBehaviour
     private void Damage ()
     {
         // Damaged by outside field.
-        if(Input.GetKeyUp(KeyCode.S))
+        if(Input.GetKeyUp(KeyCode.E))
         {
             Anim.CrossFade(SurprisedState, 0.1f, 0, 0);
             HP--;
@@ -299,7 +357,7 @@ public class GhostScript : MonoBehaviour
             HP = maxHP;
             
             Ctrl.enabled = false;
-            this.transform.position = Vector3.zero; // player position
+            this.transform.position = spawnPosition; // player position
             this.transform.rotation = Quaternion.Euler(Vector3.zero); // player facing
             Ctrl.enabled = true;
             
