@@ -46,6 +46,17 @@ public class GhostScript : MonoBehaviour
     //---------------------------------------------------------------------
     public void FallIntoLava()
     {
+        Die();
+    }
+
+    // called by an enemy's catch trigger - same fatal sequence as lava
+    public void CaughtByEnemy()
+    {
+        Die();
+    }
+
+    private void Die()
+    {
         if (isDead) return;
         isDead = true;
         Ctrl.enabled = false;
