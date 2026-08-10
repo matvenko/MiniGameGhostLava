@@ -256,13 +256,27 @@ public class GhostScript : MonoBehaviour
     private void MOVE ()
     {
         // velocity - combine held keys so opposite pairs cancel out and
-        // adjacent pairs (e.g. W+A) move/face diagonally
+        // adjacent pairs (e.g. W+A) move/face diagonally. Arrow keys work
+        // as aliases for WASD, and the on-screen joystick (mobile) feeds
+        // into the same x/z accumulator.
         float x = 0f;
         float z = 0f;
-        if (Input.GetKey(KeyCode.W)) z -= 1f;
-        if (Input.GetKey(KeyCode.S)) z += 1f;
-        if (Input.GetKey(KeyCode.A)) x += 1f;
-        if (Input.GetKey(KeyCode.D)) x -= 1f;
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) z -= 1f;
+        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) z += 1f;
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) x += 1f;
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) x -= 1f;
+
+        if (VirtualJoystick.Instance != null)
+        {
+            Vector2 joy = VirtualJoystick.Instance.InputDirection;
+            x -= joy.x;
+            z -= joy.y;
+        }
+
+        // gamepad left stick - separate custom axes (not the shared
+        // "Horizontal"/"Vertical") so this never double-counts keyboard input
+        x -= Input.GetAxis("GamepadHorizontal");
+        z -= Input.GetAxis("GamepadVertical");
 
         if (x != 0f || z != 0f)
         {

@@ -6,6 +6,10 @@ using Sample;
 // pathfinding, moving tile-center to tile-center so it never cuts
 // through lava or walls. Catching the player triggers the same fatal
 // sequence as falling into lava.
+//
+// The grid itself (nodes/adjacency/nearest-node lookup) lives in the
+// shared EnemyPathGrid rather than being rebuilt and re-scanned per
+// enemy - see that class for why.
 [RequireComponent(typeof(Rigidbody))]
 public class EnemyChaser : MonoBehaviour
 {
@@ -25,8 +29,6 @@ public class EnemyChaser : MonoBehaviour
 
     private Rigidbody _rb;
     private Transform _target;
-    private readonly List<Vector3> _nodes = new List<Vector3>();
-    private readonly Dictionary<Vector3, List<Vector3>> _adjacency = new Dictionary<Vector3, List<Vector3>>();
     private readonly List<Vector3> _path = new List<Vector3>();
     private float _repathTimer;
     private Vector3 _lastGoal;
@@ -62,7 +64,7 @@ public class EnemyChaser : MonoBehaviour
             }
         }
 
-        BuildGraph();
+        EnemyPathGrid.Instance.EnsureBuilt();
 
         // stagger repath timing per-instance so multiple enemies don't
         // recompute (and react) in perfect lockstep
@@ -71,11 +73,11 @@ public class EnemyChaser : MonoBehaviour
 
     void Update()
     {
-        if (_target == null || _nodes.Count == 0) return;
+        if (_target == null || EnemyPathGrid.Instance.AllNodes.Count == 0) return;
 
         _repathTimer -= Time.deltaTime;
-        Vector3 start = NearestNode(transform.position);
-        Vector3 goal = NearestNode(_target.position);
+        Vector3 start = EnemyPathGrid.Instance.NearestNode(transform.position);
+        Vector3 goal = EnemyPathGrid.Instance.NearestNode(_target.position);
 
         // Repath on the usual timer, but also the instant the queued path
         // runs dry while we're not yet on the player's tile - otherwise
@@ -108,8 +110,8 @@ public class EnemyChaser : MonoBehaviour
         // lava - Update() will supply a fresh grid step immediately.
         if (_path.Count == 0)
         {
-            Vector3 start = NearestNode(current);
-            Vector3 goal = NearestNode(_target.position);
+            Vector3 start = EnemyPathGrid.Instance.NearestNode(current);
+            Vector3 goal = EnemyPathGrid.Instance.NearestNode(_target.position);
             if (start != goal) return;
         }
 
@@ -184,53 +186,6 @@ public class EnemyChaser : MonoBehaviour
         if (ghost != null) ghost.CaughtByEnemy();
     }
 
-    //---------------------------------------------------------------------
-    // walkable graph built once from the current Blocks tiles
-    //---------------------------------------------------------------------
-    private void BuildGraph()
-    {
-        var blocksParent = GameObject.Find("Blocks");
-        if (blocksParent == null) return;
-
-        foreach (Transform b in blocksParent.transform)
-        {
-            Vector3 pos = Round(b.position);
-            _nodes.Add(pos);
-            _adjacency[pos] = new List<Vector3>();
-        }
-
-        foreach (var a in _nodes)
-        {
-            foreach (var b in _nodes)
-            {
-                if (a == b) continue;
-                float d = Vector3.Distance(a, b);
-                if (d > 0.9f && d < 1.1f)
-                {
-                    _adjacency[a].Add(b);
-                }
-            }
-        }
-    }
-
-    private Vector3 NearestNode(Vector3 worldPos)
-    {
-        Vector3 best = _nodes[0];
-        float bestDistSq = float.MaxValue;
-        foreach (var n in _nodes)
-        {
-            float dx = n.x - worldPos.x;
-            float dz = n.z - worldPos.z;
-            float distSq = dx * dx + dz * dz;
-            if (distSq < bestDistSq)
-            {
-                bestDistSq = distSq;
-                best = n;
-            }
-        }
-        return best;
-    }
-
     private void RecalculatePath(Vector3 start, Vector3 goal)
     {
         _path.Clear();
@@ -259,7 +214,7 @@ public class EnemyChaser : MonoBehaviour
             var cur = queue.Dequeue();
             if (cur == goal) break;
 
-            foreach (var n in _adjacency[cur])
+            foreach (var n in EnemyPathGrid.Instance.GetNeighbors(cur))
             {
                 if (visited.Contains(n)) continue;
                 visited.Add(n);
@@ -286,7 +241,7 @@ public class EnemyChaser : MonoBehaviour
     {
         Vector3 best = start;
         float bestDistSq = float.MaxValue;
-        foreach (var n in _adjacency[start])
+        foreach (var n in EnemyPathGrid.Instance.GetNeighbors(start))
         {
             float d = (n - goal).sqrMagnitude;
             if (d < bestDistSq)
@@ -296,10 +251,5 @@ public class EnemyChaser : MonoBehaviour
             }
         }
         if (best != start) _path.Add(best);
-    }
-
-    private static Vector3 Round(Vector3 v)
-    {
-        return new Vector3(Mathf.Round(v.x * 100f) / 100f, v.y, Mathf.Round(v.z * 100f) / 100f);
     }
 }
