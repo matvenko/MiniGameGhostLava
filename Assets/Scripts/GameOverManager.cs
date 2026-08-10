@@ -61,5 +61,7 @@ public class GameOverManager : MonoBehaviour
         _ghost.RespawnAt(chosen.position);
 
         if (cameraFollow != null) cameraFollow.SetControlEnabled(true);
+
+        if (EnemySpawnManager.Instance != null) EnemySpawnManager.Instance.RespawnEnemies();
     }
 }

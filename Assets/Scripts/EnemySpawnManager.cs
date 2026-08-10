@@ -8,6 +8,8 @@ using UnityEngine;
 // actually appears there, giving the player a chance to spot it and leave.
 public class EnemySpawnManager : MonoBehaviour
 {
+    public static EnemySpawnManager Instance { get; private set; }
+
     [SerializeField] private List<GameObject> enemies = new List<GameObject>();
     [SerializeField] private GameObject portalPrefab;
     [SerializeField] private float portalWarningDuration = 3f;
@@ -18,6 +20,7 @@ public class EnemySpawnManager : MonoBehaviour
 
     void Awake()
     {
+        Instance = this;
         foreach (var e in enemies)
         {
             if (e != null) e.SetActive(false);
@@ -35,6 +38,24 @@ public class EnemySpawnManager : MonoBehaviour
             }
         }
 
+        TriggerSpawnSequence();
+    }
+
+    // called by GameOverManager after the player hits Continue - hides every
+    // enemy again and reruns the exact same portal-warning spawn sequence
+    // used at the start of the level, with freshly chosen random cells.
+    public void RespawnEnemies()
+    {
+        StopAllCoroutines();
+        foreach (var e in enemies)
+        {
+            if (e != null) e.SetActive(false);
+        }
+        TriggerSpawnSequence();
+    }
+
+    private void TriggerSpawnSequence()
+    {
         var usedCells = new List<Vector3>();
         foreach (var e in enemies)
         {

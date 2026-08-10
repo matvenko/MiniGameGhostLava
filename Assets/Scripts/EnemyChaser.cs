@@ -9,9 +9,19 @@ using Sample;
 [RequireComponent(typeof(Rigidbody))]
 public class EnemyChaser : MonoBehaviour
 {
+    // Optimal = full BFS shortest path (smart, so it's slower to compensate).
+    // Greedy = only looks at its immediate neighbors each step with no
+    // lookahead, so it can wander into dead ends and take longer routes
+    // (dumb, so it's faster to compensate). Giving enemies different
+    // strategies keeps them from marching the exact same route in lockstep.
+    public enum PathingStrategy { Optimal, Greedy }
+
+    [SerializeField] private PathingStrategy strategy = PathingStrategy.Optimal;
     [SerializeField] private float speed = 4f;
     [SerializeField] private float repathInterval = 0.4f;
     [SerializeField] private float waypointTolerance = 0.15f;
+    [SerializeField] private float separationRadius = 0.8f;
+    [SerializeField] private float separationStrength = 2f;
 
     private Rigidbody _rb;
     private Transform _target;
@@ -19,6 +29,20 @@ public class EnemyChaser : MonoBehaviour
     private readonly Dictionary<Vector3, List<Vector3>> _adjacency = new Dictionary<Vector3, List<Vector3>>();
     private readonly List<Vector3> _path = new List<Vector3>();
     private float _repathTimer;
+    private Vector3 _lastGoal;
+    private bool _hasGoal;
+
+    private static readonly List<EnemyChaser> AllChasers = new List<EnemyChaser>();
+
+    void OnEnable()
+    {
+        AllChasers.Add(this);
+    }
+
+    void OnDisable()
+    {
+        AllChasers.Remove(this);
+    }
 
     void Start()
     {
@@ -39,6 +63,10 @@ public class EnemyChaser : MonoBehaviour
         }
 
         BuildGraph();
+
+        // stagger repath timing per-instance so multiple enemies don't
+        // recompute (and react) in perfect lockstep
+        _repathTimer = Random.Range(0f, repathInterval);
     }
 
     void Update()
@@ -46,11 +74,21 @@ public class EnemyChaser : MonoBehaviour
         if (_target == null || _nodes.Count == 0) return;
 
         _repathTimer -= Time.deltaTime;
-        if (_repathTimer <= 0f)
+        Vector3 start = NearestNode(transform.position);
+        Vector3 goal = NearestNode(_target.position);
+
+        // Repath on the usual timer, but also the instant the queued path
+        // runs dry while we're not yet on the player's tile - otherwise
+        // FixedUpdate has nothing safe to walk toward and (for Greedy
+        // especially, which only ever queues one step at a time) that gap
+        // used to fall back to unconstrained steering that could cut
+        // straight across a lava tile.
+        bool pathExhausted = _path.Count == 0 && start != goal;
+        if (_repathTimer <= 0f || pathExhausted || !_hasGoal || goal != _lastGoal)
         {
             _repathTimer = repathInterval;
-            Vector3 start = NearestNode(transform.position);
-            Vector3 goal = NearestNode(_target.position);
+            _lastGoal = goal;
+            _hasGoal = true;
             RecalculatePath(start, goal);
         }
 
@@ -63,10 +101,22 @@ public class EnemyChaser : MonoBehaviour
 
         Vector3 current = _rb.position;
 
+        // With no queued step, only close the gap directly when we're
+        // already on the player's own tile (short-range, inherently safe).
+        // If a real path is needed but hasn't been computed yet, stay put
+        // rather than free-steer toward the player and risk walking onto
+        // lava - Update() will supply a fresh grid step immediately.
+        if (_path.Count == 0)
+        {
+            Vector3 start = NearestNode(current);
+            Vector3 goal = NearestNode(_target.position);
+            if (start != goal) return;
+        }
+
         // Once the grid path is used up (or start/goal were the same node),
-        // steer straight at the player's real position instead of stopping -
-        // the BFS only reasons about tile centers, so it can leave a small
-        // gap that never closes on its own.
+        // close the last bit of distance to the player directly - but only
+        // along one axis at a time, so it can never cut a lava corner
+        // diagonally the way the player deliberately can.
         Vector3 destination = _path.Count > 0 ? _path[0] : _target.position;
         Vector3 toDestination = new Vector3(destination.x - current.x, 0f, destination.z - current.z);
 
@@ -78,10 +128,44 @@ public class EnemyChaser : MonoBehaviour
 
         if (toDestination.sqrMagnitude < 0.0001f) return;
 
-        Vector3 move = toDestination.normalized * speed * Time.fixedDeltaTime;
-        if (move.magnitude > toDestination.magnitude) move = toDestination;
+        Vector3 chaseDir;
+        if (_path.Count > 0)
+        {
+            chaseDir = toDestination.normalized;
+        }
+        else if (Mathf.Abs(toDestination.x) > Mathf.Abs(toDestination.z))
+        {
+            chaseDir = new Vector3(Mathf.Sign(toDestination.x), 0f, 0f);
+        }
+        else
+        {
+            chaseDir = new Vector3(0f, 0f, Mathf.Sign(toDestination.z));
+        }
+
+        Vector3 separation = GetSeparation(current);
+        Vector3 move = (chaseDir * speed + separation * separationStrength) * Time.fixedDeltaTime;
+        if (move.magnitude > toDestination.magnitude) move = move.normalized * toDestination.magnitude;
 
         _rb.MovePosition(current + move);
+    }
+
+    // gently pushes this enemy away from any other chaser that's crowding
+    // it, so multiple enemies don't stack on the exact same tile
+    private Vector3 GetSeparation(Vector3 current)
+    {
+        Vector3 push = Vector3.zero;
+        foreach (var other in AllChasers)
+        {
+            if (other == this || other == null) continue;
+            Vector3 diff = current - other._rb.position;
+            diff.y = 0f;
+            float dist = diff.magnitude;
+            if (dist > 0.001f && dist < separationRadius)
+            {
+                push += diff.normalized * (separationRadius - dist);
+            }
+        }
+        return push;
     }
 
     private void FaceMovementDirection()
@@ -152,6 +236,19 @@ public class EnemyChaser : MonoBehaviour
         _path.Clear();
         if (start == goal) return;
 
+        if (strategy == PathingStrategy.Optimal)
+        {
+            RecalculateBFS(start, goal);
+        }
+        else
+        {
+            RecalculateGreedy(start, goal);
+        }
+    }
+
+    // true shortest path across the whole grid
+    private void RecalculateBFS(Vector3 start, Vector3 goal)
+    {
         var visited = new HashSet<Vector3> { start };
         var prev = new Dictionary<Vector3, Vector3>();
         var queue = new Queue<Vector3>();
@@ -180,6 +277,25 @@ public class EnemyChaser : MonoBehaviour
             node = prev[node];
         }
         _path.Reverse();
+    }
+
+    // only picks whichever neighbor is closest (straight-line) to the goal,
+    // one step at a time, with no lookahead - so it has no idea a direction
+    // leads into a dead end until it's already walked into it
+    private void RecalculateGreedy(Vector3 start, Vector3 goal)
+    {
+        Vector3 best = start;
+        float bestDistSq = float.MaxValue;
+        foreach (var n in _adjacency[start])
+        {
+            float d = (n - goal).sqrMagnitude;
+            if (d < bestDistSq)
+            {
+                bestDistSq = d;
+                best = n;
+            }
+        }
+        if (best != start) _path.Add(best);
     }
 
     private static Vector3 Round(Vector3 v)

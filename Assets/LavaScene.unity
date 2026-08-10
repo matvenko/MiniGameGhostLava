@@ -5416,7 +5416,7 @@ Transform:
   m_GameObject: {fileID: 524859454}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 2.318, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8240,9 +8240,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 327ae5492ec1cc247a97cb3af2cd32b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
-  speed: 2
+  strategy: 1
+  speed: 2.5
   repathInterval: 0.4
   waypointTolerance: 0.15
+  separationRadius: 0.8
+  separationStrength: 2
 --- !u!1 &745292072
 GameObject:
   m_ObjectHideFlags: 0
@@ -13521,7 +13524,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u10D2\u10D0\u10D2\u10E0\u10EB\u10D4\u10DA\u10D4\u10D1\u10D0"
+  m_text: Continue
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -16779,9 +16782,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 327ae5492ec1cc247a97cb3af2cd32b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
+  strategy: 0
   speed: 2
   repathInterval: 0.4
   waypointTolerance: 0.15
+  separationRadius: 0.8
+  separationStrength: 2
 --- !u!1 &1388253535
 GameObject:
   m_ObjectHideFlags: 0
