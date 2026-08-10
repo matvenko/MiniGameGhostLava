@@ -64,6 +64,11 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void TriggerSpawnSequence()
     {
+        if (SpawnCountdownController.Instance != null)
+        {
+            SpawnCountdownController.Instance.PlayCountdown(portalWarningDuration);
+        }
+
         var usedCells = new List<Vector3>();
         for (int i = 0; i < enemies.Count; i++)
         {
