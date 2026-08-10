@@ -15,8 +15,16 @@ public class EnemySpawnManager : MonoBehaviour
     [SerializeField] private float portalWarningDuration = 3f;
     [SerializeField] private float minDistanceFromPlayer = 3f;
     [SerializeField] private float portalWorldY = 0.48f;
+    // how many enemies (from the front of the list) actually spawn - lets
+    // early levels ship with fewer enemies without touching the roster
+    [SerializeField] private int activeEnemyCount = 1;
 
     private Transform _player;
+
+    public void SetActiveEnemyCount(int count)
+    {
+        activeEnemyCount = Mathf.Clamp(count, 0, enemies.Count);
+    }
 
     void Awake()
     {
@@ -57,9 +65,17 @@ public class EnemySpawnManager : MonoBehaviour
     private void TriggerSpawnSequence()
     {
         var usedCells = new List<Vector3>();
-        foreach (var e in enemies)
+        for (int i = 0; i < enemies.Count; i++)
         {
+            var e = enemies[i];
             if (e == null) continue;
+
+            if (i >= activeEnemyCount)
+            {
+                e.SetActive(false);
+                continue;
+            }
+
             Vector3 cell = PickRandomCell(usedCells);
             usedCells.Add(cell);
             StartCoroutine(SpawnOne(e, cell));

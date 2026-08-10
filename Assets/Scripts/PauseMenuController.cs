@@ -37,7 +37,8 @@ public class PauseMenuController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             bool gameOverActive = GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive;
-            if (gameOverActive) return;
+            bool levelCompleteActive = LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive;
+            if (gameOverActive || levelCompleteActive) return;
 
             if (_isOpen) Close();
             else Open();
