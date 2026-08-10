@@ -7,6 +7,7 @@ using Sample;
 public class GameOverManager : MonoBehaviour
 {
     public static GameOverManager Instance { get; private set; }
+    public bool IsGameOverActive { get; private set; }
 
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private Button continueButton;
@@ -25,6 +26,7 @@ public class GameOverManager : MonoBehaviour
 
     public void TriggerGameOver(GhostScript ghost)
     {
+        IsGameOverActive = true;
         _ghost = ghost;
         StartCoroutine(GameOverSequence());
     }
@@ -52,6 +54,7 @@ public class GameOverManager : MonoBehaviour
 
     private void OnContinueClicked()
     {
+        IsGameOverActive = false;
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
 
         var blocksParent = GameObject.Find("Blocks");

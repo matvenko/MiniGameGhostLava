@@ -20,7 +20,7 @@ public class Coin : MonoBehaviour
         _collected = true;
 
         GetComponent<Collider>().enabled = false;
-        if (pickupSound != null)
+        if (pickupSound != null && !AudioManager.SfxMuted)
             AudioSource.PlayClipAtPoint(pickupSound, transform.position);
         RewardSystem.CollectCoin();
         StartCoroutine(PickupAnimation());
