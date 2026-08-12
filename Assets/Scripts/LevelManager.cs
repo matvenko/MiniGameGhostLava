@@ -25,6 +25,9 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private int coinsFromLevel2 = 7;
     [SerializeField] private float lavaDensity = 0.27f;
     [SerializeField] private float coinHeightOffset = 0.83f;
+    [SerializeField] private GameObject friendlyGhost;
+    [SerializeField] private int friendlyGhostFromLevel = 3;
+    [SerializeField] private float friendlyGhostMinDistanceFromPlayer = 3f;
 
     private static readonly Vector2Int[] Dirs =
     {
@@ -215,6 +218,36 @@ public class LevelManager : MonoBehaviour
         if (ghost != null) ghost.RespawnAt(chosen.position);
         if (cameraFollow != null) cameraFollow.SetControlEnabled(true);
         if (enemySpawnManager != null) enemySpawnManager.RespawnEnemies();
+
+        SpawnOrHideFriendlyGhost(candidates, chosen.position);
+    }
+
+    // Starting at friendlyGhostFromLevel, places a fresh (un-caught) flee-AI
+    // ghost each level; earlier levels just keep it hidden. It only ever
+    // respawns on a level transition, so catching it makes it gone for the
+    // rest of the current level as requested.
+    private void SpawnOrHideFriendlyGhost(List<Transform> candidates, Vector3 playerPos)
+    {
+        if (friendlyGhost == null) return;
+
+        if (_level < friendlyGhostFromLevel)
+        {
+            friendlyGhost.SetActive(false);
+            return;
+        }
+
+        var farCandidates = candidates.Where(c => Vector3.Distance(c.position, playerPos) >= friendlyGhostMinDistanceFromPlayer).ToList();
+        var pool = farCandidates.Count > 0 ? farCandidates : candidates;
+        var spot = pool[Random.Range(0, pool.Count)];
+
+        Vector3 pos = spot.position;
+        pos.y = friendlyGhost.transform.position.y;
+        friendlyGhost.transform.position = pos;
+
+        var flee = friendlyGhost.GetComponent<FriendlyGhostFlee>();
+        if (flee != null) flee.ResetState();
+
+        friendlyGhost.SetActive(true);
     }
 
     private static void Shuffle<T>(IList<T> list)
