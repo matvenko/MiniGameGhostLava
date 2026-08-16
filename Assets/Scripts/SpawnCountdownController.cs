@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 // Plays a big centered "3... 2... 1..." countdown, timed to match the
@@ -10,6 +11,10 @@ public class SpawnCountdownController : MonoBehaviour
     public static SpawnCountdownController Instance { get; private set; }
 
     [SerializeField] private TextMeshProUGUI countdownText;
+    // soft dark circle behind the number so its gold color still reads
+    // against bright lava/floor tiles instead of blending into them
+    [SerializeField] private Image countdownBackdrop;
+    [SerializeField] private float backdropMaxAlpha = 0.55f;
     [SerializeField] private float punchInDuration = 0.15f;
     [SerializeField] private float punchOutDuration = 0.25f;
 
@@ -17,6 +22,7 @@ public class SpawnCountdownController : MonoBehaviour
     {
         Instance = this;
         if (countdownText != null) countdownText.gameObject.SetActive(false);
+        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(false);
     }
 
     public void PlayCountdown(float duration)
@@ -26,10 +32,21 @@ public class SpawnCountdownController : MonoBehaviour
         StartCoroutine(CountdownRoutine(duration));
     }
 
+    // called by GameOverManager the instant the player dies, so a
+    // countdown caught mid-pulse doesn't keep animating over the death
+    // sequence
+    public void StopAndHide()
+    {
+        StopAllCoroutines();
+        if (countdownText != null) countdownText.gameObject.SetActive(false);
+        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(false);
+    }
+
     private IEnumerator CountdownRoutine(float duration)
     {
         int startNumber = Mathf.Max(1, Mathf.CeilToInt(duration));
         countdownText.gameObject.SetActive(true);
+        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(true);
 
         for (int i = startNumber; i >= 1; i--)
         {
@@ -38,6 +55,7 @@ public class SpawnCountdownController : MonoBehaviour
         }
 
         countdownText.gameObject.SetActive(false);
+        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(false);
     }
 
     // one "beat": pops in oversized+transparent, settles to full size and
@@ -78,5 +96,12 @@ public class SpawnCountdownController : MonoBehaviour
         Color c = countdownText.color;
         c.a = a;
         countdownText.color = c;
+
+        if (countdownBackdrop != null)
+        {
+            Color bc = countdownBackdrop.color;
+            bc.a = a * backdropMaxAlpha;
+            countdownBackdrop.color = bc;
+        }
     }
 }

@@ -73,6 +73,7 @@ public class EnemyChaser : MonoBehaviour
 
     void Update()
     {
+        if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
         if (_target == null || EnemyPathGrid.Instance.AllNodes.Count == 0) return;
 
         _repathTimer -= Time.deltaTime;
@@ -99,6 +100,7 @@ public class EnemyChaser : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
         if (_target == null) return;
 
         Vector3 current = _rb.position;

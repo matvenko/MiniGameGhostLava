@@ -28,6 +28,7 @@ public class GameOverManager : MonoBehaviour
     {
         IsGameOverActive = true;
         _ghost = ghost;
+        if (SpawnCountdownController.Instance != null) SpawnCountdownController.Instance.StopAndHide();
         StartCoroutine(GameOverSequence());
     }
 
