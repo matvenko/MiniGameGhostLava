@@ -38,7 +38,8 @@ public class PauseMenuController : MonoBehaviour
         {
             bool gameOverActive = GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive;
             bool levelCompleteActive = LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive;
-            if (gameOverActive || levelCompleteActive) return;
+            bool shopOpen = ShopUIController.Instance != null && ShopUIController.Instance.IsOpen;
+            if (gameOverActive || levelCompleteActive || shopOpen) return;
 
             if (_isOpen) Close();
             else Open();

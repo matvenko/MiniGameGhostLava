@@ -2,30 +2,32 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Tracks the player's remaining ghost-icon lives for the current run and
-// drives the HUD row. Starts at 3; the shop can raise the owned max up to
-// HardCap (6) via IncreaseMaxLives - never touches EconomyManager's
-// persistent coin wallet.
+// drives the HUD row. Always starts at 3 each run; the shop can top lives
+// back up to HardCap (6) as a consumable purchase (see AddLife) - never
+// touches EconomyManager's persistent coin wallet.
 public class LivesManager : MonoBehaviour
 {
     public static LivesManager Instance { get; private set; }
     private const int StartingLives = 3;
-    private const int HardCap = 6;
+    public const int HardCap = 6;
 
-    [SerializeField] private Image[] ghostIcons; // sized for HardCap slots; only the first _ownedMaxLives are shown
+    [SerializeField] private Image[] ghostIcons; // HardCap slots; only the living ones are shown
     [SerializeField] private Sprite ghostFullSprite;
-    [SerializeField] private Sprite ghostEmptySprite;
+    // resized to fit the visible icons so the pill never leaves dead space;
+    // its pivot is on the right edge, so it shrinks leftwards and stays put
+    [SerializeField] private RectTransform panelRect;
+    [SerializeField] private float panelPadding = 12f;
+    [SerializeField] private float iconSize = 32f;
+    [SerializeField] private float iconSpacing = 6.8f;
     [SerializeField] private float lostLifePunchScale = 1.4f;
     [SerializeField] private float lostLifePunchDuration = 0.25f;
-
-    private int _ownedMaxLives = StartingLives;
 
     public int CurrentLives { get; private set; }
 
     void Awake()
     {
         Instance = this;
-        _ownedMaxLives = StartingLives;
-        CurrentLives = _ownedMaxLives;
+        CurrentLives = StartingLives;
         UpdateIcons(-1);
     }
 
@@ -34,9 +36,10 @@ public class LivesManager : MonoBehaviour
     // instead of a quick respawn.
     public bool LoseLife()
     {
-        int lostIndex = Mathf.Max(0, CurrentLives - 1);
         CurrentLives = Mathf.Max(0, CurrentLives - 1);
-        UpdateIcons(lostIndex);
+        // punch the icon that's now last in the row - the one that vanished
+        // is already gone, so the feedback lands on what's still there
+        UpdateIcons(CurrentLives - 1);
         return CurrentLives <= 0;
     }
 
@@ -44,29 +47,29 @@ public class LivesManager : MonoBehaviour
     // resumes, rather than refilling all the way back to full.
     public void GrantExtraLife()
     {
-        CurrentLives = Mathf.Min(_ownedMaxLives, 1);
+        CurrentLives = 1;
         UpdateIcons(-1);
     }
 
-    // Shop hook: raises the owned max life count (up to HardCap) and grants
-    // one immediately. Safe to call once the cap is already reached - it's
-    // just a no-op then.
-    public void IncreaseMaxLives(int amount = 1)
+    // Shop hook: a consumable top-up, +1 life up to HardCap. Repurchasable
+    // any time you're below the cap, including mid-run after losing lives.
+    // Returns false if already at the cap (nothing to buy).
+    public bool AddLife()
     {
-        int newMax = Mathf.Min(HardCap, _ownedMaxLives + amount);
-        int gained = newMax - _ownedMaxLives;
-        _ownedMaxLives = newMax;
-        CurrentLives = Mathf.Min(_ownedMaxLives, CurrentLives + gained);
+        if (CurrentLives >= HardCap) return false;
+        CurrentLives++;
         UpdateIcons(-1);
+        return true;
     }
 
     public void ResetLives()
     {
-        _ownedMaxLives = StartingLives;
-        CurrentLives = _ownedMaxLives;
+        CurrentLives = StartingLives;
         UpdateIcons(-1);
     }
 
+    // Only as many icons as lives remaining are shown - spent slots are
+    // hidden outright rather than left as empty outlines.
     private void UpdateIcons(int punchIndex)
     {
         if (ghostIcons == null) return;
@@ -74,13 +77,23 @@ public class LivesManager : MonoBehaviour
         {
             if (ghostIcons[i] == null) continue;
 
-            bool owned = i < _ownedMaxLives;
-            ghostIcons[i].gameObject.SetActive(owned);
-            if (!owned) continue;
+            bool alive = i < CurrentLives;
+            ghostIcons[i].gameObject.SetActive(alive);
+            if (!alive) continue;
 
-            ghostIcons[i].sprite = i < CurrentLives ? ghostFullSprite : ghostEmptySprite;
+            ghostIcons[i].sprite = ghostFullSprite;
             if (i == punchIndex) StartCoroutine(PunchScale(ghostIcons[i].transform));
         }
+
+        ResizePanel();
+    }
+
+    private void ResizePanel()
+    {
+        if (panelRect == null) return;
+        int shown = Mathf.Max(1, CurrentLives);
+        float width = panelPadding * 2f + shown * iconSize + (shown - 1) * iconSpacing;
+        panelRect.sizeDelta = new Vector2(width, panelRect.sizeDelta.y);
     }
 
     private System.Collections.IEnumerator PunchScale(Transform t)

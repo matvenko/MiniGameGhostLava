@@ -31,6 +31,17 @@ public class EconomyManager : MonoBehaviour
         UpdateText();
     }
 
+    // Returns false without spending anything if the wallet can't cover it.
+    public bool SpendCoins(int amount)
+    {
+        if (amount > TotalCoins) return false;
+        TotalCoins -= amount;
+        PlayerPrefs.SetInt(WalletKey, TotalCoins);
+        PlayerPrefs.Save();
+        UpdateText();
+        return true;
+    }
+
     private void UpdateText()
     {
         if (walletText != null) walletText.text = TotalCoins.ToString();

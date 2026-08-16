@@ -13,6 +13,7 @@ public class LevelManager : MonoBehaviour
 {
     public static LevelManager Instance { get; private set; }
     public bool IsLevelCompleteActive { get; private set; }
+    public int CurrentLevel => _level;
 
     [SerializeField] private GameObject levelCompletePanel;
     [SerializeField] private Button nextLevelButton;
