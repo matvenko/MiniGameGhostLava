@@ -6,6 +6,7 @@ public class Coin : MonoBehaviour
     private float rotationSpeed = 200f;
     [SerializeField] private AudioClip pickupSound;
     [SerializeField] private float pickupDuration = 0.3f;
+    [SerializeField] private int walletValue = 50;
 
     private bool _collected;
 
@@ -23,6 +24,7 @@ public class Coin : MonoBehaviour
         if (pickupSound != null && !AudioManager.SfxMuted)
             AudioSource.PlayClipAtPoint(pickupSound, transform.position);
         RewardSystem.CollectCoin();
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(walletValue);
         StartCoroutine(PickupAnimation());
     }
 

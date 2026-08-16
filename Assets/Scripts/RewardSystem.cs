@@ -48,6 +48,6 @@ public class RewardSystem : MonoBehaviour
     private void UpdateText()
     {
         if (coinsAmountText != null)
-            coinsAmountText.text = collectedCoins + " / " + totalCoins;
+            coinsAmountText.text = collectedCoins + "/" + totalCoins;
     }
 }
