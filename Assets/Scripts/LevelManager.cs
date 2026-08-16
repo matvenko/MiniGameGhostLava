@@ -76,6 +76,8 @@ public class LevelManager : MonoBehaviour
         _level++;
         UpdateLevelText();
 
+        if (TrapManager.Instance != null) TrapManager.Instance.ClearPlacedTraps();
+
         RegenerateLayout();
         EnemyPathGrid.Instance.Rebuild();
 

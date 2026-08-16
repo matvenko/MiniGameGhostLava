@@ -58,6 +58,18 @@ public class TrapManager : MonoBehaviour
         Refresh();
     }
 
+    // Called when the level regenerates: the tiles a trap was armed on may
+    // be lava in the new layout, so unfired traps are removed with it. They
+    // aren't refunded - placing one already spent it.
+    public void ClearPlacedTraps()
+    {
+        foreach (var trap in _placed)
+        {
+            if (trap != null) Destroy(trap.gameObject);
+        }
+        _placed.Clear();
+    }
+
     // Traps destroy themselves after firing, so the list accumulates nulls -
     // clear those out while checking rather than keeping a separate sweep.
     private bool HasTrapAt(Vector3 tile)
