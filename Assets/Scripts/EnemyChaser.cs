@@ -33,12 +33,34 @@ public class EnemyChaser : MonoBehaviour
     private float _repathTimer;
     private Vector3 _lastGoal;
     private bool _hasGoal;
+    private float _stunTimer;
+
+    public bool IsStunned => _stunTimer > 0f;
+
+    // Called by Trap when this enemy walks onto one. The trap's own effect
+    // stays on the tile for the duration, so the frozen state is visible
+    // there - these materials expose no color property to tint.
+    public void Stun(float duration)
+    {
+        _stunTimer = Mathf.Max(_stunTimer, duration);
+    }
 
     private static readonly List<EnemyChaser> AllChasers = new List<EnemyChaser>();
 
     void OnEnable()
     {
         AllChasers.Add(this);
+
+        // Respawns (new level, player death) re-enable the same object, and
+        // the queued path would otherwise survive a level regeneration -
+        // sending the enemy walking a route computed for the old layout,
+        // straight over tiles that are now lava. Start every activation with
+        // no path and no goal so the first Update repaths against the
+        // current grid.
+        _path.Clear();
+        _hasGoal = false;
+        _stunTimer = 0f;
+        _repathTimer = 0f;
     }
 
     void OnDisable()
@@ -74,6 +96,16 @@ public class EnemyChaser : MonoBehaviour
     void Update()
     {
         if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
+
+        if (_stunTimer > 0f)
+        {
+            _stunTimer -= Time.deltaTime;
+            // drop the queued path so it repaths from wherever it's standing
+            // once it comes to, instead of resuming a now-stale route
+            if (_stunTimer <= 0f) _path.Clear();
+            return;
+        }
+
         if (_target == null || EnemyPathGrid.Instance.AllNodes.Count == 0) return;
 
         _repathTimer -= Time.deltaTime;
@@ -101,9 +133,20 @@ public class EnemyChaser : MonoBehaviour
     void FixedUpdate()
     {
         if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
+        if (_stunTimer > 0f) return;
         if (_target == null) return;
 
         Vector3 current = _rb.position;
+
+        // Second line of defence behind OnEnable's reset: if the queued
+        // waypoint is no longer walkable (the layout changed under us), drop
+        // the whole path rather than walk to it, and let Update repath.
+        if (_path.Count > 0 && !IsOverWalkable(_path[0]))
+        {
+            _path.Clear();
+            _hasGoal = false;
+            return;
+        }
 
         // With no queued step, only close the gap directly when we're
         // already on the player's own tile (short-range, inherently safe).
@@ -146,11 +189,35 @@ public class EnemyChaser : MonoBehaviour
             chaseDir = new Vector3(0f, 0f, Mathf.Sign(toDestination.z));
         }
 
+        // chaseDir is grid-derived and safe, but separation pushes in an
+        // arbitrary direction to unstack crowded enemies - which can shove
+        // one clean off the walkable tiles onto lava. Take the separation
+        // only when the resulting step stays on the grid, otherwise fall
+        // back to the pure chase step.
         Vector3 separation = GetSeparation(current);
-        Vector3 move = (chaseDir * speed + separation * separationStrength) * Time.fixedDeltaTime;
-        if (move.magnitude > toDestination.magnitude) move = move.normalized * toDestination.magnitude;
+        Vector3 move = ClampToWalkable(current, (chaseDir * speed + separation * separationStrength) * Time.fixedDeltaTime, toDestination.magnitude);
+        if (move == Vector3.zero)
+        {
+            move = ClampToWalkable(current, chaseDir * speed * Time.fixedDeltaTime, toDestination.magnitude);
+        }
 
         _rb.MovePosition(current + move);
+    }
+
+    // Caps the step at the remaining distance, then rejects it outright
+    // (returns zero) if it would land off the walkable tiles.
+    private Vector3 ClampToWalkable(Vector3 current, Vector3 move, float maxDistance)
+    {
+        if (move.magnitude > maxDistance) move = move.normalized * maxDistance;
+        return IsOverWalkable(current + move) ? move : Vector3.zero;
+    }
+
+    // A position counts as on the grid when the nearest walkable node is the
+    // tile it's standing over - i.e. within half a tile on both axes.
+    private static bool IsOverWalkable(Vector3 pos)
+    {
+        Vector3 node = EnemyPathGrid.Instance.NearestNode(pos);
+        return Mathf.Abs(node.x - pos.x) <= 0.5f && Mathf.Abs(node.z - pos.z) <= 0.5f;
     }
 
     // gently pushes this enemy away from any other chaser that's crowding
@@ -183,6 +250,20 @@ public class EnemyChaser : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        TryCatch(other);
+    }
+
+    // Also on stay, so a player who walked through a stunned enemy is caught
+    // the moment it comes to rather than standing inside it safely - Enter
+    // has already fired by then and won't fire again.
+    private void OnTriggerStay(Collider other)
+    {
+        TryCatch(other);
+    }
+
+    private void TryCatch(Collider other)
+    {
+        if (IsStunned) return;
         if (!other.CompareTag("Ghost")) return;
         var ghost = other.GetComponentInParent<GhostScript>();
         if (ghost != null) ghost.CaughtByEnemy();

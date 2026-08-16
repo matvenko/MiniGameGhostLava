@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // Shared walkable-tile graph used by every EnemyChaser instead of each one
 // separately doing an O(n^2) graph build and an O(n) linear nearest-node
@@ -18,12 +19,17 @@ public class EnemyPathGrid
     private float _originX;
     private float _originZ;
     private bool _built;
+    private Scene _builtForScene;
 
     public IReadOnlyList<Vector3> AllNodes => _nodes;
 
+    // This is a plain static singleton, so it outlives scene loads - after a
+    // restart the old level's grid would otherwise still be here, marked
+    // built, describing tiles that are now lava. Tracking which scene
+    // instance it was built for makes a reload rebuild it.
     public void EnsureBuilt()
     {
-        if (!_built) Rebuild();
+        if (!_built || _builtForScene != SceneManager.GetActiveScene()) Rebuild();
     }
 
     public void Rebuild()
@@ -32,6 +38,7 @@ public class EnemyPathGrid
         _adjacency.Clear();
         _cellLookup.Clear();
         _built = false;
+        _builtForScene = SceneManager.GetActiveScene();
 
         var blocksParent = GameObject.Find("Blocks");
         if (blocksParent == null) return;

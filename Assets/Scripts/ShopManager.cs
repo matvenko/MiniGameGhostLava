@@ -13,6 +13,9 @@ public class ShopManager : MonoBehaviour
     private const int EarlyLevelCost = 1000;
     private const int LateLevelCost = 2000;
 
+    private const int TrapCost = 400;
+    private const int TrapsPerPurchase = 1;
+
     void Awake()
     {
         Instance = this;
@@ -42,5 +45,27 @@ public class ShopManager : MonoBehaviour
         if (!EconomyManager.Instance.SpendCoins(GetExtraLifeCost())) return false;
 
         return LivesManager.Instance != null && LivesManager.Instance.AddLife();
+    }
+
+    // Traps have no cap - they're pure stock, and unspent ones carry over
+    // into the next run.
+    public int GetTrapCost()
+    {
+        return TrapCost;
+    }
+
+    public bool CanBuyTrap()
+    {
+        return EconomyManager.Instance != null && EconomyManager.Instance.TotalCoins >= TrapCost;
+    }
+
+    public bool BuyTrap()
+    {
+        if (!CanBuyTrap()) return false;
+        if (TrapManager.Instance == null) return false;
+        if (!EconomyManager.Instance.SpendCoins(TrapCost)) return false;
+
+        TrapManager.Instance.AddTraps(TrapsPerPurchase);
+        return true;
     }
 }

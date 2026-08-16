@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using Sample;
 
 // Owns level progression: shows the level-complete popup, and on "Next
@@ -16,6 +17,7 @@ public class LevelManager : MonoBehaviour
     public int CurrentLevel => _level;
 
     [SerializeField] private GameObject levelCompletePanel;
+    [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private Button nextLevelButton;
     [SerializeField] private GhostScript ghost;
     [SerializeField] private EnemySpawnManager enemySpawnManager;
@@ -44,6 +46,18 @@ public class LevelManager : MonoBehaviour
         Instance = this;
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.onClick.AddListener(OnNextLevelClicked);
+        UpdateLevelText();
+
+        // The path grid is a static singleton that outlives scene loads, so a
+        // restart would otherwise keep pathing on the previous run's layout.
+        // Enemies can't do this themselves - they spawn disabled and only
+        // reach Start() after the portal delay, long after they'd be needed.
+        EnemyPathGrid.Instance.EnsureBuilt();
+    }
+
+    private void UpdateLevelText()
+    {
+        if (levelText != null) levelText.text = "LEVEL " + _level;
     }
 
     public void OnLevelComplete()
@@ -60,6 +74,7 @@ public class LevelManager : MonoBehaviour
         Time.timeScale = 1f;
 
         _level++;
+        UpdateLevelText();
 
         RegenerateLayout();
         EnemyPathGrid.Instance.Rebuild();

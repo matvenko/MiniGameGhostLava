@@ -18,6 +18,9 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private Button buyExtraLifeButton;
     [SerializeField] private TextMeshProUGUI buyExtraLifeButtonText;
     [SerializeField] private TextMeshProUGUI extraLifeStatusText;
+    [SerializeField] private Button buyTrapButton;
+    [SerializeField] private TextMeshProUGUI buyTrapButtonText;
+    [SerializeField] private TextMeshProUGUI trapStatusText;
     [SerializeField] private TextMeshProUGUI walletText;
 
     void Awake()
@@ -27,6 +30,7 @@ public class ShopUIController : MonoBehaviour
         if (openButton != null) openButton.onClick.AddListener(Open);
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         if (buyExtraLifeButton != null) buyExtraLifeButton.onClick.AddListener(OnBuyExtraLifeClicked);
+        if (buyTrapButton != null) buyTrapButton.onClick.AddListener(OnBuyTrapClicked);
     }
 
     private void Open()
@@ -59,6 +63,12 @@ public class ShopUIController : MonoBehaviour
         Refresh();
     }
 
+    private void OnBuyTrapClicked()
+    {
+        if (ShopManager.Instance != null) ShopManager.Instance.BuyTrap();
+        Refresh();
+    }
+
     private void Refresh()
     {
         if (walletText != null && EconomyManager.Instance != null)
@@ -75,5 +85,14 @@ public class ShopUIController : MonoBehaviour
 
         if (buyExtraLifeButton != null)
             buyExtraLifeButton.interactable = !maxed && ShopManager.Instance.CanBuyExtraLife();
+
+        if (trapStatusText != null && TrapManager.Instance != null)
+            trapStatusText.text = "Owned: " + TrapManager.Instance.TrapsOwned;
+
+        if (buyTrapButtonText != null)
+            buyTrapButtonText.text = ShopManager.Instance.GetTrapCost().ToString();
+
+        if (buyTrapButton != null)
+            buyTrapButton.interactable = ShopManager.Instance.CanBuyTrap();
     }
 }
