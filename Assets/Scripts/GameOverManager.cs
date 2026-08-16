@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 using Sample;
 
 public class GameOverManager : MonoBehaviour
@@ -11,6 +12,7 @@ public class GameOverManager : MonoBehaviour
     public bool IsGameOverActive { get; private set; }
 
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private TextMeshProUGUI subText;
     [SerializeField] private Button watchAdButton;
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private CameraFollow cameraFollow;
@@ -74,6 +76,17 @@ public class GameOverManager : MonoBehaviour
 
         yield return _ghost.PlayDeathAnimation();
 
+        // The wallet is only halved if the player actually gives up (see
+        // OnMainMenuClicked) - continuing via the ad keeps it whole, so the
+        // screen warns what quitting would cost rather than charging now.
+        if (subText != null)
+        {
+            int atStake = EconomyManager.Instance != null ? EconomyManager.Instance.CoinsLostOnDefeat : 0;
+            subText.text = atStake > 0
+                ? "Quit now and lose " + atStake + " coins"
+                : "Continue to keep playing";
+        }
+
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
@@ -99,8 +112,11 @@ public class GameOverManager : MonoBehaviour
         RespawnPlayerAndEnemies();
     }
 
+    // Giving up is what actually costs the coins - the run is over here, so
+    // the wallet is halved on the way out.
     private void OnMainMenuClicked()
     {
+        if (EconomyManager.Instance != null) EconomyManager.Instance.HalveOnDefeat();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainMenuSceneName);
     }

@@ -2,10 +2,9 @@ using UnityEngine;
 using TMPro;
 
 // Persistent coin wallet, separate from RewardSystem's per-level "X / Y
-// collected" objective counter. Survives level transitions, deaths, and
-// full game restarts via PlayerPrefs - nothing in the game currently
-// resets it, by design (see game design plan: losing should never wipe
-// shop currency).
+// collected" objective counter. Survives level transitions and individual
+// deaths via PlayerPrefs; only running out of lives touches it, and even
+// then it just halves (see HalveOnDefeat) rather than wiping.
 public class EconomyManager : MonoBehaviour
 {
     public static EconomyManager Instance { get; private set; }
@@ -40,6 +39,23 @@ public class EconomyManager : MonoBehaviour
         PlayerPrefs.Save();
         UpdateText();
         return true;
+    }
+
+    // What abandoning the run would cost, so the Game Over screen can warn
+    // before the player commits to it.
+    public int CoinsLostOnDefeat => TotalCoins - Mathf.CeilToInt(TotalCoins / 2f);
+
+    // Abandoning the run costs half the wallet, rounded in the player's
+    // favour. Returns how many coins were taken.
+    public int HalveOnDefeat()
+    {
+        int kept = Mathf.CeilToInt(TotalCoins / 2f);
+        int lost = TotalCoins - kept;
+        TotalCoins = kept;
+        PlayerPrefs.SetInt(WalletKey, TotalCoins);
+        PlayerPrefs.Save();
+        UpdateText();
+        return lost;
     }
 
     private void UpdateText()
