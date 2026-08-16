@@ -25,6 +25,8 @@ public class GhostScript : MonoBehaviour
     private Text HP_text;
     private Vector3 spawnPosition;
     private bool isDead;
+    private bool _invincible;
+    private Coroutine _invincibilityRoutine;
 
     // moving speed
     [SerializeField] private float Speed = 4;
@@ -57,11 +59,41 @@ public class GhostScript : MonoBehaviour
 
     private void Die()
     {
-        if (isDead) return;
+        if (isDead || _invincible) return;
         isDead = true;
         Ctrl.enabled = false;
         if (GameOverManager.Instance != null)
             GameOverManager.Instance.TriggerGameOver(this);
+    }
+
+    // brief post-respawn grace window (blinking) so landing back on/near a
+    // hazard doesn't instantly burn a second life
+    public void StartInvincibility(float duration)
+    {
+        if (_invincibilityRoutine != null) StopCoroutine(_invincibilityRoutine);
+        _invincibilityRoutine = StartCoroutine(InvincibilityRoutine(duration));
+    }
+
+    private IEnumerator InvincibilityRoutine(float duration)
+    {
+        _invincible = true;
+        const float blinkInterval = 0.12f;
+        float t = 0f;
+        while (t < duration)
+        {
+            for (int i = 0; i < MeshR.Length; i++)
+            {
+                if (MeshR[i] != null) MeshR[i].enabled = !MeshR[i].enabled;
+            }
+            yield return new WaitForSeconds(blinkInterval);
+            t += blinkInterval;
+        }
+        for (int i = 0; i < MeshR.Length; i++)
+        {
+            if (MeshR[i] != null) MeshR[i].enabled = true;
+        }
+        _invincible = false;
+        _invincibilityRoutine = null;
     }
 
     // plays the dissolve-away animation over deathAnimDuration; the caller
