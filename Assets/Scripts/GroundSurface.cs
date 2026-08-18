@@ -32,9 +32,25 @@ public class GroundSurface : MonoBehaviour
     [Tooltip("Spread of the per-facet colour variation baked into vertex colours.")]
     [SerializeField, Range(0f, 1f)] private float colorVariation = 0.55f;
 
+    [Header("Meadow")]
+    [Tooltip("Amplitude of the smooth rolling undulation laid over the whole field.")]
+    [SerializeField, Range(0f, 0.4f)] private float undulation = 0.09f;
+    [Tooltip("Wavelength of that undulation, in cells.")]
+    [SerializeField, Range(2f, 20f)] private float undulationScale = 6f;
+    [Tooltip("How far inland (in cells) the shoreline dirt band reaches. Baked into vertex colour green.")]
+    [SerializeField, Range(0.5f, 5f)] private float shoreWidth = 0.9f;
+    [Tooltip("How far the ground dips as it approaches the water, giving a soft bank.")]
+    [SerializeField, Range(0f, 0.3f)] private float shoreDip = 0.05f;
+    [Tooltip("Minimum gap kept between the surface and the liquid plane, so water never pokes through the grass.")]
+    [SerializeField, Range(0f, 0.3f)] private float waterClearance = 0.1f;
+
     private Transform _surface;
     private Transform _blocksParent;
     private Transform _lavaParent;
+
+    private Dictionary<Vector2Int, float> _shoreDist;
+    private float _shoreOriginX, _shoreOriginZ;
+    private float _liquidTopY;
 
     void Awake() => Instance = this;
 
@@ -155,6 +171,19 @@ public class GroundSurface : MonoBehaviour
         var first = _blocksParent.GetChild(0);
         topY = first.position.y + first.lossyScale.y * 0.5f;
 
+        // Same figure LiquidSurface parks its plane at: the lowest lava tile top.
+        _liquidTopY = topY - 1f;
+        if (_lavaParent != null)
+        {
+            bool any = false;
+            foreach (Transform t in _lavaParent)
+            {
+                float top = t.position.y + t.lossyScale.y * 0.5f;
+                _liquidTopY = any ? Mathf.Min(_liquidTopY, top) : top;
+                any = true;
+            }
+        }
+
         foreach (Transform t in _blocksParent)
         {
             walkable.Add(new Vector2Int(
@@ -178,14 +207,32 @@ public class GroundSurface : MonoBehaviour
         int s = Mathf.Max(1, facetsPerCell);
         float step = 1f / s;
 
+        BuildShoreField(walkable, originX, originZ);
+
         var verts = new List<Vector3>();
         var norms = new List<Vector3>();
         var cols = new List<Color>();
         var tris = new List<int>();
 
+        // The liquid plane sits at the top of the recessed lava tiles, so anything
+        // the surface does below that line pokes the water up through the grass.
+        // The clamp is the hard guarantee; the terms below are also shaped to stay
+        // clear of it, so it only ever catches the extreme corners.
+        float minY = _liquidTopY + waterClearance;
+
         // Height is a pure function of the corner's grid index, so neighbouring
-        // cells agree on shared corners and the surface never cracks open.
-        float HeightAt(int i, int j) => topY + (Hash01(i, j, 7) - 0.5f) * 2f * heightJitter;
+        // cells agree on shared corners and the surface never cracks open. Three
+        // terms: a smooth roll across the whole field (upward only, so it can
+        // never eat into the clearance), per-vertex jitter for the faceting, and
+        // a dip into the water so the bank is not a flat table.
+        float HeightAt(int i, int j)
+        {
+            float x = originX + i * step;
+            float z = originZ + j * step;
+            float roll = SmoothNoise(x / undulationScale, z / undulationScale) * undulation;
+            float jitter = (Hash01(i, j, 7) - 0.5f) * 2f * heightJitter;
+            return Mathf.Max(topY + roll + jitter - ShoreAt(x, z) * shoreDip, minY);
+        }
         Vector3 TopVert(int i, int j) => new Vector3(originX + i * step, HeightAt(i, j), originZ + j * step);
 
         float bottomY = topY - skirtDepth;
@@ -277,17 +324,93 @@ public class GroundSurface : MonoBehaviour
     private float Variation(int i, int j, int salt) =>
         Mathf.Clamp01(0.5f + (Hash01(i, j, salt) - 0.5f) * colorVariation);
 
-    private static void AddTri(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<int> tris,
+    // The facet variation is per-triangle - that is the flat-shaded look - but the
+    // shoreline weight in green is per-vertex, so the dirt band fades smoothly
+    // across facets instead of stepping from one triangle to the next.
+    private void AddTri(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<int> tris,
         Vector3 a, Vector3 b, Vector3 c, float variation, bool isTop)
     {
         int at = verts.Count;
         Vector3 n = Vector3.Cross(b - a, c - a).normalized;
-        var col = new Color(variation, variation, variation, isTop ? 1f : 0f);
+        float alpha = isTop ? 1f : 0f;
 
         verts.Add(a); verts.Add(b); verts.Add(c);
         norms.Add(n); norms.Add(n); norms.Add(n);
-        cols.Add(col); cols.Add(col); cols.Add(col);
+        cols.Add(new Color(variation, ShoreAt(a.x, a.z), 0f, alpha));
+        cols.Add(new Color(variation, ShoreAt(b.x, b.z), 0f, alpha));
+        cols.Add(new Color(variation, ShoreAt(c.x, c.z), 0f, alpha));
         tris.Add(at); tris.Add(at + 1); tris.Add(at + 2);
+    }
+
+    // Distance (in cells) from every walkable cell to the water, so the mesh can
+    // fade grass into dirt as it approaches the edge. Cells touching water sit
+    // half a cell from the boundary line, which is where the value hits 1.
+    private void BuildShoreField(HashSet<Vector2Int> walkable, float originX, float originZ)
+    {
+        _shoreOriginX = originX;
+        _shoreOriginZ = originZ;
+        _shoreDist = new Dictionary<Vector2Int, float>(walkable.Count);
+
+        var frontier = new Queue<Vector2Int>();
+        foreach (var cell in walkable)
+        {
+            foreach (var d in Neighbours)
+            {
+                if (walkable.Contains(cell + d)) continue;
+                _shoreDist[cell] = 0.5f;
+                frontier.Enqueue(cell);
+                break;
+            }
+        }
+
+        while (frontier.Count > 0)
+        {
+            var cell = frontier.Dequeue();
+            float next = _shoreDist[cell] + 1f;
+            foreach (var d in Neighbours)
+            {
+                var n = cell + d;
+                if (!walkable.Contains(n)) continue;
+                if (_shoreDist.TryGetValue(n, out float existing) && existing <= next) continue;
+                _shoreDist[n] = next;
+                frontier.Enqueue(n);
+            }
+        }
+    }
+
+    // Bilinear sample of that field at an arbitrary point. Water cells count as
+    // half a cell beyond the boundary, which keeps the gradient continuous right
+    // up to the shoreline instead of flattening out at the last row of cells.
+    private float ShoreAt(float worldX, float worldZ)
+    {
+        if (_shoreDist == null || _shoreDist.Count == 0) return 0f;
+
+        float cx = worldX - _shoreOriginX - 0.5f;
+        float cz = worldZ - _shoreOriginZ - 0.5f;
+        int i = Mathf.FloorToInt(cx), j = Mathf.FloorToInt(cz);
+        float fx = cx - i, fz = cz - j;
+
+        float d00 = DistAt(i, j), d10 = DistAt(i + 1, j);
+        float d01 = DistAt(i, j + 1), d11 = DistAt(i + 1, j + 1);
+        float d = Mathf.Lerp(Mathf.Lerp(d00, d10, fx), Mathf.Lerp(d01, d11, fx), fz);
+
+        return Mathf.Clamp01(1f - d / Mathf.Max(shoreWidth, 0.01f));
+    }
+
+    private float DistAt(int i, int j) =>
+        _shoreDist.TryGetValue(new Vector2Int(i, j), out float d) ? d : -0.5f;
+
+    // Smoothed value noise on a unit lattice, for the rolling undulation.
+    private static float SmoothNoise(float x, float z)
+    {
+        int i = Mathf.FloorToInt(x), j = Mathf.FloorToInt(z);
+        float fx = x - i, fz = z - j;
+        fx = fx * fx * (3f - 2f * fx);
+        fz = fz * fz * (3f - 2f * fz);
+
+        float a = Hash01(i, j, 101), b = Hash01(i + 1, j, 101);
+        float c = Hash01(i, j + 1, 101), d = Hash01(i + 1, j + 1, 101);
+        return Mathf.Lerp(Mathf.Lerp(a, b, fx), Mathf.Lerp(c, d, fx), fz);
     }
 
     private static float Hash01(int x, int y, int salt)

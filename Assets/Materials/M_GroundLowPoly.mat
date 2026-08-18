@@ -22,18 +22,59 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 0f7b02a6635fe744c9c28407ede09d57, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 4efcbd6a9c8b1f247a727222cd3995ae, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlowerMap:
+        m_Texture: {fileID: 2800000, guid: 8d38408652a91a549ad06164ec9f74ca, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlowerNormal:
+        m_Texture: {fileID: 2800000, guid: 64a668b993f05a44d81dad3299580617, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilMap:
+        m_Texture: {fileID: 2800000, guid: 1237c43b955e9114b9584e6c031d4f7c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilNormal:
+        m_Texture: {fileID: 2800000, guid: ec73f91e9407c3c4a941519a019c780b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _Cutoff: 0.5
+    - _FacetStrength: 0.14
+    - _FlowerScale: 4
+    - _GrassScale: 3
+    - _MacroScale: 16
+    - _MacroStrength: 0.22
+    - _NormalStrength: 0.5
+    - _PatchAmount: 0.42
+    - _PatchScale: 11
+    - _PatchSoftness: 0.22
     - _RimPower: 3
-    - _RimStrength: 0.14
+    - _RimStrength: 0.12
+    - _Saturation: 1.1
+    - _ShoreDamp: 0.18
+    - _ShoreWidth: 0.4
+    - _SoilScale: 2.5
+    - _Stylize: 0.55
     m_Colors:
     - _AmbientColor: {r: 0.24, g: 0.32, b: 0.36, a: 1}
-    - _ColorDark: {r: 0.1, g: 0.4, b: 0.26, a: 1}
-    - _ColorLight: {r: 0.44, g: 0.8, b: 0.4, a: 1}
+    - _FlowerTint: {r: 0.95, g: 1, b: 0.85, a: 1}
+    - _GrassTint: {r: 0.86, g: 1.02, b: 0.74, a: 1}
     - _RimColor: {r: 0.55, g: 0.92, b: 0.72, a: 1}
-    - _SideDark: {r: 0.07, g: 0.2, b: 0.2, a: 1}
-    - _SideLight: {r: 0.16, g: 0.34, b: 0.3, a: 1}
+    - _SoilTint: {r: 1, g: 0.95, b: 0.85, a: 1}
+    - _StyleGrassDark: {r: 0.13, g: 0.42, b: 0.24, a: 1}
+    - _StyleGrassLight: {r: 0.46, g: 0.8, b: 0.4, a: 1}
+    - _StyleSoilDark: {r: 0.26, g: 0.19, b: 0.14, a: 1}
+    - _StyleSoilLight: {r: 0.6, g: 0.47, b: 0.34, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
