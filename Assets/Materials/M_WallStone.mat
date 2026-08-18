@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_GroundLowPoly
-  m_Shader: {fileID: 4800000, guid: 74d746d6405973d4da217c91641a869b, type: 3}
+  m_Name: M_WallStone
+  m_Shader: {fileID: 4800000, guid: 750b99b6a93748fcb38a5942ed8bba1d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -31,25 +31,16 @@ Material:
     m_Floats:
     - _CelStrength: 0.8
     - _Cutoff: 0.5
-    - _FacetJitter: 0.07
-    - _FacetShading: 0.75
-    - _FlowerChance: 0.22
-    - _FlowerDensity: 2.6
-    - _FlowerSize: 0.13
+    - _FacetJitter: 0.09
     - _LightSteps: 3
     - _RimPower: 3
-    - _RimStrength: 0.1
-    - _ShoreAmount: 0.35
-    - _ShoreWidth: 0.35
+    - _RimStrength: 0.12
     m_Colors:
-    - _AmbientColor: {r: 0.32, g: 0.38, b: 0.42, a: 1}
-    - _FlowerWhite: {r: 0.96, g: 0.97, b: 0.92, a: 1}
-    - _FlowerYellow: {r: 0.98, g: 0.86, b: 0.35, a: 1}
-    - _GrassDeep: {r: 0.13, g: 0.4, b: 0.16, a: 1}
-    - _GrassLight: {r: 0.5, g: 0.82, b: 0.31, a: 1}
-    - _GrassMid: {r: 0.27, g: 0.6, b: 0.21, a: 1}
-    - _RimColor: {r: 0.6, g: 0.94, b: 0.78, a: 1}
-    - _SoilDark: {r: 0.26, g: 0.2, b: 0.14, a: 1}
-    - _SoilLight: {r: 0.44, g: 0.35, b: 0.23, a: 1}
+    - _AmbientColor: {r: 0.3, g: 0.34, b: 0.4, a: 1}
+    - _CrestTint: {r: 1.18, g: 1.15, b: 1.1, a: 1}
+    - _RimColor: {r: 0.45, g: 0.62, b: 0.75, a: 1}
+    - _StoneDark: {r: 0.13, g: 0.13, b: 0.16, a: 1}
+    - _StoneLight: {r: 0.34, g: 0.33, b: 0.35, a: 1}
+    - _StoneMid: {r: 0.22, g: 0.22, b: 0.25, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

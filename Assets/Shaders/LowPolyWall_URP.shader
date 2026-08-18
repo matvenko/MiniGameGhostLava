@@ -1,50 +1,32 @@
-// Low-poly ground: every facet is one flat colour from a shared palette.
+// The border wall, in the same visual language as the ground: one flat palette
+// colour per face, banded lighting, no texture.
 //
-// There is no texture and no per-pixel noise. Which palette band a facet gets is
-// decided by GroundSurface.cs and baked into the vertex colours, so this shader
-// only ramps, jitters and lights. That split is deliberate: two earlier attempts
-// generated the surface here in HLSL, where the noise driving it could not be
-// measured, and both shipped bugs that were invisible until rendered - once a
-// photographic texture that would not match the stylised water, once a procedural
-// one whose noise never left its middle band. On the CPU the distribution can be
-// printed and checked before anything is drawn.
+// It shares ArtStyle.hlsl with the ground rather than duplicating the lighting,
+// which is the whole point - the previous wall used a triplanar photo of stone
+// and read as a different world from everything around it.
 //
-// Vertex colour layout (written by GroundSurface.cs):
-//   r = palette band 0..1, flat across the triangle
-//   g = shoreline proximity 0..1, 1 at the water's edge
-//   b = per-facet brightness jitter 0..1
-//   a = 1 on top faces, 0 on the skirt walls
-Shader "Custom/LowPolyGround_URP"
+// Vertex colour layout (written by WallSurface.cs):
+//   r = palette band 0..1, flat across the face
+//   b = per-face brightness jitter 0..1
+//   a = 1 on the crest, 0 on the vertical faces
+Shader "Custom/LowPolyWall_URP"
 {
     Properties
     {
-        [Header(Grass Palette)]
-        _GrassDeep ("Grass Deep", Color) = (0.13, 0.40, 0.16, 1)
-        _GrassMid ("Grass Mid", Color) = (0.27, 0.60, 0.21, 1)
-        _GrassLight ("Grass Light", Color) = (0.50, 0.82, 0.31, 1)
-        _FacetJitter ("Facet Jitter", Range(0, 0.3)) = 0.07
-
-        [Header(Bank)]
-        _SoilDark ("Soil Dark", Color) = (0.26, 0.20, 0.14, 1)
-        _SoilLight ("Soil Light", Color) = (0.44, 0.35, 0.23, 1)
-        _ShoreWidth ("Shoreline Width", Range(0,1)) = 0.35
-        _ShoreAmount ("Shoreline Soil", Range(0,1)) = 0.35
-
-        [Header(Flowers)]
-        _FlowerWhite ("Flower White", Color) = (0.96, 0.97, 0.92, 1)
-        _FlowerYellow ("Flower Yellow", Color) = (0.98, 0.86, 0.35, 1)
-        _FlowerDensity ("Flowers Per World Unit", Float) = 2.6
-        _FlowerSize ("Flower Size", Range(0.02, 0.4)) = 0.13
-        _FlowerChance ("Flower Chance", Range(0, 1)) = 0.22
+        [Header(Stone Palette)]
+        _StoneDark ("Stone Dark", Color) = (0.13, 0.13, 0.16, 1)
+        _StoneMid ("Stone Mid", Color) = (0.22, 0.22, 0.25, 1)
+        _StoneLight ("Stone Light", Color) = (0.34, 0.33, 0.35, 1)
+        _CrestTint ("Crest Tint", Color) = (1.18, 1.15, 1.1, 1)
+        _FacetJitter ("Face Jitter", Range(0, 0.3)) = 0.09
 
         [Header(Lighting)]
-        _FacetShading ("Flatten Facet Lighting", Range(0,1)) = 0.75
         _LightSteps ("Light Bands", Range(1, 6)) = 3
         _CelStrength ("Banding Strength", Range(0,1)) = 0.8
-        _AmbientColor ("Ambient", Color) = (0.32, 0.38, 0.42, 1)
-        _RimColor ("Rim", Color) = (0.60, 0.94, 0.78, 1)
+        _AmbientColor ("Ambient", Color) = (0.30, 0.34, 0.40, 1)
+        _RimColor ("Rim", Color) = (0.45, 0.62, 0.75, 1)
         _RimPower ("Rim Power", Range(0.5, 8)) = 3
-        _RimStrength ("Rim Strength", Range(0, 1)) = 0.1
+        _RimStrength ("Rim Strength", Range(0, 1)) = 0.12
 
         [HideInInspector] _BaseMap ("Unused", 2D) = "white" {}
         [HideInInspector] _Cutoff ("Alpha Cutoff", Range(0,1)) = 0.5
@@ -55,10 +37,6 @@ Shader "Custom/LowPolyGround_URP"
         Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
         LOD 200
 
-        // Shared by every pass so the UnityPerMaterial layout stays identical -
-        // SRP batching silently drops the shader otherwise. SurfaceInput.hlsl
-        // supplies _BaseMap and the helpers the stock URP shadow and depth passes
-        // expect to find already declared.
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
@@ -66,20 +44,11 @@ Shader "Custom/LowPolyGround_URP"
 
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
-            float4 _GrassDeep;
-            float4 _GrassMid;
-            float4 _GrassLight;
+            float4 _StoneDark;
+            float4 _StoneMid;
+            float4 _StoneLight;
+            float4 _CrestTint;
             float  _FacetJitter;
-            float4 _SoilDark;
-            float4 _SoilLight;
-            float  _ShoreWidth;
-            float  _ShoreAmount;
-            float4 _FlowerWhite;
-            float4 _FlowerYellow;
-            float  _FlowerDensity;
-            float  _FlowerSize;
-            float  _FlowerChance;
-            float  _FacetShading;
             float  _LightSteps;
             float  _CelStrength;
             float4 _AmbientColor;
@@ -146,34 +115,15 @@ Shader "Custom/LowPolyGround_URP"
                 UNITY_SETUP_INSTANCE_ID(IN);
 
                 float3 N = normalize(IN.normalWS);
-                float3 pw = IN.positionWS;
 
                 half zone   = IN.color.r;
-                half shore  = IN.color.g;
                 half jitter = IN.color.b;
                 half isTop  = IN.color.a;
 
-                half3 grass = ArtRamp3(_GrassDeep.rgb, _GrassMid.rgb, _GrassLight.rgb, zone);
-                half3 soil  = lerp(_SoilDark.rgb, _SoilLight.rgb, zone);
-
-                // Flower heads on a jittered grid. No patch mask on purpose: every
-                // patch-based version clumped them all into one corner of the board.
-                float2 cellUV = pw.xz * _FlowerDensity;
-                float2 cellId = floor(cellUV);
-                float2 cellPos = frac(cellUV) - 0.5;
-                half seed = ArtHash21(cellId);
-                float2 offset = float2(ArtHash21(cellId + 7.13), ArtHash21(cellId + 3.71)) - 0.5;
-
-                half head = 1.0h - smoothstep(_FlowerSize * 0.7h, _FlowerSize,
-                    length(cellPos - offset * 0.7));
-                half3 petal = seed < _FlowerChance * 0.4h ? _FlowerYellow.rgb : _FlowerWhite.rgb;
-                grass = lerp(grass, petal, saturate(head * step(seed, _FlowerChance)) * isTop);
-
-                half shoreMask = smoothstep(1.0h - _ShoreWidth, 1.0h, shore) * _ShoreAmount;
-                half3 albedo = lerp(soil, lerp(grass, soil, shoreMask), isTop);
-
-                // Equal bands would read as one flat mass; this is what keeps the
-                // individual facets legible.
+                half3 albedo = ArtRamp3(_StoneDark.rgb, _StoneMid.rgb, _StoneLight.rgb, zone);
+                // The crest catches the sky, so it stays lighter than the faces
+                // below it even where the sun is not reaching it directly.
+                albedo *= lerp(half3(1, 1, 1), _CrestTint.rgb, isTop);
                 albedo *= 1.0h + (jitter - 0.5h) * 2.0h * _FacetJitter;
 
                 #if defined(_MAIN_LIGHT_SHADOWS) || defined(_MAIN_LIGHT_SHADOWS_CASCADE)
@@ -184,14 +134,11 @@ Shader "Custom/LowPolyGround_URP"
                     half atten = 1.0h;
                 #endif
 
-                float3 faceAxis = isTop > 0.5h ? float3(0, 1, 0) : normalize(float3(N.x, 0, N.z));
-                float3 litN = ArtFacetNormal(N, faceAxis, _FacetShading);
-                half lit = ArtCelLight(litN, mainLight.direction, _LightSteps, _CelStrength);
-
+                // Box faces already have clean axis normals, so unlike the ground
+                // there is nothing to flatten here.
+                half lit = ArtCelLight(N, mainLight.direction, _LightSteps, _CelStrength);
                 half3 color = albedo * (mainLight.color * lit * atten + _AmbientColor.rgb);
 
-                // Light rim on the tiles facing away, so each island reads against
-                // the bright water instead of dissolving into it.
                 float3 viewDir = GetWorldSpaceNormalizeViewDir(IN.positionWS);
                 half rim = pow(1.0h - saturate(dot(N, viewDir)), _RimPower);
                 color += _RimColor.rgb * rim * _RimStrength;
@@ -220,8 +167,6 @@ Shader "Custom/LowPolyGround_URP"
             ENDHLSL
         }
 
-        // The water's depth fade samples the camera depth texture, so the ground
-        // has to write into it or the shoreline breaks.
         Pass
         {
             Name "DepthOnly"

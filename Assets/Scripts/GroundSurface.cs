@@ -29,8 +29,16 @@ public class GroundSurface : MonoBehaviour
     [SerializeField] private float heightJitter = 0.035f;
     [Tooltip("How far the shoreline wall drops below the surface. Must reach past the liquid bed.")]
     [SerializeField] private float skirtDepth = 1.1f;
-    [Tooltip("Spread of the per-facet colour variation baked into vertex colours.")]
+    [Tooltip("Spread of the per-facet brightness jitter baked into vertex colours.")]
     [SerializeField, Range(0f, 1f)] private float colorVariation = 0.55f;
+
+    [Header("Colour Zones")]
+    [Tooltip("How many flat palette bands the field is divided into.")]
+    [SerializeField, Range(2, 6)] private int colorZones = 4;
+    [Tooltip("Size of those bands in world units.")]
+    [SerializeField, Range(1f, 12f)] private float zoneScale = 3.2f;
+    [Tooltip("Contrast of the zone noise. Low values leave every facet in the middle band.")]
+    [SerializeField, Range(1f, 4f)] private float zoneContrast = 2.4f;
 
     [Header("Meadow")]
     [Tooltip("Amplitude of the smooth rolling undulation laid over the whole field.")]
@@ -324,21 +332,39 @@ public class GroundSurface : MonoBehaviour
     private float Variation(int i, int j, int salt) =>
         Mathf.Clamp01(0.5f + (Hash01(i, j, salt) - 0.5f) * colorVariation);
 
-    // The facet variation is per-triangle - that is the flat-shaded look - but the
-    // shoreline weight in green is per-vertex, so the dirt band fades smoothly
-    // across facets instead of stepping from one triangle to the next.
+    // Which flat palette band a facet belongs to. Quantised here, on the CPU,
+    // rather than in the shader: the earlier procedural attempt hid this noise in
+    // HLSL where its output range could not be measured, and it silently sat in
+    // the middle band the whole time. Here it can be printed and checked.
+    private float ZoneAt(Vector3 centre)
+    {
+        float n = Fbm(centre.x / zoneScale, centre.z / zoneScale);
+        n = Mathf.Clamp01((n - 0.5f) * zoneContrast + 0.5f);
+        int steps = Mathf.Max(1, colorZones - 1);
+        return Mathf.Round(n * steps) / steps;
+    }
+
+    private static float Fbm(float x, float z) =>
+        SmoothNoise(x, z) * 0.65f + SmoothNoise(x * 2.4f + 11.3f, z * 2.4f + 5.7f) * 0.35f;
+
+    // Vertex colour layout, read by LowPolyGround_URP:
+    //   r = palette band 0..1, flat across the triangle - this is the facet colour
+    //   g = shoreline proximity, per-vertex so the damp edge fades smoothly
+    //   b = per-facet brightness jitter, what stops equal bands reading as one mass
+    //   a = 1 on top faces, 0 on the skirt walls
     private void AddTri(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<int> tris,
         Vector3 a, Vector3 b, Vector3 c, float variation, bool isTop)
     {
         int at = verts.Count;
         Vector3 n = Vector3.Cross(b - a, c - a).normalized;
         float alpha = isTop ? 1f : 0f;
+        float zone = ZoneAt((a + b + c) / 3f);
 
         verts.Add(a); verts.Add(b); verts.Add(c);
         norms.Add(n); norms.Add(n); norms.Add(n);
-        cols.Add(new Color(variation, ShoreAt(a.x, a.z), 0f, alpha));
-        cols.Add(new Color(variation, ShoreAt(b.x, b.z), 0f, alpha));
-        cols.Add(new Color(variation, ShoreAt(c.x, c.z), 0f, alpha));
+        cols.Add(new Color(zone, ShoreAt(a.x, a.z), variation, alpha));
+        cols.Add(new Color(zone, ShoreAt(b.x, b.z), variation, alpha));
+        cols.Add(new Color(zone, ShoreAt(c.x, c.z), variation, alpha));
         tris.Add(at); tris.Add(at + 1); tris.Add(at + 2);
     }
 

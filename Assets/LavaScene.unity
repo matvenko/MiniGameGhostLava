@@ -23660,6 +23660,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1308551000}
   - component: {fileID: 1308550999}
+  - component: {fileID: 1308551001}
   m_Layer: 0
   m_Name: GroundSurface
   m_TagString: Untagged
@@ -23684,6 +23685,27 @@ MonoBehaviour:
   heightJitter: 0.07
   skirtDepth: 1.1
   colorVariation: 0.3
+--- !u!114 &1308551001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308550998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7649508918e6478c8a8cedd9354d3cdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WallSurface
+  wallMaterial: {fileID: 2100000, guid: 3f251a96b6aa401ab71dc348dcef85d3, type: 2}
+  wallsParentName: Walls
+  crestWear: 0.12
+  crestFlatness: 0.35
+  colorZones: 4
+  zoneScale: 2.4
+  zoneContrast: 2.4
+  colorVariation: 0.6
+  castShadows: 0
 --- !u!4 &1308551000
 Transform:
   m_ObjectHideFlags: 0
