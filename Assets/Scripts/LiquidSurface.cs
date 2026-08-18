@@ -47,6 +47,11 @@ public class LiquidSurface : MonoBehaviour
     private Transform _surface;
     private Transform _bed;
 
+    // Cached so teardown never has to call GameObject.Find: during scene unload
+    // and domain reload the parents are already deactivated and Find asserts.
+    private Transform _blocksParent;
+    private Transform _lavaParent;
+
     void Awake()
     {
         Instance = this;
@@ -66,7 +71,9 @@ public class LiquidSurface : MonoBehaviour
         DestroyPlane(_bed);
         _surface = null;
         _bed = null;
-        RestoreTileRendering();
+        // Cached lookups only - resolving here would hit GameObject.Find, which
+        // asserts once the scene starts unloading or a domain reload begins.
+        RestoreCachedTiles();
     }
 
     void OnDestroy()
@@ -87,17 +94,29 @@ public class LiquidSurface : MonoBehaviour
     [ContextMenu("Refresh")]
     public void Refresh()
     {
-        var blocksParent = GameObject.Find("Blocks");
-        var lavaParent = GameObject.Find("Lava");
+        ResolveParents();
 
-        if (blocksParent != null)
+        // Ownership is split strictly by parent: this component controls only the
+        // Lava tiles, GroundSurface controls only the Blocks tiles. An earlier
+        // version touched both and the two fought - whichever ran last won, so
+        // the block cubes reappeared depending on enable order.
+        if (_lavaParent != null)
         {
-            foreach (Transform t in blocksParent.transform) SetTileVisible(t, true);
+            foreach (Transform t in _lavaParent) SetTileVisible(t, !hideLavaTiles);
         }
+    }
 
-        if (lavaParent != null)
+    private void ResolveParents()
+    {
+        if (_blocksParent == null)
         {
-            foreach (Transform t in lavaParent.transform) SetTileVisible(t, !hideLavaTiles);
+            var go = GameObject.Find("Blocks");
+            _blocksParent = go != null ? go.transform : null;
+        }
+        if (_lavaParent == null)
+        {
+            var go = GameObject.Find("Lava");
+            _lavaParent = go != null ? go.transform : null;
         }
     }
 
@@ -113,12 +132,13 @@ public class LiquidSurface : MonoBehaviour
     [ContextMenu("Restore Tile Rendering")]
     public void RestoreTileRendering()
     {
-        foreach (var parentName in new[] { "Blocks", "Lava" })
-        {
-            var parent = GameObject.Find(parentName);
-            if (parent == null) continue;
-            foreach (Transform t in parent.transform) SetTileVisible(t, true);
-        }
+        ResolveParents();
+        RestoreCachedTiles();
+    }
+
+    private void RestoreCachedTiles()
+    {
+        if (_lavaParent != null) foreach (Transform t in _lavaParent) SetTileVisible(t, true);
     }
 
     // forceRenderingOff instead of MeshRenderer.enabled: it is a runtime-only

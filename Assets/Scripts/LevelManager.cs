@@ -81,9 +81,10 @@ public class LevelManager : MonoBehaviour
         RegenerateLayout();
         EnemyPathGrid.Instance.Rebuild();
 
-        // Different cells are lava now, so the shared liquid surface has to
-        // re-decide which tile renderers it punches through.
+        // Different cells are lava now, so both shared surfaces have to be
+        // rebuilt against the new layout.
         if (LiquidSurface.Instance != null) LiquidSurface.Instance.Refresh();
+        if (GroundSurface.Instance != null) GroundSurface.Instance.Refresh();
 
         int coinCount = _level >= 2 ? coinsFromLevel2 : 5;
         int spawned = SpawnCoins(coinCount);
