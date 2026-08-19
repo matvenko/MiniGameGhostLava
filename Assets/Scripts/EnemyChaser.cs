@@ -27,6 +27,11 @@ public class EnemyChaser : MonoBehaviour
     [SerializeField] private float separationRadius = 0.8f;
     [SerializeField] private float separationStrength = 2f;
 
+    // Authored speed is the hard-mode speed; easy mode plays it back slower
+    // (see DifficultySettings). Read per-use rather than cached so a mode
+    // picked after this component woke up still applies.
+    private float ChaseSpeed => DifficultySettings.EnemySpeed(speed);
+
     private Rigidbody _rb;
     private Transform _target;
     private readonly List<Vector3> _path = new List<Vector3>();
@@ -195,10 +200,11 @@ public class EnemyChaser : MonoBehaviour
         // only when the resulting step stays on the grid, otherwise fall
         // back to the pure chase step.
         Vector3 separation = GetSeparation(current);
-        Vector3 move = ClampToWalkable(current, (chaseDir * speed + separation * separationStrength) * Time.fixedDeltaTime, toDestination.magnitude);
+        float chaseSpeed = ChaseSpeed;
+        Vector3 move = ClampToWalkable(current, (chaseDir * chaseSpeed + separation * separationStrength) * Time.fixedDeltaTime, toDestination.magnitude);
         if (move == Vector3.zero)
         {
-            move = ClampToWalkable(current, chaseDir * speed * Time.fixedDeltaTime, toDestination.magnitude);
+            move = ClampToWalkable(current, chaseDir * chaseSpeed * Time.fixedDeltaTime, toDestination.magnitude);
         }
 
         _rb.MovePosition(current + move);

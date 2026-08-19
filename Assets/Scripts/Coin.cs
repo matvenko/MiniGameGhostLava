@@ -24,7 +24,9 @@ public class Coin : MonoBehaviour
         if (pickupSound != null && !AudioManager.SfxMuted)
             AudioSource.PlayClipAtPoint(pickupSound, transform.position);
         RewardSystem.CollectCoin();
-        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(walletValue);
+        // walletValue is the hard-mode payout; easy mode pays a flat, much
+        // larger amount per coin so younger players still reach the shop.
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(DifficultySettings.CoinWalletValue(walletValue));
         StartCoroutine(PickupAnimation());
     }
 
