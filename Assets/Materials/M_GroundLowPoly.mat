@@ -29,18 +29,18 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CelStrength: 0.8
+    - _CelStrength: 0.326
     - _Cutoff: 0.5
-    - _FacetJitter: 0.07
-    - _FacetShading: 0.75
-    - _FlowerChance: 0.22
+    - _FacetJitter: 0
+    - _FacetShading: 0.419
+    - _FlowerChance: 0.188
     - _FlowerDensity: 2.6
-    - _FlowerSize: 0.13
-    - _LightSteps: 3
+    - _FlowerSize: 0.047
+    - _LightSteps: 2.39
     - _RimPower: 3
     - _RimStrength: 0.1
-    - _ShoreAmount: 0.35
-    - _ShoreWidth: 0.35
+    - _ShoreAmount: 0.564
+    - _ShoreWidth: 0.703
     m_Colors:
     - _AmbientColor: {r: 0.32, g: 0.38, b: 0.42, a: 1}
     - _FlowerWhite: {r: 0.96, g: 0.97, b: 0.92, a: 1}
