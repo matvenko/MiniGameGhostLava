@@ -26,7 +26,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _A_SHORT_HIKE_MODE
-  - _PERSPECTIVE
   - _WORLD_SPACE_UV
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -107,7 +106,7 @@ Material:
     - _FresnelPower: 1
     - _GradientRefractionScale: 0
     - _HorizonDistance: 77
-    - _Hue: 2.49
+    - _Hue: 0.96
     - _IntersectionFoamBlend: 1.09
     - _IntersectionFoamCutoff: 1.1
     - _IntersectionFoamDepth: 0.22
@@ -121,7 +120,7 @@ Material:
     - _NormalSpeed: 0
     - _NormalStrength: -1.6
     - _OrthographicCamSize: 0
-    - _PERSPECTIVE: 1
+    - _PERSPECTIVE: 0
     - _PosterizeSteps: 0
     - _QueueControl: 1
     - _QueueOffset: -49
@@ -129,10 +128,10 @@ Material:
     - _ReflectionBlend: 0.594
     - _ReflectionDistortion: 0.38
     - _RefractionScale: 0
-    - _RefractionSpeed: 0.04
+    - _RefractionSpeed: -0.3
     - _RefractionStrength: 0
     - _RippleStrength: 83.62
-    - _Saturation: 1.3
+    - _Saturation: 1.31
     - _SecondaryFoamBlend: 0.06
     - _Show: 0
     - _SkyboxForce: 2.5
@@ -142,7 +141,7 @@ Material:
     - _SurfaceFoamSpeed: 0.11
     - _SurfaceFoamTiling: 5.46
     - _TileSize: 200
-    - _Value: 1.2
+    - _Value: 2.51
     - _WORLD_SPACE_UV: 1
     - _WaterAlpha: 1
     - _WaterMetallic: 0.559
