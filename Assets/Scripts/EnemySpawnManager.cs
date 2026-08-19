@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Each enemy gets its own portal at a random walkable cell, visible the
-// instant the level loads (no global delay - the player can already move).
-// A portal telegraphs for portalWarningDuration seconds before its enemy
-// actually appears there, giving the player a chance to spot it and leave.
+// instant the level loads. A portal telegraphs for portalWarningDuration
+// seconds before its enemy actually appears there; the player is held
+// still for that same window so nobody moves until the countdown ends.
 public class EnemySpawnManager : MonoBehaviour
 {
     public static EnemySpawnManager Instance { get; private set; }
@@ -20,6 +20,13 @@ public class EnemySpawnManager : MonoBehaviour
     [SerializeField] private int activeEnemyCount = 1;
 
     private Transform _player;
+
+    // Deadline for the current portal warning. The player is frozen until
+    // then so the countdown reads as a shared "get ready" beat instead of
+    // free movement while the enemies are still hidden. Time.time stalls
+    // with timeScale, so a paused game keeps whatever is left of it.
+    private static float _freezeUntil;
+    public static bool PlayerFrozen => Time.time < _freezeUntil;
 
     public void SetActiveEnemyCount(int count)
     {
@@ -64,6 +71,8 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void TriggerSpawnSequence()
     {
+        _freezeUntil = Time.time + portalWarningDuration;
+
         if (SpawnCountdownController.Instance != null)
         {
             SpawnCountdownController.Instance.PlayCountdown(portalWarningDuration);

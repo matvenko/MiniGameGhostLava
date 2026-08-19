@@ -27,6 +27,9 @@ public class GhostScript : MonoBehaviour
     private bool isDead;
     private bool _invincible;
     private Coroutine _invincibilityRoutine;
+    // set while the spawn countdown holds the character still, so the
+    // first unfrozen frame can pick the move animation back up
+    private bool _wasFrozen;
 
     // moving speed
     [SerializeField] private float Speed = 4;
@@ -146,7 +149,17 @@ public class GhostScript : MonoBehaviour
         // this character status
         if(!PlayerStatus.ContainsValue( true ))
         {
-            MOVE();
+            // frozen until the spawn countdown finishes - input is dropped
+            // entirely so the character cannot creep toward a portal before
+            // its enemy appears
+            if (EnemySpawnManager.PlayerFrozen)
+            {
+                _wasFrozen = true;
+            }
+            else
+            {
+                MOVE();
+            }
             PlayerAttack();
             Damage();
         }
@@ -309,6 +322,14 @@ public class GhostScript : MonoBehaviour
         // "Horizontal"/"Vertical") so this never double-counts keyboard input
         x -= Input.GetAxis("GamepadHorizontal");
         z -= Input.GetAxis("GamepadVertical");
+
+        // a key held through the freeze never fired KEY_DOWN, so the move
+        // animation has to be started here on the first frame back
+        if (_wasFrozen)
+        {
+            _wasFrozen = false;
+            if (x != 0f || z != 0f) Anim.CrossFade(MoveState, 0.1f, 0, 0);
+        }
 
         if (x != 0f || z != 0f)
         {
