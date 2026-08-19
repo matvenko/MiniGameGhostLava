@@ -1,4 +1,5 @@
-// Low-poly ground: hand-painted meadow grass over a flat palette band per facet.
+// Low-poly ground: every facet takes a flat colour from a shared palette, with
+// hand-painted leaf detail modulating its brightness.
 //
 // Which palette band a facet gets is still decided by GroundSurface.cs and baked
 // into the vertex colours; this shader only ramps, jitters, textures and lights.
@@ -9,11 +10,10 @@
 // middle band. On the CPU the distribution can be printed and checked before
 // anything is drawn.
 //
-// _MeadowMap is the exception, and a deliberate one. It is the painted grass off
-// the reference sheet with its own colour intact, and _TextureAmount decides how
-// much of the palette it covers. At 0 the board is the pure CPU-driven palette
-// this file was originally built around; at 1 it is the reference art. The
-// palette still owns the shoreline, the facet jitter and the flowers.
+// _DetailMap does not break that rule, because it carries no colour of its own.
+// It was high-passed against its own local mean before import, so it is a ratio
+// around 0.5 - pure light and shade with the green divided out. It can only
+// modulate the band the CPU chose, never override it.
 //
 // Vertex colour layout (written by GroundSurface.cs):
 //   r = palette band 0..1, flat across the triangle
@@ -36,14 +36,13 @@ Shader "Custom/LowPolyGround_URP"
         _ShoreWidth ("Shoreline Width", Range(0,1)) = 0.35
         _ShoreAmount ("Shoreline Soil", Range(0,1)) = 0.35
 
-        [Header(Painted Meadow)]
-        [NoScaleOffset] _MeadowMap ("Meadow Grass", 2D) = "white" {}
-        _MeadowMean ("Meadow Mean Colour", Color) = (0.485, 0.610, 0.018, 1)
-        _DetailScale ("Tiles Per Unit", Float) = 0.55
-        _DetailScaleB ("Second Layer Tiles Per Unit", Float) = 0.34
+        [Header(Painted Detail)]
+        [NoScaleOffset] _DetailMap ("Meadow Detail (linear, 0.5 neutral)", 2D) = "linearGrey" {}
+        _DetailScale ("Detail Tiles Per Unit", Float) = 0.5
+        _DetailScaleB ("Second Layer Tiles Per Unit", Float) = 0.309
         _DetailBlend ("Second Layer Mix", Range(0,1)) = 0.45
-        _TextureAmount ("Texture Over Palette", Range(0,1)) = 0.85
-        _TextureOnSoil ("Texture On Bank", Range(0,1)) = 0.45
+        _DetailStrength ("Detail Strength", Range(0,1.5)) = 0.55
+        _DetailOnSoil ("Detail On Bank", Range(0,1)) = 0.45
 
         [Header(Flowers)]
         _FlowerWhite ("Flower White", Color) = (0.96, 0.97, 0.92, 1)
@@ -82,8 +81,8 @@ Shader "Custom/LowPolyGround_URP"
         // Outside the cbuffer on purpose - a texture handle in UnityPerMaterial
         // breaks the SRP batcher's layout match and the shader silently drops out
         // of batching.
-        TEXTURE2D(_MeadowMap);
-        SAMPLER(sampler_MeadowMap);
+        TEXTURE2D(_DetailMap);
+        SAMPLER(sampler_DetailMap);
 
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
@@ -91,12 +90,11 @@ Shader "Custom/LowPolyGround_URP"
             float4 _GrassMid;
             float4 _GrassLight;
             float  _FacetJitter;
-            float4 _MeadowMean;
             float  _DetailScale;
             float  _DetailScaleB;
             float  _DetailBlend;
-            float  _TextureAmount;
-            float  _TextureOnSoil;
+            float  _DetailStrength;
+            float  _DetailOnSoil;
             float4 _SoilDark;
             float4 _SoilLight;
             float  _ShoreWidth;
@@ -183,38 +181,33 @@ Shader "Custom/LowPolyGround_URP"
                 half3 grass = ArtRamp3(_GrassDeep.rgb, _GrassMid.rgb, _GrassLight.rgb, zone);
                 half3 soil  = lerp(_SoilDark.rgb, _SoilLight.rgb, zone);
 
-                // The painted meadow from the reference sheet, in its own colour.
+                // Hand-painted leaf work, lifted from the reference sheet and
+                // stored as a ratio around 0.5 - it carries no colour of its own,
+                // so it modulates the palette band instead of replacing it. That
+                // keeps the rule this whole scene is built on: the CPU picks the
+                // colour, the shader only shades it.
                 //
-                // Sampled twice at scales that share no common period, with the
+                // Sampled twice at scales that share no common period, and the
                 // second layer rotated off-axis. One layer at this board size
                 // repeats visibly under a top-down camera; two that never line up
                 // average the repeat away for one extra fetch.
-                //
-                // The two are combined as deviations around _MeadowMean and
-                // renormalised by rsqrt rather than lerped. A straight average of
-                // two uncorrelated samples pulls everything towards the mean and
-                // washes the leaf work out; this keeps the contrast the same
-                // whatever _DetailBlend is set to.
                 float2x2 kDetailRot = float2x2(0.8, -0.6, 0.6, 0.8);
-                half3 mean = _MeadowMean.rgb;
-                half3 sA = SAMPLE_TEXTURE2D(_MeadowMap, sampler_MeadowMap, pw.xz * _DetailScale).rgb;
-                half3 sB = SAMPLE_TEXTURE2D(_MeadowMap, sampler_MeadowMap, mul(kDetailRot, pw.xz) * _DetailScaleB).rgb;
+                half3 devA = SAMPLE_TEXTURE2D(_DetailMap, sampler_DetailMap, pw.xz * _DetailScale).rgb - 0.5h;
+                half3 devB = SAMPLE_TEXTURE2D(_DetailMap, sampler_DetailMap, mul(kDetailRot, pw.xz) * _DetailScaleB).rgb - 0.5h;
 
+                // Weights renormalised by rsqrt, not a plain lerp. The two layers
+                // are uncorrelated, so a straight average drops their combined
+                // contrast to ~0.71 of one layer and _DetailStrength stops meaning
+                // what it says. This keeps the mix independent of _DetailBlend.
                 half wA = 1.0h - _DetailBlend;
                 half wB = _DetailBlend;
-                half3 tex = mean + ((sA - mean) * wA + (sB - mean) * wB) * rsqrt(max(wA * wA + wB * wB, 1e-4h));
+                half3 dev = (devA * wA + devB * wB) * rsqrt(max(wA * wA + wB * wB, 1e-4h));
 
-                // isTop keeps this off the skirt walls: they are vertical, and an
-                // XZ-projected sample smears into streaks down them.
-                grass = lerp(grass, tex, _TextureAmount * isTop);
-
-                // The bank takes brightness from the texture but not its hue - the
-                // meadow mean is almost pure yellow-green (blue sits near zero), so
-                // a per-channel ratio would divide by nothing and blow out.
-                half3 kLum = half3(0.2126h, 0.7152h, 0.0722h);
-                half texLum = dot(tex, kLum);
-                half meanLum = max(dot(mean, kLum), 1e-3h);
-                soil *= lerp(1.0h, texLum / meanLum, _TextureOnSoil * isTop);
+                // Flat on the skirt: those walls are vertical, and an XZ-projected
+                // sample smears into streaks down them.
+                half3 detailMul = lerp(1.0h, 1.0h + dev * 2.0h * _DetailStrength, isTop);
+                grass *= detailMul;
+                soil  *= lerp(half3(1, 1, 1), detailMul, _DetailOnSoil);
 
                 // Flower heads on a jittered grid. No patch mask on purpose: every
                 // patch-based version clumped them all into one corner of the board.
