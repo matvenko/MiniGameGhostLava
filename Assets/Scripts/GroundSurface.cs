@@ -40,6 +40,16 @@ public class GroundSurface : MonoBehaviour
     [Tooltip("Contrast of the zone noise. Low values leave every facet in the middle band.")]
     [SerializeField, Range(1f, 4f)] private float zoneContrast = 2.4f;
 
+    [Header("Painted Tiles")]
+    [Tooltip("How far along the sheet's grass-to-dirt run a cell at the water's edge reaches. 1 is bare soil.")]
+    [SerializeField, Range(0f, 1f)] private float shorelineDirt = 0.5f;
+    [Tooltip("How far inland (in cells) the sheet's dirt tiles reach before the ground is pure grass again.")]
+    [SerializeField, Range(0.5f, 6f)] private float dirtBandWidth = 2f;
+    [Tooltip("Shape of that run. Above 1 the dirt stays hugging the water instead of creeping inland.")]
+    [SerializeField, Range(0.5f, 4f)] private float dirtFalloff = 2f;
+    [Tooltip("Per-cell scatter around the tile the shoreline distance picked, as a fraction of the sheet's grass-to-dirt run.")]
+    [SerializeField, Range(0f, 1f)] private float tileScatter = 0.18f;
+
     [Header("Meadow")]
     [Tooltip("Amplitude of the smooth rolling undulation laid over the whole field.")]
     [SerializeField, Range(0f, 0.4f)] private float undulation = 0.09f;
@@ -220,7 +230,13 @@ public class GroundSurface : MonoBehaviour
         var verts = new List<Vector3>();
         var norms = new List<Vector3>();
         var cols = new List<Color>();
+        // xy is the position inside the cell's painted tile, z is which slice of
+        // the tile array that cell draws. Vertices are never shared, so a whole
+        // cell can carry one slice with no seam bookkeeping.
+        var uvs = new List<Vector3>();
         var tris = new List<int>();
+
+        int sliceCount = ResolveSliceCount();
 
         // The liquid plane sits at the top of the recessed lava tiles, so anything
         // the surface does below that line pokes the water up through the grass.
@@ -248,14 +264,21 @@ public class GroundSurface : MonoBehaviour
         foreach (var cell in walkable)
         {
             int i0 = cell.x * s, j0 = cell.y * s;
+            float slice = PickSlice(cell, sliceCount);
+            int orient = PickOrientation(cell);
 
             for (int a = 0; a < s; a++)
             {
                 for (int b = 0; b < s; b++)
                 {
                     int i = i0 + a, j = j0 + b;
-                    AddQuad(verts, norms, cols, tris,
+                    float u0 = a * step, u1 = (a + 1) * step;
+                    float v0 = b * step, v1 = (b + 1) * step;
+
+                    AddQuad(verts, norms, cols, uvs, tris,
                         TopVert(i, j), TopVert(i, j + 1), TopVert(i + 1, j + 1), TopVert(i + 1, j),
+                        Oriented(u0, v0, orient, slice), Oriented(u0, v1, orient, slice),
+                        Oriented(u1, v1, orient, slice), Oriented(u1, v0, orient, slice),
                         Vector3.up, true, i, j);
                 }
             }
@@ -286,7 +309,14 @@ public class GroundSurface : MonoBehaviour
                     Vector3 ba = new Vector3(ta.x, bottomY, ta.z);
                     Vector3 bb = new Vector3(tb.x, bottomY, tb.z);
 
-                    AddQuad(verts, norms, cols, tris, ta, tb, bb, ba,
+                    // The bank runs the tile vertically down the cut face; the
+                    // shader takes only its light and dark, so what matters here
+                    // is that the streaks stay put as the wall drops.
+                    float su0 = k * step, su1 = (k + 1) * step;
+
+                    AddQuad(verts, norms, cols, uvs, tris, ta, tb, bb, ba,
+                        new Vector3(su0, 1f, slice), new Vector3(su1, 1f, slice),
+                        new Vector3(su1, 0f, slice), new Vector3(su0, 0f, slice),
                         new Vector3(d.x, 0f, d.y), false, ia, ja);
                 }
             }
@@ -297,6 +327,7 @@ public class GroundSurface : MonoBehaviour
         mesh.SetVertices(verts);
         mesh.SetNormals(norms);
         mesh.SetColors(cols);
+        mesh.SetUVs(0, uvs);
         mesh.SetTriangles(tris, 0);
         mesh.RecalculateBounds();
         return mesh;
@@ -304,12 +335,15 @@ public class GroundSurface : MonoBehaviour
 
     // Vertices are never shared between triangles: that is what makes the
     // shading faceted instead of smooth.
-    private void AddQuad(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<int> tris,
-        Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 expectedNormal, bool isTop, int hi, int hj)
+    private void AddQuad(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<Vector3> uvs, List<int> tris,
+        Vector3 a, Vector3 b, Vector3 c, Vector3 d,
+        Vector3 ua, Vector3 ub, Vector3 uc, Vector3 ud,
+        Vector3 expectedNormal, bool isTop, int hi, int hj)
     {
         if (Vector3.Dot(Vector3.Cross(b - a, c - a), expectedNormal) < 0f)
         {
             (a, b, c, d) = (d, c, b, a);
+            (ua, ub, uc, ud) = (ud, uc, ub, ua);
         }
 
         float v0 = Variation(hi, hj, 11);
@@ -319,14 +353,78 @@ public class GroundSurface : MonoBehaviour
         // banding you get from triangulating a grid the same way every time.
         if (Hash01(hi, hj, 41) < 0.5f)
         {
-            AddTri(verts, norms, cols, tris, a, b, c, v0, isTop);
-            AddTri(verts, norms, cols, tris, a, c, d, v1, isTop);
+            AddTri(verts, norms, cols, uvs, tris, a, b, c, ua, ub, uc, v0, isTop);
+            AddTri(verts, norms, cols, uvs, tris, a, c, d, ua, uc, ud, v1, isTop);
         }
         else
         {
-            AddTri(verts, norms, cols, tris, a, b, d, v0, isTop);
-            AddTri(verts, norms, cols, tris, b, c, d, v1, isTop);
+            AddTri(verts, norms, cols, uvs, tris, a, b, d, ua, ub, ud, v0, isTop);
+            AddTri(verts, norms, cols, uvs, tris, b, c, d, ub, uc, ud, v1, isTop);
         }
+    }
+
+    // How many painted tiles the ground material actually has to choose from.
+    // Read off the material rather than stored here, so re-slicing the sheet
+    // into a different number of tiles needs no matching edit in this file.
+    private int ResolveSliceCount()
+    {
+        if (groundMaterial == null) return 1;
+        if (!groundMaterial.HasProperty(TileArrayId)) return 1;
+        var array = groundMaterial.GetTexture(TileArrayId) as Texture2DArray;
+        return array != null ? Mathf.Max(1, array.depth) : 1;
+    }
+
+    private static readonly int TileArrayId = Shader.PropertyToID("_TileArray");
+
+    // Which tile off the sheet a cell draws. The slicer sorted the array
+    // greenest-first, so this is just "how close is the cell to the water",
+    // shaped and then scattered. The scatter is what stops the interior of the
+    // board reading as one repeated tile - inland cells all sit near slice 0 and
+    // land on whichever of the grass variants the hash picks.
+    private float PickSlice(Vector2Int cell, int sliceCount)
+    {
+        if (sliceCount <= 1) return 0f;
+        int last = sliceCount - 1;
+
+        // Cells touching the water sit at 0.5; subtracting that puts the band's
+        // full-dirt end exactly on the shoreline row.
+        float dist = _shoreDist != null && _shoreDist.TryGetValue(cell, out float d) ? d : 99f;
+        float wet = Mathf.Clamp01(1f - (dist - 0.5f) / Mathf.Max(dirtBandWidth, 0.01f));
+
+        // Stopping short of the dirt end matters more than it looks: on this
+        // board almost every cell borders lava or the rim, so running the ramp
+        // all the way to bare soil turned the whole field brown and left grass
+        // only in the few cells with water on no side. The water's edge wants
+        // the sheet's middle tiles - grass worn through to a path - not its last
+        // one.
+        float target = Mathf.Pow(wet, dirtFalloff) * last * shorelineDirt;
+
+        float scatter = (Hash01(cell.x, cell.y, 613) - 0.5f) * 2f * tileScatter * last;
+        return Mathf.Clamp(Mathf.Round(target + scatter), 0f, last);
+    }
+
+    // One of eight square symmetries per cell. Thirteen tiles alone were not
+    // enough: every piece on the sheet carries its grass tufts near its corners,
+    // so laying them all down the same way up printed a regular lattice of
+    // tufts across the whole board that read as pattern, not as ground. Turning
+    // and mirroring takes the same thirteen tiles to a hundred and four
+    // orientations, and the tufts scatter.
+    private int PickOrientation(Vector2Int cell) =>
+        Mathf.Clamp(Mathf.FloorToInt(Hash01(cell.x, cell.y, 271) * 8f), 0, 7);
+
+    // Cell-local uv through that symmetry. Bit 2 mirrors, bits 0-1 are quarter
+    // turns; the tiles are square and edge-to-edge grass, so any of the eight
+    // still meets its neighbours cleanly.
+    private static Vector3 Oriented(float u, float v, int orient, float slice)
+    {
+        if ((orient & 4) != 0) u = 1f - u;
+        switch (orient & 3)
+        {
+            case 1: (u, v) = (v, 1f - u); break;
+            case 2: (u, v) = (1f - u, 1f - v); break;
+            case 3: (u, v) = (1f - v, u); break;
+        }
+        return new Vector3(u, v, slice);
     }
 
     private float Variation(int i, int j, int salt) =>
@@ -352,8 +450,8 @@ public class GroundSurface : MonoBehaviour
     //   g = shoreline proximity, per-vertex so the damp edge fades smoothly
     //   b = per-facet brightness jitter, what stops equal bands reading as one mass
     //   a = 1 on top faces, 0 on the skirt walls
-    private void AddTri(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<int> tris,
-        Vector3 a, Vector3 b, Vector3 c, float variation, bool isTop)
+    private void AddTri(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<Vector3> uvs, List<int> tris,
+        Vector3 a, Vector3 b, Vector3 c, Vector3 ua, Vector3 ub, Vector3 uc, float variation, bool isTop)
     {
         int at = verts.Count;
         Vector3 n = Vector3.Cross(b - a, c - a).normalized;
@@ -362,6 +460,7 @@ public class GroundSurface : MonoBehaviour
 
         verts.Add(a); verts.Add(b); verts.Add(c);
         norms.Add(n); norms.Add(n); norms.Add(n);
+        uvs.Add(ua); uvs.Add(ub); uvs.Add(uc);
         cols.Add(new Color(zone, ShoreAt(a.x, a.z), variation, alpha));
         cols.Add(new Color(zone, ShoreAt(b.x, b.z), variation, alpha));
         cols.Add(new Color(zone, ShoreAt(c.x, c.z), variation, alpha));
