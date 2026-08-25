@@ -105,7 +105,13 @@ public class WallSurface : MonoBehaviour
 
     // The border does not change when the level is reshuffled, but the hook is
     // here so a caller that moves the walls can put them back in sync.
-    public void Refresh() => Rebuild();
+    // Off means off: Instance survives on a disabled component, and rebuilding
+    // from that hook would draw the merged wall over cubes meant to be visible.
+    public void Refresh()
+    {
+        if (!isActiveAndEnabled) return;
+        Rebuild();
+    }
 
     public void HideWallTiles()
     {

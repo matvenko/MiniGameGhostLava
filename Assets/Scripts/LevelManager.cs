@@ -204,6 +204,15 @@ public class LevelManager : MonoBehaviour
             pos.y = _blockTileY;
             tile.position = pos;
             tile.SetParent(blocksParent, true);
+            // A tile arriving from the lava side had its renderer suppressed by
+            // LiquidSurface, and LiquidSurface only ever revisits its own
+            // children - so nothing would switch this one back on. The result is
+            // walkable floor that reads as water: you can stand on it, but the
+            // liquid plane is all you see. Rendering belongs with the tile type,
+            // so it is restored here. If GroundSurface is drawing the merged
+            // floor instead, its Refresh() runs straight after this and hides
+            // the cubes again.
+            mr.forceRenderingOff = false;
         }
     }
 

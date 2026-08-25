@@ -94,6 +94,10 @@ public class LiquidSurface : MonoBehaviour
     [ContextMenu("Refresh")]
     public void Refresh()
     {
+        // Instance is set even while this is disabled, so the layout hook can reach
+        // a surface that is deliberately off. It must not re-hide anything then.
+        if (!isActiveAndEnabled) return;
+
         ResolveParents();
 
         // Ownership is split strictly by parent: this component controls only the

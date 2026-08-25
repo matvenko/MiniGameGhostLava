@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_WallStone
-  m_Shader: {fileID: 4800000, guid: 750b99b6a93748fcb38a5942ed8bba1d, type: 3}
+  m_Name: M_BlockGrass
+  m_Shader: {fileID: 4800000, guid: a09f77733c0eb504c956ba5b3861bad6, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,24 +23,29 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 0}
+    - _SideMap:
+        m_Texture: {fileID: 2800000, guid: f6c39581d75e3d84d86729ead91f1355, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TopMap:
+        m_Texture: {fileID: 2800000, guid: 75a0d0fb68d84bc44b7e5fe229c16416, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CelStrength: 0.8
-    - _Cutoff: 0.5
-    - _FacetJitter: 0.09
-    - _LightSteps: 3
-    - _RimPower: 3
-    - _RimStrength: 0.12
+    - _BlendSharpness: 8
+    - _LightWrap: 0.8
+    - _SeamStrength: 0.363
+    - _SeamWidth: 0.018
+    - _SideBrightness: 1.7
+    - _SideOffset: 0
+    - _SideScale: 0.87
+    - _SideStretch: 3.4
+    - _Smoothness: 0
+    - _TopScale: 4.32
     m_Colors:
     - _AmbientColor: {r: 0.46, g: 0.48, b: 0.52, a: 1}
-    - _CrestTint: {r: 1.18, g: 1.15, b: 1.1, a: 1}
-    - _RimColor: {r: 0.45, g: 0.62, b: 0.75, a: 1}
-    - _StoneDark: {r: 0.4, g: 0.4, b: 0.43, a: 1}
-    - _StoneLight: {r: 0.7, g: 0.69, b: 0.7, a: 1}
-    - _StoneMid: {r: 0.55, g: 0.55, b: 0.57, a: 1}
+    - _AmbientGround: {r: 0.46, g: 0.45, b: 0.42, a: 1}
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

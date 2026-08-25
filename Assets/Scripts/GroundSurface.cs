@@ -109,7 +109,15 @@ public class GroundSurface : MonoBehaviour
 
     // Called after the level layout is reshuffled - which cells are walkable
     // changed, so the merged mesh has to be regenerated from scratch.
-    public void Refresh() => Rebuild();
+    // Awake runs on a disabled component too, so Instance is still set when the
+    // surface is switched off to let the block cubes show through. Rebuilding on
+    // that call would put the merged mesh straight back, so a surface that is off
+    // stays off.
+    public void Refresh()
+    {
+        if (!isActiveAndEnabled) return;
+        Rebuild();
+    }
 
     public void HideBlockTiles()
     {

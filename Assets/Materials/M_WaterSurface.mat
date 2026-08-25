@@ -26,7 +26,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _A_SHORT_HIKE_MODE
-  - _PERSPECTIVE
   - _WORLD_SPACE_UV
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -115,13 +114,13 @@ Material:
     - _IntersectionFoamFade: 1.2
     - _IntersectionFoamSpeed: 0.2
     - _IntersectionFoamTiling: 2.4
-    - _LightingHardness: 0.39
+    - _LightingHardness: -2.8
     - _LightingSmoothness: 12.34
     - _NormalScale: 0
     - _NormalSpeed: 0
     - _NormalStrength: -1.6
     - _OrthographicCamSize: 0
-    - _PERSPECTIVE: 1
+    - _PERSPECTIVE: 0
     - _PosterizeSteps: 0
     - _QueueControl: 1
     - _QueueOffset: -49
@@ -136,7 +135,7 @@ Material:
     - _SecondaryFoamBlend: 0.06
     - _Show: 0
     - _SkyboxForce: 2.5
-    - _Steps: 50
+    - _Steps: 26
     - _SurfaceFoamDirection: 0
     - _SurfaceFoamDistorsion: 0.94
     - _SurfaceFoamSpeed: 0.11
@@ -154,6 +153,7 @@ Material:
     - _WaveSteepness: 0.03
     - _WaveStepness: 0.35
     - _WaveTileSize: 1.98
+    - _XRMotionVectorsPass: 1
     m_Colors:
     - _BaseColor: {r: 0, g: 0.1989687, b: 1.110646, a: 1}
     - _CaveColor: {r: 0.21881218, g: 0.21216798, b: 0.4867924, a: 0.41960785}
