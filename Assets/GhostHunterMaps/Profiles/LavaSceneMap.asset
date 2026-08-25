@@ -1,0 +1,404 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11b2917400ccf44e0a63ab25e17320df, type: 3}
+  m_Name: LavaSceneMap
+  m_EditorClassIdentifier: Assembly-CSharp::GhostHunterMaps.GhmMapProfile
+  width: 15
+  height: 10
+  cellSize: 1
+  boardCenter: {x: 1.5200002, y: 1}
+  floorY: -0.07999998
+  waterDrop: 0.18
+  wallMargin: 1
+  seed: 20260825
+  previewLevel: 1
+  perLevelLayout: 1
+  overrideRuntimeLayout: 1
+  minIslandSize: 4
+  minWalkableShare: 0.55
+  compression: 1
+  cameraHeight: 7
+  fieldOfView: 60
+  cameraYaw: 0
+  clampCameraToMap: 1
+  sunColor: {r: 1, g: 1, b: 1, a: 1}
+  sunIntensity: 1.2
+  sunPitch: 45.85856
+  sunYaw: 98.51746
+  ambientColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  layers:
+  - id: 350e1ebc7ba14e40ad3bab6fa88f739e
+    name: Ground
+    kind: 0
+    visible: 1
+    locked: 0
+    material: {fileID: 2100000, guid: 096d4912731b1c14d915bd4050389c92, type: 2}
+    texture: {fileID: 0}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    tiling: {x: 1, y: 1}
+    yOffset: 0
+    facetsPerCell: 3
+    heightJitter: 0.07
+    skirtDepth: 1.1
+    colorVariation: 0.3
+    colorZones: 4
+    zoneScale: 3.2
+    zoneContrast: 2.4
+    undulation: 0.09
+    undulationScale: 6
+    shoreWidth: 0.9
+    shoreDip: 0.05
+    waterClearance: 0.1
+    bedMaterial: {fileID: 0}
+    surfaceYOffset: 0
+    bedDepth: 0.6
+    padding: 0.5
+    verticesPerUnit: 4
+    crestWear: 0.12
+    crestFlatness: 0.35
+    castShadows: 1
+    wallRows: 2
+    path:
+      anchors: 4
+      width: 1
+      wander: 0.35
+      reuse: 0.7
+      shoreAvoidance: 0.8
+      edgeSoftness: 0.55
+      opacity: 0.9
+      yOffset: 0.012
+      tiling: {x: 0.5, y: 0.5}
+      smooth: 1
+      closeLoop: 0
+    rules: []
+    minLevel: 1
+    maxLevel: 999
+  - id: 5dbb61e0565a4bb380c96386dbbacfa8
+    name: Water
+    kind: 1
+    visible: 1
+    locked: 0
+    material: {fileID: 2100000, guid: 6dd2ba612680af240a892de5ce7a4d69, type: 2}
+    texture: {fileID: 0}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    tiling: {x: 1, y: 1}
+    yOffset: 0
+    facetsPerCell: 2
+    heightJitter: 0.035
+    skirtDepth: 1.1
+    colorVariation: 0.55
+    colorZones: 4
+    zoneScale: 3.2
+    zoneContrast: 2.4
+    undulation: 0.09
+    undulationScale: 6
+    shoreWidth: 0.9
+    shoreDip: 0.05
+    waterClearance: 0.1
+    bedMaterial: {fileID: 2100000, guid: 4c0b4e069e59edf47b7610f0b0dcbf3c, type: 2}
+    surfaceYOffset: 0
+    bedDepth: 0.7
+    padding: 0.5
+    verticesPerUnit: 4
+    crestWear: 0.12
+    crestFlatness: 0.35
+    castShadows: 1
+    wallRows: 2
+    path:
+      anchors: 4
+      width: 1
+      wander: 0.35
+      reuse: 0.7
+      shoreAvoidance: 0.8
+      edgeSoftness: 0.55
+      opacity: 0.9
+      yOffset: 0.012
+      tiling: {x: 0.5, y: 0.5}
+      smooth: 1
+      closeLoop: 0
+    rules: []
+    minLevel: 1
+    maxLevel: 999
+  - id: fd677a18fd8249f386c3aa140e7c3443
+    name: Wall
+    kind: 2
+    visible: 1
+    locked: 0
+    material: {fileID: 2100000, guid: 3f251a96b6aa401ab71dc348dcef85d3, type: 2}
+    texture: {fileID: 0}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    tiling: {x: 1, y: 1}
+    yOffset: 0
+    facetsPerCell: 2
+    heightJitter: 0.035
+    skirtDepth: 1.1
+    colorVariation: 0.6
+    colorZones: 4
+    zoneScale: 2.4
+    zoneContrast: 2.4
+    undulation: 0.09
+    undulationScale: 6
+    shoreWidth: 0.9
+    shoreDip: 0.05
+    waterClearance: 0.1
+    bedMaterial: {fileID: 0}
+    surfaceYOffset: 0
+    bedDepth: 0.6
+    padding: 0.5
+    verticesPerUnit: 4
+    crestWear: 0.12
+    crestFlatness: 0.35
+    castShadows: 0
+    wallRows: 2
+    path:
+      anchors: 4
+      width: 1
+      wander: 0.35
+      reuse: 0.7
+      shoreAvoidance: 0.8
+      edgeSoftness: 0.55
+      opacity: 0.9
+      yOffset: 0.012
+      tiling: {x: 0.5, y: 0.5}
+      smooth: 1
+      closeLoop: 0
+    rules: []
+    minLevel: 1
+    maxLevel: 999
+  - id: 806c9db434c1478cb1085e446cc942d4
+    name: Paths
+    kind: 3
+    visible: 1
+    locked: 0
+    material: {fileID: 0}
+    texture: {fileID: 0}
+    tint: {r: 0.76, g: 0.63, b: 0.44, a: 1}
+    tiling: {x: 1, y: 1}
+    yOffset: 0
+    facetsPerCell: 2
+    heightJitter: 0.035
+    skirtDepth: 1.1
+    colorVariation: 0.55
+    colorZones: 4
+    zoneScale: 3.2
+    zoneContrast: 2.4
+    undulation: 0.09
+    undulationScale: 6
+    shoreWidth: 0.9
+    shoreDip: 0.05
+    waterClearance: 0.1
+    bedMaterial: {fileID: 0}
+    surfaceYOffset: 0
+    bedDepth: 0.6
+    padding: 0.5
+    verticesPerUnit: 4
+    crestWear: 0.12
+    crestFlatness: 0.35
+    castShadows: 1
+    wallRows: 2
+    path:
+      anchors: 4
+      width: 1
+      wander: 0.35
+      reuse: 0.7
+      shoreAvoidance: 0.8
+      edgeSoftness: 0.55
+      opacity: 0.9
+      yOffset: 0.012
+      tiling: {x: 0.5, y: 0.5}
+      smooth: 1
+      closeLoop: 0
+    rules: []
+    minLevel: 1
+    maxLevel: 999
+  - id: 5a6efbb59ff54141ae2913672ba2dc99
+    name: Decor
+    kind: 4
+    visible: 1
+    locked: 0
+    material: {fileID: 0}
+    texture: {fileID: 0}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    tiling: {x: 1, y: 1}
+    yOffset: 0
+    facetsPerCell: 2
+    heightJitter: 0.035
+    skirtDepth: 1.1
+    colorVariation: 0.55
+    colorZones: 4
+    zoneScale: 3.2
+    zoneContrast: 2.4
+    undulation: 0.09
+    undulationScale: 6
+    shoreWidth: 0.9
+    shoreDip: 0.05
+    waterClearance: 0.1
+    bedMaterial: {fileID: 0}
+    surfaceYOffset: 0
+    bedDepth: 0.6
+    padding: 0.5
+    verticesPerUnit: 4
+    crestWear: 0.12
+    crestFlatness: 0.35
+    castShadows: 1
+    wallRows: 2
+    path:
+      anchors: 4
+      width: 1
+      wander: 0.35
+      reuse: 0.7
+      shoreAvoidance: 0.8
+      edgeSoftness: 0.55
+      opacity: 0.9
+      yOffset: 0.012
+      tiling: {x: 0.5, y: 0.5}
+      smooth: 1
+      closeLoop: 0
+    rules:
+    - id: 04d624c7a4f44510b6998aeb5e10f774
+      name: Flowers
+      enabled: 1
+      source: 0
+      texture: {fileID: 0}
+      prefab: {fileID: 0}
+      materialOverride: {fileID: 0}
+      per100Cells: 18
+      minSpacing: 0.7
+      clusterSize: 1
+      clusterRadius: 0.6
+      placement: 8
+      inlandMargin: 1.2
+      shoreBand: 1.1
+      scaleRange: {x: 0.8, y: 1.15}
+      baseScale: 0.35
+      yawJitter: 180
+      positionJitter: 0.32
+      yOffset: 0.02
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      tintVariation: 0.12
+      stance: 0
+      pivot: 0
+      minLevel: 1
+      maxLevel: 999
+      seedSalt: 1
+    - id: ce00a8e23e744dd18e67a60b44954d2a
+      name: Small stones
+      enabled: 1
+      source: 0
+      texture: {fileID: 0}
+      prefab: {fileID: 0}
+      materialOverride: {fileID: 0}
+      per100Cells: 10
+      minSpacing: 0.7
+      clusterSize: 1
+      clusterRadius: 0.6
+      placement: 8
+      inlandMargin: 1.2
+      shoreBand: 1.1
+      scaleRange: {x: 0.8, y: 1.15}
+      baseScale: 0.3
+      yawJitter: 180
+      positionJitter: 0.32
+      yOffset: 0.02
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      tintVariation: 0.12
+      stance: 0
+      pivot: 0
+      minLevel: 1
+      maxLevel: 999
+      seedSalt: 2
+    - id: 454af0f0c68b447789696751291db331
+      name: Shore reeds
+      enabled: 1
+      source: 0
+      texture: {fileID: 0}
+      prefab: {fileID: 0}
+      materialOverride: {fileID: 0}
+      per100Cells: 14
+      minSpacing: 0.7
+      clusterSize: 1
+      clusterRadius: 0.6
+      placement: 2
+      inlandMargin: 1.2
+      shoreBand: 1.1
+      scaleRange: {x: 0.8, y: 1.15}
+      baseScale: 0.45
+      yawJitter: 180
+      positionJitter: 0.32
+      yOffset: 0.02
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      tintVariation: 0.12
+      stance: 0
+      pivot: 0
+      minLevel: 1
+      maxLevel: 999
+      seedSalt: 3
+    minLevel: 1
+    maxLevel: 999
+  bands:
+  - id: 876d95b878254d95993e336ed1a0c329
+    name: Meadow
+    minLevel: 1
+    maxLevel: 5
+    groundMaterial: {fileID: 0}
+    waterMaterial: {fileID: 0}
+    wallMaterial: {fileID: 0}
+    bedMaterial: {fileID: 0}
+    pathMaterial: {fileID: 0}
+    groundTint: {r: 1, g: 1, b: 1, a: 1}
+    waterTint: {r: 1, g: 1, b: 1, a: 1}
+    wallTint: {r: 1, g: 1, b: 1, a: 1}
+    algorithm: 0
+    waterDensity: 0.26666668
+    minPoolSize: 2
+    decorDensityScale: 1
+    drawPaths: 1
+  - id: fb60608019ea41ff91ed478eb6955f93
+    name: Deep garden
+    minLevel: 6
+    maxLevel: 10
+    groundMaterial: {fileID: 0}
+    waterMaterial: {fileID: 0}
+    wallMaterial: {fileID: 0}
+    bedMaterial: {fileID: 0}
+    pathMaterial: {fileID: 0}
+    groundTint: {r: 1, g: 1, b: 1, a: 1}
+    waterTint: {r: 1, g: 1, b: 1, a: 1}
+    wallTint: {r: 1, g: 1, b: 1, a: 1}
+    algorithm: 2
+    waterDensity: 0.2986667
+    minPoolSize: 2
+    decorDensityScale: 1
+    drawPaths: 1
+  - id: 765e0585f32140a890942b1a0db7c77b
+    name: Flooded
+    minLevel: 11
+    maxLevel: 999
+    groundMaterial: {fileID: 0}
+    waterMaterial: {fileID: 0}
+    wallMaterial: {fileID: 0}
+    bedMaterial: {fileID: 0}
+    pathMaterial: {fileID: 0}
+    groundTint: {r: 1, g: 1, b: 1, a: 1}
+    waterTint: {r: 1, g: 1, b: 1, a: 1}
+    wallTint: {r: 1, g: 1, b: 1, a: 1}
+    algorithm: 4
+    waterDensity: 0.3306667
+    minPoolSize: 2
+    decorDensityScale: 1
+    drawPaths: 1
+  catalog: []
+  targetScenePath: Assets/LavaScene.unity
+  publishCamera: 1
+  publishLighting: 0
+  publishDecor: 1
+  publishPaths: 1
