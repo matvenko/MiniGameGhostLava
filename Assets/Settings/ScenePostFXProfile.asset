@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.VolumeProfile
   components:
   - {fileID: 2878588977094866049}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!114 &2878588977094866049
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -32,10 +35,10 @@ MonoBehaviour:
     m_Value: 1
   threshold:
     m_OverrideState: 1
-    m_Value: 0.8
+    m_Value: 1.05
   intensity:
     m_OverrideState: 1
-    m_Value: 0.35
+    m_Value: 0.5
   scatter:
     m_OverrideState: 1
     m_Value: 0.6

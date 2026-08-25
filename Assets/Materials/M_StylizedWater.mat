@@ -34,19 +34,19 @@ Material:
     - _CreaseWidth: 0.3
     - _DetailScale: 2.3
     - _DetailWeight: 0.38
-    - _LightWrap: 0.6
+    - _LightWrap: 0.4
     - _SparkleCoverage: 0.35
     - _SparklePower: 14
     - _SparkleStrength: 0.22
     - _Speed: 0.06
-    - _SunStrength: 0.55
+    - _SunStrength: 0.7
     - _Warp: 0.09
     - _WarpSpeed: 0.5
     m_Colors:
-    - _AmbientColor: {r: 0.55, g: 0.58, b: 0.6, a: 1}
-    - _CreaseColor: {r: 0.435, g: 0.635, b: 0.576, a: 1}
-    - _DeepColor: {r: 0.157, g: 0.345, b: 0.337, a: 1}
-    - _LightColor: {r: 0.298, g: 0.494, b: 0.463, a: 1}
+    - _AmbientColor: {r: 0.4, g: 0.43, b: 0.47, a: 1}
+    - _CreaseColor: {r: 0.43529412, g: 0.63529414, b: 0.6317419, a: 1}
+    - _DeepColor: {r: 0.12041651, g: 0.29828784, b: 0.6226415, a: 1}
+    - _LightColor: {r: 0.29803923, g: 0.4026023, b: 0.49411765, a: 1}
     - _SparkleColor: {r: 0.82, g: 0.89, b: 0.83, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
