@@ -29,6 +29,7 @@ Shader "Custom/BlockGround_URP"
         [Header(Tile Seam)]
         _SeamStrength ("Seam Darkening", Range(0,1)) = 0.12
         _SeamWidth ("Seam Width", Range(0.005,0.2)) = 0.045
+        _CellVariation ("Per Cell Brightness Variation", Range(0,0.5)) = 0
 
         [Header(Lighting)]
         _AmbientColor ("Ambient From Above", Color) = (0.34, 0.36, 0.40, 1)
@@ -60,6 +61,7 @@ Shader "Custom/BlockGround_URP"
             float  _BlendSharpness;
             float  _SeamStrength;
             float  _SeamWidth;
+            float  _CellVariation;
             float4 _AmbientColor;
             float4 _AmbientGround;
             float  _LightWrap;
@@ -160,6 +162,14 @@ Shader "Custom/BlockGround_URP"
 
                 half3 albedo = (sideX * w.x + top * w.y + sideZ * w.z) * _BaseColor.rgb;
                 albedo *= lerp(1.0h, Seam(IN.positionWS.xz), w.y);
+
+                // One brightness per grid cell. A wall of 108 stones off the same
+                // mesh and the same material is otherwise 108 identical stones,
+                // however much their scale and yaw are shuffled - and the eye
+                // reads the repeat long before it reads the silhouette.
+                float2 cell = floor(IN.positionWS.xz + 0.5);
+                float h = frac(sin(dot(cell, float2(12.9898, 78.233))) * 43758.5453);
+                albedo *= 1.0h + (h - 0.5h) * 2.0h * _CellVariation;
 
                 // Explicit main light plus a flat ambient, matching the other
                 // hand-written surfaces in this project: UniversalFragmentPBR

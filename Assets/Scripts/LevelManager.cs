@@ -25,7 +25,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject coinPrefab;
     [SerializeField] private Material blockMaterial;
     [SerializeField] private Material lavaMaterial;
-    [SerializeField] private int coinsFromLevel2 = 7;
+    [SerializeField] private int coinsFromLevel2 = 28;
     [SerializeField] private float lavaDensity = 0.27f;
     [SerializeField] private float coinHeightOffset = 0.83f;
     [SerializeField] private GameObject friendlyGhost;

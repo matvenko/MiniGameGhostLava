@@ -1,26 +1,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Same treatment GroundSurface gives the floor, applied to the border wall: the
-// 108 stone cubes are merged into ONE mesh so the rampart reads as a built wall
-// instead of a row of boxes.
+// The border wall, merged into ONE mesh built out of painted stone modules.
 //
-// Two things gave the cubes away. Every cube drew its own six faces, so the
-// interior faces between neighbours produced a seam and a shading break at every
-// join; and each cube restarted the stone texture, which put a visible brick grid
-// on a surface that should run continuously. This walks the occupied cells and
-// emits a face only where a cell has no neighbour in that direction.
+// A module is a 1x1 footprint standing `moduleHeight` units tall, and that
+// number is not free: the side art is painted 1:2 and the cap 1:1, so a module
+// has to be exactly twice as tall as it is wide or the stones come out squat.
+// The scene supplies the footprint as two stacked rows of cubes; this collapses
+// them to a single 2D ring and extrudes one module per cell, which is the same
+// wall the cubes described but with the horizontal joint between the rows gone.
 //
-// There are no UVs and no texture at all now: each face carries a palette band
-// and a brightness jitter in its vertex colours, and LowPolyWall_URP flattens
-// those into one solid colour per face. The wall and the ground share
-// ArtStyle.hlsl, so they light identically.
+// Every face carries a real UV rectangle - one full copy of a texture, 0..1 in
+// both directions - rather than a projection. That is the whole point: the
+// mortar joints are painted into the edges of the art, so they only land on the
+// module edges if a face maps exactly one texture. Interior faces between
+// neighbouring modules are never emitted, and neither is the underside.
 //
-// The crest is the one place a merged box shell still looks machined, so the
-// vertices sitting on the top plane get a small hash-based drop. Neighbouring
-// faces agree on it because it is a pure function of the corner's grid index.
+// Four side elevations ship with the set. Which one a face gets is a hash of the
+// cell and the direction it faces, so a corner shows two different stones, and
+// the choice travels to the shader in uv2.x. uv2.y is a per-module brightness -
+// 54 modules off one material would otherwise read as 54 copies.
 //
-// The cubes stay in the scene as colliders - only their rendering is suppressed,
+// The cubes stay in the scene as colliders: only their rendering is suppressed,
 // through the non-serialized Renderer.forceRenderingOff, so nothing leaks into
 // the saved scene.
 [ExecuteAlways]
@@ -35,21 +36,21 @@ public class WallSurface : MonoBehaviour
     [Tooltip("Name of the parent holding the wall cubes.")]
     [SerializeField] private string wallsParentName = "Walls";
 
-    [Header("Shape")]
-    [Tooltip("How far the crest vertices drop, so the top edge is weathered rather than machined.")]
-    [SerializeField, Range(0f, 0.4f)] private float crestWear = 0.12f;
-    [Tooltip("Share of crest vertices left untouched, keeping stretches of the top edge level.")]
-    [SerializeField, Range(0f, 1f)] private float crestFlatness = 0.35f;
+    [Header("Module")]
+    [Tooltip("Height of one module in world units. The side art is 1:2, so this wants to be twice the cell width.")]
+    [SerializeField, Range(0.5f, 6f)] private float moduleHeight = 2f;
+    [Tooltip("Raises or lowers the crest without moving the colliders underneath it.")]
+    [SerializeField, Range(-1f, 1f)] private float crestOffset = 0f;
 
-    [Header("Colour Zones")]
-    [Tooltip("How many flat palette bands the stone is divided into.")]
-    [SerializeField, Range(2, 6)] private int colorZones = 4;
-    [Tooltip("Size of those bands in world units.")]
-    [SerializeField, Range(0.5f, 8f)] private float zoneScale = 2.4f;
-    [Tooltip("Contrast of the zone noise. Low values leave every face in the middle band.")]
-    [SerializeField, Range(1f, 4f)] private float zoneContrast = 2.4f;
-    [Tooltip("Spread of the per-face brightness jitter baked into vertex colours.")]
-    [SerializeField, Range(0f, 1f)] private float colorVariation = 0.6f;
+    [Header("Variation")]
+    [Tooltip("Mirror the art on roughly half the faces, so four elevations and one cap read as more than five.")]
+    [SerializeField] private bool mirrorFaces = true;
+    [Tooltip("Trims the painted mortar margin off both sides of an elevation. Without it two neighbouring panels butt their margins together and the joint comes out twice as wide as the art intends.")]
+    [SerializeField, Range(0f, 0.2f)] private float sideInset = 0.05f;
+    [Tooltip("Turn the cap art a quarter turn at a time, so the crest is not one stamp repeated along the run.")]
+    [SerializeField] private bool rotateCaps = true;
+    [Tooltip("Spread of the per-module brightness handed to the shader.")]
+    [SerializeField, Range(0f, 1f)] private float moduleVariation = 0.7f;
 
     [Header("Rendering")]
     [Tooltip("Let the rampart cast shadows onto the field. The cubes never did.")]
@@ -80,11 +81,10 @@ public class WallSurface : MonoBehaviour
     {
         DestroySurface();
         if (!ResolveParent()) return;
-
-        if (!BuildCellSet(out HashSet<Vector3Int> cells, out Vector3 origin, out Vector3 cell)) return;
+        if (!BuildFootprint(out var cells, out Vector3 origin, out Vector2 cell, out float topY)) return;
         if (cells.Count == 0) return;
 
-        var mesh = BuildMesh(cells, origin, cell);
+        var mesh = BuildMesh(cells, origin, cell, topY);
 
         var go = new GameObject("WallSurface");
         go.hideFlags = HideFlags.DontSave;
@@ -155,19 +155,22 @@ public class WallSurface : MonoBehaviour
         return _wallsParent != null;
     }
 
-    // Snaps the cubes onto an integer lattice.
+    // Collapses the cubes onto a 2D lattice: the wall is a ring one cell thick,
+    // stacked two rows deep, and a module replaces a whole stack.
     //
-    // The cell size is measured from how far apart the cubes actually sit, not
-    // from their scale. These two disagree here: the wall is two rows of 1-unit
-    // cubes stacked 0.902 apart, so they overlap. Sizing cells by the scale would
-    // make the rows overlap in the merged shell too, and the coincident side
-    // faces in the overlap band would z-fight. Sizing by the spacing makes the
-    // rows stack flush - no gap, no overlap - for a 0.05 change in wall height.
-    private bool BuildCellSet(out HashSet<Vector3Int> cells, out Vector3 origin, out Vector3 cell)
+    // Cell size is measured from how far apart the cubes actually sit rather
+    // than from their scale, because those disagree here - the cubes carry a
+    // randomised scale from when the wall was a heap of rocks, and it is the
+    // spacing, not the scale, that says where the grid is.
+    //
+    // The crest sits half a row-pitch above the top row, which is where the top
+    // of those cubes was; everything below it is the module's own business.
+    private bool BuildFootprint(out HashSet<Vector2Int> cells, out Vector3 origin, out Vector2 cell, out float topY)
     {
-        cells = new HashSet<Vector3Int>();
+        cells = new HashSet<Vector2Int>();
         origin = Vector3.zero;
-        cell = Vector3.one;
+        cell = Vector2.one;
+        topY = 0f;
 
         if (_wallsParent.childCount == 0) return false;
 
@@ -175,25 +178,28 @@ public class WallSurface : MonoBehaviour
         foreach (Transform t in _wallsParent) positions.Add(t.position);
 
         Vector3 fallback = _wallsParent.GetChild(0).lossyScale;
-        cell = new Vector3(
-            Spacing(positions, 0, fallback.x),
-            Spacing(positions, 1, fallback.y),
-            Spacing(positions, 2, fallback.z));
-        if (cell.x <= 0f || cell.y <= 0f || cell.z <= 0f) return false;
+        cell = new Vector2(Spacing(positions, 0, fallback.x), Spacing(positions, 2, fallback.z));
+        if (cell.x <= 0f || cell.y <= 0f) return false;
 
-        var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-        foreach (var p in positions) min = Vector3.Min(min, p);
+        float minX = float.MaxValue, minZ = float.MaxValue, maxY = float.MinValue;
+        foreach (var p in positions)
+        {
+            minX = Mathf.Min(minX, p.x);
+            minZ = Mathf.Min(minZ, p.z);
+            maxY = Mathf.Max(maxY, p.y);
+        }
+
+        float rowPitch = Spacing(positions, 1, fallback.y);
+        topY = maxY + rowPitch * 0.5f + crestOffset;
 
         foreach (var p in positions)
         {
-            Vector3 d = p - min;
-            cells.Add(new Vector3Int(
-                Mathf.RoundToInt(d.x / cell.x),
-                Mathf.RoundToInt(d.y / cell.y),
-                Mathf.RoundToInt(d.z / cell.z)));
+            cells.Add(new Vector2Int(
+                Mathf.RoundToInt((p.x - minX) / cell.x),
+                Mathf.RoundToInt((p.z - minZ) / cell.y)));
         }
 
-        origin = min;
+        origin = new Vector3(minX, 0f, minZ);
         return true;
     }
 
@@ -215,49 +221,69 @@ public class WallSurface : MonoBehaviour
         return best < float.MaxValue && best > 0.001f ? best : fallback;
     }
 
-    private static readonly Vector3Int[] Faces =
+    private static readonly Vector2Int[] Sides =
     {
-        new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0),
-        new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0),
-        new Vector3Int(0, 0, 1), new Vector3Int(0, 0, -1)
+        new Vector2Int(1, 0), new Vector2Int(-1, 0),
+        new Vector2Int(0, 1), new Vector2Int(0, -1)
     };
 
-    private Mesh BuildMesh(HashSet<Vector3Int> cells, Vector3 origin, Vector3 cell)
+    // The four corners of a unit UV square. Reading them at an offset rotates
+    // the art a quarter turn, which is only valid because the cap is square.
+    private static readonly Vector2[] Corners =
+    {
+        new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f)
+    };
+
+    private Mesh BuildMesh(HashSet<Vector2Int> cells, Vector3 origin, Vector2 cell, float topY)
     {
         var verts = new List<Vector3>();
         var norms = new List<Vector3>();
-        var cols = new List<Color>();
+        var uvs = new List<Vector2>();
+        var mods = new List<Vector2>();
         var tris = new List<int>();
 
-        int topLevel = int.MinValue;
-        foreach (var c in cells) topLevel = Mathf.Max(topLevel, c.y);
-        float topY = origin.y + topLevel * cell.y + cell.y * 0.5f;
+        float bottomY = topY - moduleHeight;
 
         foreach (var c in cells)
         {
-            Vector3 centre = origin + new Vector3(c.x * cell.x, c.y * cell.y, c.z * cell.z);
+            float cx = origin.x + c.x * cell.x;
+            float cz = origin.z + c.y * cell.y;
+            float jitter = Hash01(c.x, c.y, 23);
 
-            foreach (var d in Faces)
+            // Cap. There is only one of these in the set and the game camera
+            // looks almost straight down at it, so it turns a quarter turn and
+            // mirrors per module: eight readings of one square instead of 54
+            // copies of it.
+            int rot = rotateCaps ? Mathf.FloorToInt(Hash01(c.x, c.y, 61) * 4f) & 3 : 0;
+            bool flipCap = mirrorFaces && Hash01(c.x, c.y, 89) < 0.5f;
+            AddQuad(verts, norms, uvs, mods, tris,
+                new Vector3(cx - cell.x * 0.5f, topY, cz + cell.y * 0.5f),
+                Vector3.right * cell.x, Vector3.back * cell.y, Vector3.up,
+                rot, flipCap, 0f, 0f, jitter);
+
+            foreach (var d in Sides)
             {
                 // The face between two neighbours is never visible, so it is
                 // never built: that is what removes the per-cube seams.
                 if (cells.Contains(c + d)) continue;
 
-                Vector3 n = new Vector3(d.x, d.y, d.z);
-                GetFaceAxes(d, out Vector3 u, out Vector3 v);
+                var n = new Vector3(d.x, 0f, d.y);
+                Vector3 u = Vector3.Cross(Vector3.up, n);
+                float width = Mathf.Abs(u.x) > 0.5f ? cell.x : cell.y;
 
-                Vector3 half = new Vector3(n.x * cell.x, n.y * cell.y, n.z * cell.z) * 0.5f;
-                Vector3 du = new Vector3(u.x * cell.x, u.y * cell.y, u.z * cell.z) * 0.5f;
-                Vector3 dv = new Vector3(v.x * cell.x, v.y * cell.y, v.z * cell.z) * 0.5f;
+                Vector3 faceCentre = new Vector3(cx, bottomY, cz)
+                                   + new Vector3(n.x * cell.x, 0f, n.z * cell.y) * 0.5f;
+                Vector3 anchor = faceCentre - u * (width * 0.5f);
 
-                Vector3 a = centre + half - du - dv;
-                Vector3 b = centre + half - du + dv;
-                Vector3 e = centre + half + du + dv;
-                Vector3 f = centre + half + du - dv;
+                int face = (d.x + 1) * 4 + (d.y + 1);
+                float pick = Hash01(c.x * 7 + face, c.y * 13 + face, 137);
+                float variant = Mathf.Floor(pick * 4f);
+                if (variant > 3f) variant = 3f;
+                bool mirror = mirrorFaces && Hash01(c.x + face, c.y - face, 211) < 0.5f;
 
-                AddQuad(verts, norms, cols, tris,
-                    Wear(a, topY, origin, cell), Wear(b, topY, origin, cell),
-                    Wear(e, topY, origin, cell), Wear(f, topY, origin, cell), n, d.y > 0);
+                AddQuad(verts, norms, uvs, mods, tris,
+                    anchor, u * width, Vector3.up * moduleHeight, n,
+                    0, mirror, sideInset, variant, jitter);
             }
         }
 
@@ -265,99 +291,44 @@ public class WallSurface : MonoBehaviour
         if (verts.Count > 65535) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         mesh.SetVertices(verts);
         mesh.SetNormals(norms);
-        mesh.SetColors(cols);
+        mesh.SetUVs(0, uvs);
+        mesh.SetUVs(1, mods);
         mesh.SetTriangles(tris, 0);
         mesh.RecalculateBounds();
         return mesh;
     }
 
-    // Only vertices sitting exactly on the crest move, and only downwards, so a
-    // worn top edge can never punch a hole through the wall below it.
-    private Vector3 Wear(Vector3 p, float topY, Vector3 origin, Vector3 cell)
+    // One quad spanning exactly one copy of a texture. `u` and `v` are the full
+    // edge vectors, ordered so their cross product is the outward normal, which
+    // is what makes the winding below come out front-facing.
+    //
+    // Vertices are never shared between faces: the wall wants crisp corners and
+    // each face wants its own variant index.
+    private void AddQuad(List<Vector3> verts, List<Vector3> norms, List<Vector2> uvs,
+        List<Vector2> mods, List<int> tris,
+        Vector3 anchor, Vector3 u, Vector3 v, Vector3 normal,
+        int rot, bool mirror, float inset, float variant, float jitter)
     {
-        if (crestWear <= 0f || Mathf.Abs(p.y - topY) > 0.001f) return p;
+        var module = new Vector2(variant, Mathf.Clamp01(0.5f + (jitter - 0.5f) * moduleVariation));
 
-        int i = Mathf.RoundToInt((p.x - origin.x) / cell.x * 2f);
-        int k = Mathf.RoundToInt((p.z - origin.z) / cell.z * 2f);
-
-        float h = Hash01(i, k, 17);
-        if (h < crestFlatness) return p;
-
-        float t = (h - crestFlatness) / Mathf.Max(1f - crestFlatness, 0.0001f);
-        p.y -= t * crestWear;
-        return p;
-    }
-
-    private static void GetFaceAxes(Vector3Int d, out Vector3 u, out Vector3 v)
-    {
-        if (d.y != 0) { u = Vector3.right; v = Vector3.forward; }
-        else if (d.x != 0) { u = Vector3.forward; v = Vector3.up; }
-        else { u = Vector3.right; v = Vector3.up; }
-    }
-
-    // Vertices are never shared between faces, which keeps the shading flat and
-    // the corners crisp.
-    private void AddQuad(List<Vector3> verts, List<Vector3> norms, List<Color> cols, List<int> tris,
-        Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 expectedNormal, bool isCrest)
-    {
-        if (Vector3.Dot(Vector3.Cross(b - a, c - a), expectedNormal) < 0f)
+        int at = verts.Count;
+        for (int i = 0; i < 4; i++)
         {
-            (a, b, c, d) = (d, c, b, a);
+            Vector2 corner = Corners[(i + rot) & 3];
+            if (mirror) corner.x = 1f - corner.x;
+            // Reading the art from just inside its own edge, so the mortar
+            // painted along that edge is shared with the next panel instead of
+            // doubled against it.
+            corner.x = inset + corner.x * (1f - 2f * inset);
+
+            verts.Add(anchor + u * Corners[i].x + v * Corners[i].y);
+            norms.Add(normal);
+            uvs.Add(corner);
+            mods.Add(module);
         }
 
-        // One band and one jitter value for the whole quad: the wall should read
-        // as blocks of stone, not as pairs of triangles.
-        Vector3 centre = (a + b + c + d) * 0.25f;
-        var col = new Color(ZoneAt(centre), 0f, Jitter(centre), isCrest ? 1f : 0f);
-
-        AddTri(verts, norms, cols, tris, a, b, c, expectedNormal, col);
-        AddTri(verts, norms, cols, tris, a, c, d, expectedNormal, col);
-    }
-
-    private static void AddTri(List<Vector3> verts, List<Vector3> norms, List<Color> cols,
-        List<int> tris, Vector3 a, Vector3 b, Vector3 c, Vector3 fallbackNormal, Color col)
-    {
-        int at = verts.Count;
-        Vector3 n = Vector3.Cross(b - a, c - a);
-        // The crest drop can collapse a triangle; fall back to the face normal
-        // rather than emitting a zero-length one and blackening the facet.
-        n = n.sqrMagnitude > 1e-10f ? n.normalized : fallbackNormal.normalized;
-
-        verts.Add(a); verts.Add(b); verts.Add(c);
-        norms.Add(n); norms.Add(n); norms.Add(n);
-        cols.Add(col); cols.Add(col); cols.Add(col);
         tris.Add(at); tris.Add(at + 1); tris.Add(at + 2);
-    }
-
-    // Same scheme the ground uses: the noise that picks a palette band runs here,
-    // where its output can be measured, not in the shader where it cannot.
-    private float ZoneAt(Vector3 centre)
-    {
-        float n = Fbm(centre.x / zoneScale, (centre.y + centre.z) / zoneScale);
-        n = Mathf.Clamp01((n - 0.5f) * zoneContrast + 0.5f);
-        int steps = Mathf.Max(1, colorZones - 1);
-        return Mathf.Round(n * steps) / steps;
-    }
-
-    private float Jitter(Vector3 centre)
-    {
-        float h = Hash01(Mathf.RoundToInt(centre.x * 97f), Mathf.RoundToInt((centre.y + centre.z) * 97f), 23);
-        return Mathf.Clamp01(0.5f + (h - 0.5f) * colorVariation);
-    }
-
-    private static float Fbm(float x, float y) =>
-        SmoothNoise(x, y) * 0.65f + SmoothNoise(x * 2.4f + 11.3f, y * 2.4f + 5.7f) * 0.35f;
-
-    private static float SmoothNoise(float x, float y)
-    {
-        int i = Mathf.FloorToInt(x), j = Mathf.FloorToInt(y);
-        float fx = x - i, fy = y - j;
-        fx = fx * fx * (3f - 2f * fx);
-        fy = fy * fy * (3f - 2f * fy);
-
-        float a = Hash01(i, j, 101), b = Hash01(i + 1, j, 101);
-        float c = Hash01(i, j + 1, 101), d = Hash01(i + 1, j + 1, 101);
-        return Mathf.Lerp(Mathf.Lerp(a, b, fx), Mathf.Lerp(c, d, fx), fy);
+        tris.Add(at); tris.Add(at + 2); tris.Add(at + 3);
     }
 
     private static float Hash01(int x, int y, int salt)
