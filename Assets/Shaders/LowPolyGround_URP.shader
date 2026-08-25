@@ -1,19 +1,13 @@
-// Low-poly ground: hand-painted meadow grass over a flat palette band per facet.
+// Low-poly ground: every facet is one flat colour from a shared palette.
 //
-// Which palette band a facet gets is still decided by GroundSurface.cs and baked
-// into the vertex colours; this shader only ramps, jitters, textures and lights.
-// That split is deliberate: two earlier attempts generated the surface here in
-// HLSL, where the noise driving it could not be measured, and both shipped bugs
-// that were invisible until rendered - once a photographic texture that would not
-// match the stylised water, once a procedural one whose noise never left its
-// middle band. On the CPU the distribution can be printed and checked before
-// anything is drawn.
-//
-// _MeadowMap is the exception, and a deliberate one. It is the painted grass off
-// the reference sheet with its own colour intact, and _TextureAmount decides how
-// much of the palette it covers. At 0 the board is the pure CPU-driven palette
-// this file was originally built around; at 1 it is the reference art. The
-// palette still owns the shoreline, the facet jitter and the flowers.
+// There is no texture and no per-pixel noise. Which palette band a facet gets is
+// decided by GroundSurface.cs and baked into the vertex colours, so this shader
+// only ramps, jitters and lights. That split is deliberate: two earlier attempts
+// generated the surface here in HLSL, where the noise driving it could not be
+// measured, and both shipped bugs that were invisible until rendered - once a
+// photographic texture that would not match the stylised water, once a procedural
+// one whose noise never left its middle band. On the CPU the distribution can be
+// printed and checked before anything is drawn.
 //
 // Vertex colour layout (written by GroundSurface.cs):
 //   r = palette band 0..1, flat across the triangle
@@ -35,15 +29,6 @@ Shader "Custom/LowPolyGround_URP"
         _SoilLight ("Soil Light", Color) = (0.44, 0.35, 0.23, 1)
         _ShoreWidth ("Shoreline Width", Range(0,1)) = 0.35
         _ShoreAmount ("Shoreline Soil", Range(0,1)) = 0.35
-
-        [Header(Painted Meadow)]
-        [NoScaleOffset] _MeadowMap ("Meadow Grass", 2D) = "white" {}
-        _MeadowMean ("Meadow Mean Colour", Color) = (0.485, 0.610, 0.018, 1)
-        _DetailScale ("Tiles Per Unit", Float) = 0.55
-        _DetailScaleB ("Second Layer Tiles Per Unit", Float) = 0.34
-        _DetailBlend ("Second Layer Mix", Range(0,1)) = 0.45
-        _TextureAmount ("Texture Over Palette", Range(0,1)) = 0.85
-        _TextureOnSoil ("Texture On Bank", Range(0,1)) = 0.45
 
         [Header(Flowers)]
         _FlowerWhite ("Flower White", Color) = (0.96, 0.97, 0.92, 1)
@@ -79,24 +64,12 @@ Shader "Custom/LowPolyGround_URP"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
         #include "Common/ArtStyle.hlsl"
 
-        // Outside the cbuffer on purpose - a texture handle in UnityPerMaterial
-        // breaks the SRP batcher's layout match and the shader silently drops out
-        // of batching.
-        TEXTURE2D(_MeadowMap);
-        SAMPLER(sampler_MeadowMap);
-
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
             float4 _GrassDeep;
             float4 _GrassMid;
             float4 _GrassLight;
             float  _FacetJitter;
-            float4 _MeadowMean;
-            float  _DetailScale;
-            float  _DetailScaleB;
-            float  _DetailBlend;
-            float  _TextureAmount;
-            float  _TextureOnSoil;
             float4 _SoilDark;
             float4 _SoilLight;
             float  _ShoreWidth;
@@ -182,39 +155,6 @@ Shader "Custom/LowPolyGround_URP"
 
                 half3 grass = ArtRamp3(_GrassDeep.rgb, _GrassMid.rgb, _GrassLight.rgb, zone);
                 half3 soil  = lerp(_SoilDark.rgb, _SoilLight.rgb, zone);
-
-                // The painted meadow from the reference sheet, in its own colour.
-                //
-                // Sampled twice at scales that share no common period, with the
-                // second layer rotated off-axis. One layer at this board size
-                // repeats visibly under a top-down camera; two that never line up
-                // average the repeat away for one extra fetch.
-                //
-                // The two are combined as deviations around _MeadowMean and
-                // renormalised by rsqrt rather than lerped. A straight average of
-                // two uncorrelated samples pulls everything towards the mean and
-                // washes the leaf work out; this keeps the contrast the same
-                // whatever _DetailBlend is set to.
-                float2x2 kDetailRot = float2x2(0.8, -0.6, 0.6, 0.8);
-                half3 mean = _MeadowMean.rgb;
-                half3 sA = SAMPLE_TEXTURE2D(_MeadowMap, sampler_MeadowMap, pw.xz * _DetailScale).rgb;
-                half3 sB = SAMPLE_TEXTURE2D(_MeadowMap, sampler_MeadowMap, mul(kDetailRot, pw.xz) * _DetailScaleB).rgb;
-
-                half wA = 1.0h - _DetailBlend;
-                half wB = _DetailBlend;
-                half3 tex = mean + ((sA - mean) * wA + (sB - mean) * wB) * rsqrt(max(wA * wA + wB * wB, 1e-4h));
-
-                // isTop keeps this off the skirt walls: they are vertical, and an
-                // XZ-projected sample smears into streaks down them.
-                grass = lerp(grass, tex, _TextureAmount * isTop);
-
-                // The bank takes brightness from the texture but not its hue - the
-                // meadow mean is almost pure yellow-green (blue sits near zero), so
-                // a per-channel ratio would divide by nothing and blow out.
-                half3 kLum = half3(0.2126h, 0.7152h, 0.0722h);
-                half texLum = dot(tex, kLum);
-                half meanLum = max(dot(mean, kLum), 1e-3h);
-                soil *= lerp(1.0h, texLum / meanLum, _TextureOnSoil * isTop);
 
                 // Flower heads on a jittered grid. No patch mask on purpose: every
                 // patch-based version clumped them all into one corner of the board.
