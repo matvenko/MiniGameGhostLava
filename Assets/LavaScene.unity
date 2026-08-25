@@ -72314,7 +72314,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44ba9879c74669f4791f4a3fd91d77cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiquidSurface
-  liquidMaterial: {fileID: 2100000, guid: 6dd2ba612680af240a892de5ce7a4d69, type: 2}
+  liquidMaterial: {fileID: 2100000, guid: 13d5d385820ce98574bdb943841ef1bf, type: 2}
   bedMaterial: {fileID: 2100000, guid: 4c0b4e069e59edf47b7610f0b0dcbf3c, type: 2}
   surfaceYOffset: 0
   bedDepth: 0.7
