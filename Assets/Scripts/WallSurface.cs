@@ -10,6 +10,11 @@ using UnityEngine;
 // them to a single 2D ring and extrudes one module per cell, which is the same
 // wall the cubes described but with the horizontal joint between the rows gone.
 //
+// `thickness` narrows that footprint across the run. Only the outward face
+// moves, so the rampart keeps hugging the edge of the field, and the art is
+// cropped rather than squeezed - a half-width module reads half a texture, so
+// its stones stay the size they were painted at.
+//
 // Every face carries a real UV rectangle - one full copy of a texture, 0..1 in
 // both directions - rather than a projection. That is the whole point: the
 // mortar joints are painted into the edges of the art, so they only land on the
@@ -41,6 +46,8 @@ public class WallSurface : MonoBehaviour
     [SerializeField, Range(0.5f, 6f)] private float moduleHeight = 2f;
     [Tooltip("Raises or lowers the crest without moving the colliders underneath it.")]
     [SerializeField, Range(-1f, 1f)] private float crestOffset = 0f;
+    [Tooltip("How much of its cell a module fills across the run. 1 is the full cell the cubes describe; 0.5 is a rampart half as thick. Only the outward face moves, so the wall keeps hugging the edge of the field and the colliders underneath are untouched.")]
+    [SerializeField, Range(0.2f, 1f)] private float thickness = 0.5f;
 
     [Header("Variation")]
     [Tooltip("Mirror the art on roughly half the faces, so four elevations and one cap read as more than five.")]
@@ -244,11 +251,38 @@ public class WallSurface : MonoBehaviour
 
         float bottomY = topY - moduleHeight;
 
+        // The ring is one cell thick, so a cell lies on the footprint's outer
+        // boundary along whichever axis it sits at an extreme of - and that is
+        // the face that gives way when the wall is thinned. Corner cells are at
+        // an extreme on both axes and so give way on both, which is what keeps
+        // the two thinned runs meeting cleanly.
+        Vector2Int lo = new Vector2Int(int.MaxValue, int.MaxValue);
+        Vector2Int hi = new Vector2Int(int.MinValue, int.MinValue);
+        foreach (var c in cells)
+        {
+            lo = Vector2Int.Min(lo, c);
+            hi = Vector2Int.Max(hi, c);
+        }
+
         foreach (var c in cells)
         {
             float cx = origin.x + c.x * cell.x;
             float cz = origin.z + c.y * cell.y;
             float jitter = Hash01(c.x, c.y, 23);
+
+            // Shrinking pulls the module toward the field, away from whichever
+            // side is the outside, so the inner face never moves.
+            float sizeX = cell.x, sizeZ = cell.y;
+            if (c.x == lo.x || c.x == hi.x)
+            {
+                sizeX = cell.x * thickness;
+                cx += (c.x == lo.x ? 1f : -1f) * (cell.x - sizeX) * 0.5f;
+            }
+            if (c.y == lo.y || c.y == hi.y)
+            {
+                sizeZ = cell.y * thickness;
+                cz += (c.y == lo.y ? 1f : -1f) * (cell.y - sizeZ) * 0.5f;
+            }
 
             // Cap. There is only one of these in the set and the game camera
             // looks almost straight down at it, so it turns a quarter turn and
@@ -257,9 +291,10 @@ public class WallSurface : MonoBehaviour
             int rot = rotateCaps ? Mathf.FloorToInt(Hash01(c.x, c.y, 61) * 4f) & 3 : 0;
             bool flipCap = mirrorFaces && Hash01(c.x, c.y, 89) < 0.5f;
             AddQuad(verts, norms, uvs, mods, tris,
-                new Vector3(cx - cell.x * 0.5f, topY, cz + cell.y * 0.5f),
-                Vector3.right * cell.x, Vector3.back * cell.y, Vector3.up,
-                rot, flipCap, 0f, 0f, jitter);
+                new Vector3(cx - sizeX * 0.5f, topY, cz + sizeZ * 0.5f),
+                Vector3.right * sizeX, Vector3.back * sizeZ, Vector3.up,
+                rot, flipCap, 0f, 0f, jitter,
+                new Vector2(sizeX / cell.x, sizeZ / cell.y));
 
             foreach (var d in Sides)
             {
@@ -269,10 +304,12 @@ public class WallSurface : MonoBehaviour
 
                 var n = new Vector3(d.x, 0f, d.y);
                 Vector3 u = Vector3.Cross(Vector3.up, n);
-                float width = Mathf.Abs(u.x) > 0.5f ? cell.x : cell.y;
+                bool alongX = Mathf.Abs(u.x) > 0.5f;
+                float width = alongX ? sizeX : sizeZ;
+                float fullWidth = alongX ? cell.x : cell.y;
 
                 Vector3 faceCentre = new Vector3(cx, bottomY, cz)
-                                   + new Vector3(n.x * cell.x, 0f, n.z * cell.y) * 0.5f;
+                                   + new Vector3(n.x * sizeX, 0f, n.z * sizeZ) * 0.5f;
                 Vector3 anchor = faceCentre - u * (width * 0.5f);
 
                 int face = (d.x + 1) * 4 + (d.y + 1);
@@ -281,9 +318,12 @@ public class WallSurface : MonoBehaviour
                 if (variant > 3f) variant = 3f;
                 bool mirror = mirrorFaces && Hash01(c.x + face, c.y - face, 211) < 0.5f;
 
+                // Only a corner's outward faces are ever narrowed - a face
+                // along a run still spans a whole cell.
                 AddQuad(verts, norms, uvs, mods, tris,
                     anchor, u * width, Vector3.up * moduleHeight, n,
-                    0, mirror, sideInset, variant, jitter);
+                    0, mirror, sideInset, variant, jitter,
+                    new Vector2(width / fullWidth, 1f));
             }
         }
 
@@ -298,18 +338,26 @@ public class WallSurface : MonoBehaviour
         return mesh;
     }
 
-    // One quad spanning exactly one copy of a texture. `u` and `v` are the full
-    // edge vectors, ordered so their cross product is the outward normal, which
-    // is what makes the winding below come out front-facing.
+    // One quad spanning exactly one copy of a texture - or `crop` of one, when
+    // the face is narrower than a full module and the art has to be cropped
+    // instead of squeezed. `u` and `v` are the full edge vectors, ordered so
+    // their cross product is the outward normal, which is what makes the
+    // winding below come out front-facing; `crop` is measured along those same
+    // two, not along the texture's axes.
     //
     // Vertices are never shared between faces: the wall wants crisp corners and
     // each face wants its own variant index.
     private void AddQuad(List<Vector3> verts, List<Vector3> norms, List<Vector2> uvs,
         List<Vector2> mods, List<int> tris,
         Vector3 anchor, Vector3 u, Vector3 v, Vector3 normal,
-        int rot, bool mirror, float inset, float variant, float jitter)
+        int rot, bool mirror, float inset, float variant, float jitter, Vector2 crop)
     {
         var module = new Vector2(variant, Mathf.Clamp01(0.5f + (jitter - 0.5f) * moduleVariation));
+
+        // An odd quarter turn has already swapped which edge runs along which
+        // texture axis, so the crop has to follow it round.
+        float cropU = (rot & 1) == 0 ? crop.x : crop.y;
+        float cropV = (rot & 1) == 0 ? crop.y : crop.x;
 
         int at = verts.Count;
         for (int i = 0; i < 4; i++)
@@ -320,6 +368,8 @@ public class WallSurface : MonoBehaviour
             // painted along that edge is shared with the next panel instead of
             // doubled against it.
             corner.x = inset + corner.x * (1f - 2f * inset);
+            corner.x *= cropU;
+            corner.y *= cropV;
 
             verts.Add(anchor + u * Corners[i].x + v * Corners[i].y);
             norms.Add(normal);

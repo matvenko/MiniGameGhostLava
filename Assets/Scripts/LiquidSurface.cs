@@ -61,7 +61,6 @@ public class LiquidSurface : MonoBehaviour
     // the editor, where the DontSave meshes from the previous session are gone.
     void OnEnable()
     {
-        Build();
         Refresh();
     }
 
@@ -89,8 +88,12 @@ public class LiquidSurface : MonoBehaviour
         if (_surface != null) _surface.GetComponent<MeshRenderer>().sharedMaterial = material;
     }
 
-    // Called after the level layout is reshuffled: the set of cells that count
-    // as lava changed, so re-decide which tile renderers are visible.
+    // Called after the level layout is regenerated, and both halves of the pool
+    // have to be redone. The board is a different size on every level, so the
+    // surface is rebuilt over the new footprint - keeping the old one would
+    // leave the rows the board just grew by with no liquid over them at all.
+    // Then, since the set of cells that count as lava changed too, re-decide
+    // which tile renderers are visible.
     [ContextMenu("Refresh")]
     public void Refresh()
     {
@@ -98,6 +101,7 @@ public class LiquidSurface : MonoBehaviour
         // a surface that is deliberately off. It must not re-hide anything then.
         if (!isActiveAndEnabled) return;
 
+        Build();
         ResolveParents();
 
         // Ownership is split strictly by parent: this component controls only the
@@ -127,6 +131,11 @@ public class LiquidSurface : MonoBehaviour
     private static void DestroyPlane(Transform plane)
     {
         if (plane == null) return;
+        // Play-mode Destroy only lands at the end of the frame, and the
+        // replacement plane is created immediately - so hide the outgoing one
+        // now, or a level change renders two transparent surfaces on top of
+        // each other for a frame.
+        plane.gameObject.SetActive(false);
         if (Application.isPlaying) Destroy(plane.gameObject);
         else DestroyImmediate(plane.gameObject);
     }
@@ -183,8 +192,9 @@ public class LiquidSurface : MonoBehaviour
         }
     }
 
-    // The board is authored in the scene rather than spawned, so the footprint
-    // is read back from the tiles instead of being configured twice.
+    // The footprint is read back from the tiles rather than configured here, so
+    // it follows the board without being told: the level generator resizes the
+    // board every level, and this measures whatever it left behind.
     private bool TryGetFootprint(out Bounds footprint, out float lavaTopY)
     {
         footprint = default;

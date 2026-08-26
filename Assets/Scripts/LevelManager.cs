@@ -25,7 +25,24 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject coinPrefab;
     [SerializeField] private Material blockMaterial;
     [SerializeField] private Material lavaMaterial;
-    [SerializeField] private int coinsFromLevel2 = 28;
+    // Coins on the board per level, indexed by level - 1; a level past the
+    // end of the table reuses its last entry, so level 6 onward keeps the
+    // level-5 count.
+    [SerializeField] private int[] coinsByLevel = { 12, 14, 16, 18, 20 };
+    // Board footprint per level, indexed by level - 1; a level past the end of
+    // the table reuses its last entry. Two cells wider and two taller each
+    // level up to 4, holding there through 7, reaching its final 30x24 at 8.
+    [SerializeField] private Vector2Int[] boardSizeByLevel =
+    {
+        new Vector2Int(22, 16),
+        new Vector2Int(24, 18),
+        new Vector2Int(26, 20),
+        new Vector2Int(28, 22),
+        new Vector2Int(28, 22),
+        new Vector2Int(28, 22),
+        new Vector2Int(28, 22),
+        new Vector2Int(30, 24)
+    };
     [SerializeField] private float lavaDensity = 0.27f;
     [SerializeField] private float coinHeightOffset = 0.83f;
     [SerializeField] private GameObject friendlyGhost;
@@ -40,6 +57,10 @@ public class LevelManager : MonoBehaviour
     private int _level = 1;
     private float _blockTileY;
     private float _lavaTileY;
+    private Vector2 _boardCentre;
+    private float[] _wallRowY;
+    private Transform _tilePool;
+    private Transform _wallPool;
 
     void Awake()
     {
@@ -48,11 +69,32 @@ public class LevelManager : MonoBehaviour
         if (nextLevelButton != null) nextLevelButton.onClick.AddListener(OnNextLevelClicked);
         UpdateLevelText();
 
-        // The path grid is a static singleton that outlives scene loads, so a
-        // restart would otherwise keep pathing on the previous run's layout.
-        // Enemies can't do this themselves - they spawn disabled and only
-        // reach Start() after the portal delay, long after they'd be needed.
-        EnemyPathGrid.Instance.EnsureBuilt();
+        // The board is built here rather than in Start because the rest of the
+        // scene reads it from Start: the enemies pick their spawn cells off the
+        // Blocks parent, and the path grid is a static singleton that outlives
+        // scene loads, so a restart would otherwise keep pathing on the
+        // previous run's layout. Enemies can't rebuild it themselves either -
+        // they spawn disabled and only reach Start() after the portal delay.
+        CaptureBoardMetrics();
+        ApplyLevelLayout();
+        PlacePlayerOnBoard();
+    }
+
+    // Level 1's coins come from the same table as every other level rather
+    // than from whatever happens to be hand-placed in the scene - otherwise
+    // changing the table would silently skip the level the player sees first.
+    // Awake laid the board out underneath them a moment ago, so the tiles they
+    // land on are this level's, not the authored ones.
+    void Start()
+    {
+        int spawned = SpawnCoins(CoinsForLevel(_level));
+        if (RewardSystem.Instance != null) RewardSystem.Instance.ResetForNewLevel(spawned);
+    }
+
+    private int CoinsForLevel(int level)
+    {
+        if (coinsByLevel == null || coinsByLevel.Length == 0) return 0;
+        return coinsByLevel[Mathf.Clamp(level - 1, 0, coinsByLevel.Length - 1)];
     }
 
     private void UpdateLevelText()
@@ -78,21 +120,205 @@ public class LevelManager : MonoBehaviour
 
         if (TrapManager.Instance != null) TrapManager.Instance.ClearPlacedTraps();
 
-        RegenerateLayout();
-        EnemyPathGrid.Instance.Rebuild();
+        ApplyLevelLayout();
 
-        // Different cells are lava now, so both shared surfaces have to be
-        // rebuilt against the new layout.
-        if (LiquidSurface.Instance != null) LiquidSurface.Instance.Refresh();
-        if (GroundSurface.Instance != null) GroundSurface.Instance.Refresh();
-
-        int coinCount = _level >= 2 ? coinsFromLevel2 : 5;
-        int spawned = SpawnCoins(coinCount);
+        int spawned = SpawnCoins(CoinsForLevel(_level));
         if (RewardSystem.Instance != null) RewardSystem.Instance.ResetForNewLevel(spawned);
 
-        if (enemySpawnManager != null) enemySpawnManager.SetActiveEnemyCount(_level >= 2 ? 2 : 1);
+        if (enemySpawnManager != null) enemySpawnManager.SetLevel(_level);
 
         RespawnPlayerAndEnemies();
+    }
+
+    private Vector2Int SizeForLevel(int level)
+    {
+        if (boardSizeByLevel == null || boardSizeByLevel.Length == 0) return new Vector2Int(30, 20);
+        return boardSizeByLevel[Mathf.Clamp(level - 1, 0, boardSizeByLevel.Length - 1)];
+    }
+
+    // Everything that has to happen when the board changes shape: floor and
+    // border resized to this level's footprint, lava laid out fresh on it (and
+    // still guaranteed connected), then every system that caches the board put
+    // back in sync. The three merged surfaces are only nudged if they have
+    // already built themselves - on the very first frame their own OnEnable
+    // may not have run yet, and it will pick up the finished board on its own.
+    private void ApplyLevelLayout()
+    {
+        Vector2Int size = SizeForLevel(_level);
+        ResizeBoard(size);
+        ResizeWalls(size);
+        RegenerateLayout();
+
+        EnemyPathGrid.Instance.Rebuild();
+        if (LiquidSurface.Instance != null) LiquidSurface.Instance.Refresh();
+        if (GroundSurface.Instance != null) GroundSurface.Instance.Refresh();
+        if (WallSurface.Instance != null) WallSurface.Instance.Refresh();
+
+        if (cameraFollow != null)
+        {
+            // Out to the far face of the border, which is where the authored
+            // limits sat: the wall is meant to be visible at the edge of the
+            // view, not cut off at the last floor tile.
+            float halfX = size.x * 0.5f + 1f;
+            float halfZ = size.y * 0.5f + 1f;
+            cameraFollow.ConfigureForMap(_boardCentre.x - halfX, _boardCentre.x + halfX,
+                                         _boardCentre.y - halfZ, _boardCentre.y + halfZ);
+        }
+    }
+
+    // Measured once from the authored board, before anything resizes it, so
+    // every later footprint is centred on the same spot and reuses the same
+    // tile heights - the board grows outward symmetrically instead of drifting
+    // off toward one corner.
+    private void CaptureBoardMetrics()
+    {
+        var blocksParent = GameObject.Find("Blocks").transform;
+        var lavaParent = GameObject.Find("Lava").transform;
+
+        var allTiles = new List<Transform>();
+        foreach (Transform t in blocksParent) allTiles.Add(t);
+        foreach (Transform t in lavaParent) allTiles.Add(t);
+        if (allTiles.Count > 0)
+        {
+            _boardCentre = new Vector2(
+                (allTiles.Min(t => t.position.x) + allTiles.Max(t => t.position.x)) * 0.5f,
+                (allTiles.Min(t => t.position.z) + allTiles.Max(t => t.position.z)) * 0.5f);
+        }
+
+        if (blocksParent.childCount > 0) _blockTileY = blocksParent.GetChild(0).position.y;
+        if (lavaParent.childCount > 0) _lavaTileY = lavaParent.GetChild(0).position.y;
+
+        // The border is two rows of cubes at fixed heights; which cells they
+        // sit on changes with the board, the heights never do.
+        var wallsParent = GameObject.Find("Walls");
+        if (wallsParent != null)
+        {
+            var rows = new List<float>();
+            foreach (Transform t in wallsParent.transform)
+            {
+                float y = Mathf.Round(t.position.y * 1000f) / 1000f;
+                if (!rows.Contains(y)) rows.Add(y);
+            }
+            rows.Sort();
+            _wallRowY = rows.ToArray();
+        }
+    }
+
+    // Lays the floor out as a size.x by size.y rectangle centred on the board.
+    // Tiles are reused rather than rebuilt: whatever is already in the scene
+    // gets moved onto the new grid, a shortfall is cloned off an existing tile
+    // so the copies carry the same mesh, collider and material, and the surplus
+    // is parked. Which of them end up lava is RegenerateLayout's business, and
+    // it runs straight after this.
+    //
+    // Cells are one world unit, the same assumption the path grid and the
+    // layout generator already make when they round a position to a cell.
+    private void ResizeBoard(Vector2Int size)
+    {
+        var blocksParent = GameObject.Find("Blocks").transform;
+        var lavaParent = GameObject.Find("Lava").transform;
+
+        var tiles = new List<Transform>();
+        foreach (Transform t in blocksParent) tiles.Add(t);
+        foreach (Transform t in lavaParent) tiles.Add(t);
+        if (_tilePool != null) foreach (Transform t in _tilePool) tiles.Add(t);
+        if (tiles.Count == 0) return;
+
+        Transform template = blocksParent.childCount > 0 ? blocksParent.GetChild(0) : tiles[0];
+        float halfX = (size.x - 1) * 0.5f;
+        float halfZ = (size.y - 1) * 0.5f;
+
+        int i = 0;
+        for (int gx = 0; gx < size.x; gx++)
+        {
+            for (int gz = 0; gz < size.y; gz++)
+            {
+                if (i >= tiles.Count) tiles.Add(Instantiate(template.gameObject, blocksParent).transform);
+
+                var tile = tiles[i++];
+                if (tile.parent == _tilePool) tile.SetParent(blocksParent, true);
+                tile.position = new Vector3(_boardCentre.x - halfX + gx, tile.position.y, _boardCentre.y - halfZ + gz);
+            }
+        }
+
+        for (; i < tiles.Count; i++) Park(tiles[i], ref _tilePool, "TilePool");
+    }
+
+    // The border is the one-cell ring just outside the floor, two rows tall.
+    // It is rebuilt from the same rectangle the floor came from rather than
+    // measured off the old wall, so it can never drift out of step with it.
+    private void ResizeWalls(Vector2Int size)
+    {
+        var wallsObject = GameObject.Find("Walls");
+        if (wallsObject == null || _wallRowY == null || _wallRowY.Length == 0) return;
+        var wallsParent = wallsObject.transform;
+
+        var cubes = new List<Transform>();
+        foreach (Transform t in wallsParent) cubes.Add(t);
+        if (_wallPool != null) foreach (Transform t in _wallPool) cubes.Add(t);
+        if (cubes.Count == 0) return;
+
+        Transform template = cubes[0];
+        float halfX = (size.x + 1) * 0.5f;
+        float halfZ = (size.y + 1) * 0.5f;
+
+        int i = 0;
+        for (int gx = 0; gx < size.x + 2; gx++)
+        {
+            for (int gz = 0; gz < size.y + 2; gz++)
+            {
+                // the ring is the border of that rectangle, nothing inside it
+                if (gx > 0 && gx <= size.x && gz > 0 && gz <= size.y) continue;
+
+                float x = _boardCentre.x - halfX + gx;
+                float z = _boardCentre.y - halfZ + gz;
+                foreach (float y in _wallRowY)
+                {
+                    if (i >= cubes.Count) cubes.Add(Instantiate(template.gameObject, wallsParent).transform);
+
+                    var cube = cubes[i++];
+                    if (cube.parent != wallsParent) cube.SetParent(wallsParent, true);
+                    cube.position = new Vector3(x, y, z);
+                }
+            }
+        }
+
+        for (; i < cubes.Count; i++) Park(cubes[i], ref _wallPool, "WallPool");
+    }
+
+    // Surplus tiles are parked, not destroyed - the board grows again on later
+    // levels. The holder itself is inactive, which is what takes its children
+    // out of play, and it is somewhere none of the systems that walk the
+    // Blocks/Lava/Walls children will ever look.
+    private static void Park(Transform t, ref Transform pool, string poolName)
+    {
+        if (pool == null)
+        {
+            var go = new GameObject(poolName);
+            go.hideFlags = HideFlags.DontSave;
+            go.SetActive(false);
+            pool = go.transform;
+        }
+        t.SetParent(pool, true);
+    }
+
+    // Level 1's authored start sat on the old hand-built board. The board under
+    // it is laid out fresh now, so the character is moved onto a walkable tile
+    // before its own Start() captures that position as its spawn point.
+    private void PlacePlayerOnBoard()
+    {
+        if (ghost == null) return;
+        var blocksParent = GameObject.Find("Blocks").transform;
+        if (blocksParent.childCount == 0) return;
+
+        var spot = blocksParent.GetChild(Random.Range(0, blocksParent.childCount));
+        var ctrl = ghost.GetComponent<CharacterController>();
+
+        // A CharacterController overrides transform writes made while it is
+        // enabled, the same reason RespawnAt cycles it.
+        if (ctrl != null) ctrl.enabled = false;
+        ghost.transform.position = new Vector3(spot.position.x, ghost.transform.position.y, spot.position.z);
+        if (ctrl != null) ctrl.enabled = true;
     }
 
     private void RegenerateLayout()
@@ -101,14 +327,11 @@ public class LevelManager : MonoBehaviour
         var lavaParent = GameObject.Find("Lava").transform;
 
         // Block and Lava tiles sit at slightly different baseline heights by
-        // design (lava is visually recessed) - capture both now, before any
-        // conversion, so a tile changing type gets moved to match its new
-        // type's height instead of keeping whatever height it started at.
-        float blockY = blocksParent.childCount > 0 ? blocksParent.GetChild(0).position.y : 0f;
-        float lavaY = lavaParent.childCount > 0 ? lavaParent.GetChild(0).position.y : 0f;
-        _blockTileY = blockY;
-        _lavaTileY = lavaY;
-
+        // design (lava is visually recessed), so a tile changing type gets moved
+        // to match its new type's height. Both heights come from
+        // CaptureBoardMetrics rather than from the current children: a resize
+        // can leave one of the two parents empty, and there would be nothing
+        // left to read the height off.
         var allTiles = new List<Transform>();
         foreach (Transform t in blocksParent) allTiles.Add(t);
         foreach (Transform t in lavaParent) allTiles.Add(t);

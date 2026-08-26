@@ -26,6 +26,10 @@ public class EnemyChaser : MonoBehaviour
     [SerializeField] private float waypointTolerance = 0.15f;
     [SerializeField] private float separationRadius = 0.8f;
     [SerializeField] private float separationStrength = 2f;
+    // How close a faster enemy has to get before this one gives way, and how
+    // long it stays out of the lane once it has - long enough to be passed.
+    [SerializeField] private float yieldRadius = 1.6f;
+    [SerializeField] private float yieldDuration = 0.8f;
 
     private Rigidbody _rb;
     private Transform _target;
@@ -34,6 +38,7 @@ public class EnemyChaser : MonoBehaviour
     private Vector3 _lastGoal;
     private bool _hasGoal;
     private float _stunTimer;
+    private float _yieldTimer;
 
     public bool IsStunned => _stunTimer > 0f;
 
@@ -61,6 +66,7 @@ public class EnemyChaser : MonoBehaviour
         _hasGoal = false;
         _stunTimer = 0f;
         _repathTimer = 0f;
+        _yieldTimer = 0f;
     }
 
     void OnDisable()
@@ -109,8 +115,24 @@ public class EnemyChaser : MonoBehaviour
         if (_target == null || EnemyPathGrid.Instance.AllNodes.Count == 0) return;
 
         _repathTimer -= Time.deltaTime;
+        _yieldTimer -= Time.deltaTime;
         Vector3 start = EnemyPathGrid.Instance.NearestNode(transform.position);
         Vector3 goal = EnemyPathGrid.Instance.NearestNode(_target.position);
+
+        // Standing aside outranks chasing for as long as it takes to be passed.
+        // Repathing mid-step would compute a route straight back down the lane
+        // this is trying to clear, which is the whole thing it must not do.
+        if (_yieldTimer > 0f)
+        {
+            FaceMovementDirection();
+            return;
+        }
+
+        if (TryStepAside(start))
+        {
+            FaceMovementDirection();
+            return;
+        }
 
         // Repath on the usual timer, but also the instant the queued path
         // runs dry while we're not yet on the player's tile - otherwise
@@ -220,6 +242,90 @@ public class EnemyChaser : MonoBehaviour
         return Mathf.Abs(node.x - pos.x) <= 0.5f && Mathf.Abs(node.z - pos.z) <= 0.5f;
     }
 
+    // A slower enemy pulls over and lets a faster one through rather than being
+    // herded along in front of it down a one-tile-wide lane. Only the slower of
+    // the pair ever moves, which is what makes it read as giving way instead of
+    // the two of them jostling - and it means the rule can never deadlock,
+    // since equal speeds mean nobody yields.
+    //
+    // Returns true when a detour was taken, in which case the queued path is
+    // now the single side cell and the caller must not repath over it.
+    private bool TryStepAside(Vector3 myNode)
+    {
+        var overtaker = FindOvertaker();
+        if (overtaker == null) return false;
+
+        Vector3 lane = overtaker.transform.forward;
+        lane.y = 0f;
+        if (lane.sqrMagnitude < 0.0001f) return false;
+        lane.Normalize();
+
+        // The cell worth ducking into is the one most side-on to the lane it is
+        // coming down; anything along that lane is still in the way. Distance
+        // from the overtaker breaks ties, so it doesn't step into its lap.
+        Vector3 best = myNode;
+        float bestScore = float.MaxValue;
+        foreach (var n in EnemyPathGrid.Instance.GetNeighbors(myNode))
+        {
+            Vector3 dir = n - myNode;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) continue;
+
+            float alignment = Mathf.Abs(Vector3.Dot(dir.normalized, lane));
+            float crowding = 1f / Mathf.Max(0.01f, (n - overtaker.transform.position).magnitude);
+            float score = alignment + crowding * 0.25f;
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = n;
+            }
+        }
+
+        // Nowhere to go - a dead end or a one-cell corridor. Carry on chasing
+        // and let separation do what little it can.
+        if (best == myNode) return false;
+
+        _path.Clear();
+        _path.Add(best);
+        // Cleared so the tick after the wait repaths immediately from wherever
+        // it ended up, rather than waiting out the normal repath interval.
+        _hasGoal = false;
+        _yieldTimer = yieldDuration;
+        return true;
+    }
+
+    // The nearest chaser that is meaningfully faster, close, and actually
+    // bearing down on us. Speed alone is not enough: something quicker on the
+    // far side of the board is nobody's problem, and neither is one that
+    // happens to be quick but is heading somewhere else.
+    private EnemyChaser FindOvertaker()
+    {
+        Vector3 me = transform.position;
+        EnemyChaser best = null;
+        float bestDistSq = yieldRadius * yieldRadius;
+
+        foreach (var other in AllChasers)
+        {
+            if (other == this || other == null || other.IsStunned) continue;
+            if (other.speed <= speed + 0.05f) continue;
+
+            Vector3 toMe = me - other.transform.position;
+            toMe.y = 0f;
+            float distSq = toMe.sqrMagnitude;
+            if (distSq > bestDistSq || distSq < 0.0001f) continue;
+
+            Vector3 heading = other.transform.forward;
+            heading.y = 0f;
+            if (heading.sqrMagnitude < 0.0001f) continue;
+            if (Vector3.Dot(heading.normalized, toMe.normalized) < 0.6f) continue;
+
+            bestDistSq = distSq;
+            best = other;
+        }
+
+        return best;
+    }
+
     // gently pushes this enemy away from any other chaser that's crowding
     // it, so multiple enemies don't stack on the exact same tile
     private Vector3 GetSeparation(Vector3 current)
@@ -233,7 +339,12 @@ public class EnemyChaser : MonoBehaviour
             float dist = diff.magnitude;
             if (dist > 0.001f && dist < separationRadius)
             {
-                push += diff.normalized * (separationRadius - dist);
+                // Weighted so a faster enemy shoulders a slower one aside
+                // instead of the two deflecting each other equally. Without
+                // this the sidestep above gets half undone by the shove it
+                // takes back from the enemy it is making room for.
+                float weight = other.speed >= speed ? 1f : 0.35f;
+                push += diff.normalized * ((separationRadius - dist) * weight);
             }
         }
         return push;
