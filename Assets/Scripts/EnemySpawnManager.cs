@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Each enemy gets its own portal at a random walkable cell, visible the
-// instant the level loads. A portal telegraphs for portalWarningDuration
-// seconds before its enemy actually appears there; the player is held
-// still for that same window so nobody moves until the countdown ends.
+// instant the level loads. The portals then burn for as long as the camera
+// takes to open the level - the board held in frame while the countdown runs,
+// then the move in to the player - so the enemies are standing there the
+// moment it settles. The player is held still for that same window, so nobody
+// moves until the camera has arrived.
 //
 // Several kinds of enemy share that sequence - the slower optimal-pathing
 // ghost, the faster greedy axe ghost, the ghoul. The scene carries one
@@ -35,11 +37,18 @@ public class EnemySpawnManager : MonoBehaviour
 
     [SerializeField] private EnemyKind[] enemyKinds = new EnemyKind[0];
     [SerializeField] private GameObject portalPrefab;
-    [SerializeField] private float portalWarningDuration = 3f;
+    [Tooltip("Only used when there is no CameraFollow to open the level; normally the camera intro sets the length of the warning.")]
+    [SerializeField] private float fallbackWarningDuration = 3f;
     [SerializeField] private float minDistanceFromPlayer = 3f;
     [SerializeField] private float portalWorldY = 0.48f;
 
     private Transform _player;
+    private CameraFollow _camera;
+
+    // How long the opening beat lasts. The camera owns the shape of it, and
+    // everything else here is timed against that shot rather than against a
+    // duration of its own, so the two can never drift apart.
+    private float WarningDuration => _camera != null ? _camera.IntroDuration : fallbackWarningDuration;
 
     // Deadline for the current portal warning. The player is frozen until
     // then so the countdown reads as a shared "get ready" beat instead of
@@ -119,6 +128,8 @@ public class EnemySpawnManager : MonoBehaviour
             }
         }
 
+        _camera = FindFirstObjectByType<CameraFollow>();
+
         // A fresh scene starts at level 1, but read it off the LevelManager
         // anyway so this stays correct if a run ever begins further in.
         SetLevel(LevelManager.Instance != null ? LevelManager.Instance.CurrentLevel : 1);
@@ -143,11 +154,16 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void TriggerSpawnSequence()
     {
-        _freezeUntil = Time.time + portalWarningDuration;
+        _freezeUntil = Time.time + WarningDuration;
+
+        if (_camera != null) _camera.PlayIntro();
 
         if (SpawnCountdownController.Instance != null)
         {
-            SpawnCountdownController.Instance.PlayCountdown(portalWarningDuration);
+            // Counts down the board shot rather than the whole warning:
+            // reaching one is what sends the camera in towards the player.
+            SpawnCountdownController.Instance.PlayCountdown(
+                _camera != null ? _camera.OverviewDuration : WarningDuration);
         }
 
         // One shared list of taken cells across every kind, so two enemies
@@ -184,7 +200,7 @@ public class EnemySpawnManager : MonoBehaviour
             portal = Instantiate(portalPrefab, portalPos, Quaternion.Euler(90f, 0f, 0f));
         }
 
-        yield return new WaitForSeconds(portalWarningDuration);
+        yield return new WaitForSeconds(WarningDuration);
 
         enemy.transform.position = new Vector3(cell.x, enemy.transform.position.y, cell.z);
         enemy.SetActive(true);
