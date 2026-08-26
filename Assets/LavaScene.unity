@@ -25182,7 +25182,7 @@ MonoBehaviour:
   - template: {fileID: 1365869697}
     countByLevel: 0000000000000000000000000000000001000000
   portalPrefab: {fileID: 5898153853332207064, guid: 54bf47f5c7bb5984b80e3be79284f16d, type: 3}
-  portalWarningDuration: 3
+  fallbackWarningDuration: 3
   minDistanceFromPlayer: 3
   portalWorldY: 0.48
 --- !u!4 &524859456
@@ -53263,6 +53263,10 @@ MonoBehaviour:
   mapMaxX: 18.02
   mapMinZ: -10
   mapMaxZ: 12
+  overviewDuration: 3
+  approachDuration: 2
+  overviewPitch: 55
+  overviewPadding: 1.06
 --- !u!1 &1121683151
 GameObject:
   m_ObjectHideFlags: 0
