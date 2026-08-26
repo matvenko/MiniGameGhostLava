@@ -27,6 +27,11 @@ public static class GhoulEnemySetup
     private const string FbxMaterialName = "StingrayPBS1";
     private const string EnemyName = "EnemyGhoul";
 
+    // The level the ghoul first turns up on. The two ghosts have the opening
+    // levels to themselves, so the taller, faster thing arriving reads as the
+    // run stepping up rather than as another face in the starting crowd.
+    private const int FirstGhoulLevel = 5;
+
     // The mesh is authored 224 units tall. The board is a 1-unit grid and the
     // two ghosts stand about a unit, so this lands the ghoul at ~1.23 - a head
     // taller than them, which is rather the point of it.
@@ -266,15 +271,19 @@ public static class GhoulEnemySetup
 
         var ghoulKind = kinds.GetArrayElementAtIndex(2);
         ghoulKind.FindPropertyRelative("template").objectReferenceValue = ghoul;
+        // Nothing for the levels before it, one from then on - the spawner
+        // reuses a table's last entry for any level past its end, so a single
+        // 1 in the last slot keeps the ghoul around for the rest of the run.
         var counts = ghoulKind.FindPropertyRelative("countByLevel");
-        counts.arraySize = 1;
-        counts.GetArrayElementAtIndex(0).intValue = 1;
+        counts.arraySize = FirstGhoulLevel;
+        for (int i = 0; i < FirstGhoulLevel; i++)
+            counts.GetArrayElementAtIndex(i).intValue = i == FirstGhoulLevel - 1 ? 1 : 0;
         spawnerFields.ApplyModifiedProperties();
 
         EditorSceneManager.MarkSceneDirty(ghoul.scene);
         EditorSceneManager.SaveScene(ghoul.scene);
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"[Ghoul] Ready: {height:0.00} units tall, one per level from level 1. Press Play.");
+        Debug.Log($"[Ghoul] Ready: {height:0.00} units tall, one per level from level {FirstGhoulLevel}. Press Play.");
     }
 }

@@ -25180,7 +25180,7 @@ MonoBehaviour:
   - template: {fileID: 738774690}
     countByLevel: 0000000001000000020000000200000003000000
   - template: {fileID: 1365869697}
-    countByLevel: 01000000
+    countByLevel: 0000000000000000000000000000000001000000
   portalPrefab: {fileID: 5898153853332207064, guid: 54bf47f5c7bb5984b80e3be79284f16d, type: 3}
   portalWarningDuration: 3
   minDistanceFromPlayer: 3
@@ -36007,6 +36007,8 @@ MonoBehaviour:
   waypointTolerance: 0.15
   separationRadius: 0.8
   separationStrength: 2
+  yieldRadius: 1.6
+  yieldDuration: 0.8
 --- !u!1 &739776284
 GameObject:
   m_ObjectHideFlags: 0
@@ -67423,6 +67425,8 @@ MonoBehaviour:
   waypointTolerance: 0.15
   separationRadius: 0.8
   separationStrength: 2
+  yieldRadius: 1.6
+  yieldDuration: 0.8
 --- !u!54 &1365869700
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -68708,6 +68712,8 @@ MonoBehaviour:
   waypointTolerance: 0.15
   separationRadius: 0.8
   separationStrength: 2
+  yieldRadius: 1.6
+  yieldDuration: 0.8
 --- !u!1 &1388253535
 GameObject:
   m_ObjectHideFlags: 0
