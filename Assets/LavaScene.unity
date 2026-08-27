@@ -35971,6 +35971,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9203938796505349292, guid: b100033bd257c8e479a5c0a5b148fa2c, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9203938797216291871, guid: b100033bd257c8e479a5c0a5b148fa2c, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9203938797635494801, guid: b100033bd257c8e479a5c0a5b148fa2c, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9203938797952966221, guid: b100033bd257c8e479a5c0a5b148fa2c, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -67342,7 +67358,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 1.227
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
       propertyPath: m_LocalPosition.y
@@ -67350,7 +67366,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.173
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
       propertyPath: m_LocalRotation.w
@@ -67380,9 +67396,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6064620355674388231, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5227725625955904091, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 210971778449491031, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
       propertyPath: m_Name
       value: EnemyGhoul
+      objectReference: {fileID: 0}
+    - target: {fileID: 3984778603868926212, guid: d9cb52baa94964aedb664420cc0e5623, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -68679,6 +68711,14 @@ PrefabInstance:
     - target: {fileID: 6423403879286395854, guid: 68a45b7c7de96f84bb3192731ba3a68c, type: 3}
       propertyPath: m_Name
       value: EnemyGhost
+      objectReference: {fileID: 0}
+    - target: {fileID: 6423403880607891856, guid: 68a45b7c7de96f84bb3192731ba3a68c, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6423403880718231730, guid: 68a45b7c7de96f84bb3192731ba3a68c, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -101816,6 +101856,7 @@ MonoBehaviour:
   waypointTolerance: 0.15
   vanishDuration: 0.6
   captureRadius: 0.85
+  catchReward: 1000
 --- !u!1 &2093136664
 GameObject:
   m_ObjectHideFlags: 0
@@ -105144,6 +105185,10 @@ PrefabInstance:
     - target: {fileID: 796652407307068396, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.035
+      objectReference: {fileID: 0}
+    - target: {fileID: 839705036205447455, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1893022538616854154, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
       propertyPath: m_Name
