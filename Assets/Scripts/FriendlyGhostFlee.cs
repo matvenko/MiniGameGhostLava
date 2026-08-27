@@ -6,9 +6,9 @@ using Sample;
 // A friendly ghost that's scared of the player: instead of chasing, it
 // flees along the walkable grid, always stepping toward whichever neighbor
 // cell is furthest from the player. Catching it makes it vanish with a
-// small animation. No reward/consequence for catching it yet - that's
-// planned as a follow-up once this movement/capture loop is confirmed to
-// feel right.
+// small animation, and pays out - it is worth twenty ordinary coins, and it
+// only appears once a level, so running one down is the biggest single thing
+// on the board.
 [RequireComponent(typeof(Rigidbody))]
 public class FriendlyGhostFlee : MonoBehaviour
 {
@@ -20,6 +20,8 @@ public class FriendlyGhostFlee : MonoBehaviour
     // with the player right on top of it still registers as a catch even
     // if the mesh-collider trigger doesn't fire cleanly
     [SerializeField] private float captureRadius = 0.85f;
+    [Tooltip("Coins paid into the wallet for catching it.")]
+    [SerializeField] private int catchReward = 1000;
 
     private Rigidbody _rb;
     private Transform _target;
@@ -156,6 +158,11 @@ public class FriendlyGhostFlee : MonoBehaviour
         if (_caught) return;
         _caught = true;
         _path.Clear();
+
+        // Paid the moment it is caught rather than at the end of the vanish, so
+        // the reward cannot be lost to a level change landing mid-animation.
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(catchReward);
+
         StartCoroutine(VanishRoutine());
     }
 
