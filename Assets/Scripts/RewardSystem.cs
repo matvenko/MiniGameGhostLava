@@ -45,9 +45,12 @@ public class RewardSystem : MonoBehaviour
         UpdateText();
     }
 
+    // One number: what is still out on the board, counting down to zero. The
+    // counter used to read "collected/total", which takes a second of arithmetic
+    // to answer the only question being asked of it - how much is left.
     private void UpdateText()
     {
         if (coinsAmountText != null)
-            coinsAmountText.text = collectedCoins + "/" + totalCoins;
+            coinsAmountText.text = Mathf.Max(0, totalCoins - collectedCoins).ToString();
     }
 }

@@ -5,9 +5,9 @@ using UnityEngine.EventSystems;
 // event system treats mouse drags the same way), so it can be tested in
 // the Editor or the Device Simulator without a physical device.
 //
-// The stick floats. It rests on the right of the screen, where it is visible
-// enough to say "this is the control", but a press anywhere picks it up and
-// puts it under the finger. A thumb never lands twice in the same spot on a
+// The stick floats. It rests at the bottom of the screen, where it is visible
+// enough to say "this is the control" and out of the way of the readouts down
+// either side, but a press anywhere picks it up and puts it under the finger. A thumb never lands twice in the same spot on a
 // phone, and a stick nailed to one corner makes the player look down mid-run to
 // find it; letting it come to the finger means they never have to.
 //
@@ -27,10 +27,10 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
 
     [Tooltip("How far from the stick's centre the handle can travel, in canvas units.")]
     [SerializeField] private float handleRange = 80f;
-    [Tooltip("Where the stick waits: this far in from the right edge, halfway up.")]
+    [Tooltip("Where the stick waits: centred, this far up from the bottom edge.")]
     [SerializeField] private float restMargin = 230f;
     [Tooltip("How visible the stick is while nobody is holding it.")]
-    [SerializeField, Range(0f, 1f)] private float idleAlpha = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float idleAlpha = 0.35f;
     [Tooltip("How quickly the stick drifts back to its resting place after release.")]
     [SerializeField] private float returnSpeed = 14f;
 
@@ -98,9 +98,9 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     }
 
     // Read off the press area rather than stored, so the stick still finds the
-    // right edge after a rotation or a resolution change.
+    // bottom of the screen after a rotation or a resolution change.
     private Vector2 RestPosition() =>
-        new Vector2(_area.rect.width * 0.5f - restMargin, 0f);
+        new Vector2(0f, -(_area.rect.height * 0.5f - restMargin));
 
     // Drops the stick on the press point, kept far enough inside the screen that
     // the whole ring stays visible - a stick half off the edge is one the player

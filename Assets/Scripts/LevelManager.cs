@@ -99,7 +99,9 @@ public class LevelManager : MonoBehaviour
 
     private void UpdateLevelText()
     {
-        if (levelText != null) levelText.text = "LEVEL " + _level;
+        // The word LEVEL is lettered into the badge behind this, so all that is
+        // left to say is the number.
+        if (levelText != null) levelText.text = _level.ToString();
     }
 
     public void OnLevelComplete()

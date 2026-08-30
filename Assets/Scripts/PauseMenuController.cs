@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class PauseMenuController : MonoBehaviour
 {
     [SerializeField] private GameObject pausePanel;
+    [SerializeField] private Button openButton;   // the gear on the HUD, doing what Escape does
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button quitButton;
     [SerializeField] private Button musicToggleButton;
@@ -20,6 +21,7 @@ public class PauseMenuController : MonoBehaviour
     void Awake()
     {
         if (pausePanel != null) pausePanel.SetActive(false);
+        if (openButton != null) openButton.onClick.AddListener(Toggle);
         if (resumeButton != null) resumeButton.onClick.AddListener(Close);
         if (quitButton != null) quitButton.onClick.AddListener(OnQuit);
         if (musicToggleButton != null) musicToggleButton.onClick.AddListener(ToggleMusic);
@@ -34,16 +36,21 @@ public class PauseMenuController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            bool gameOverActive = GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive;
-            bool levelCompleteActive = LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive;
-            bool shopOpen = ShopUIController.Instance != null && ShopUIController.Instance.IsOpen;
-            if (gameOverActive || levelCompleteActive || shopOpen) return;
+        if (Input.GetKeyDown(KeyCode.Escape)) Toggle();
+    }
 
-            if (_isOpen) Close();
-            else Open();
-        }
+    // Escape, and the gear on the HUD. Both are refused while something else owns
+    // the screen: the game-over and level-complete popups have their own way out,
+    // and the shop is opened over the top of this and closes back into it.
+    public void Toggle()
+    {
+        bool gameOverActive = GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive;
+        bool levelCompleteActive = LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive;
+        bool shopOpen = ShopUIController.Instance != null && ShopUIController.Instance.IsOpen;
+        if (gameOverActive || levelCompleteActive || shopOpen) return;
+
+        if (_isOpen) Close();
+        else Open();
     }
 
     private void Open()

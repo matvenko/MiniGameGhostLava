@@ -42,8 +42,16 @@ public static class JoystickArtBuilder
     // Short of (StickSize - HandleSize) / 2, so the knob stops just inside the
     // ring instead of sitting on it.
     private const float HandleRange = 72f;
+
+    // Where the stick waits: centred, this far up from the bottom edge. It used
+    // to rest against the right, which is where the lives, the wallet, the shop
+    // and the settings gear now live.
     private const float RestMargin = 230f;
-    private const float IdleAlpha = 0.5f;
+
+    // Faint at rest. It sits over the middle of the board now, where the player
+    // is looking and where the coins are, so it stays out of the way until a
+    // finger is on it - at which point the component takes it to full.
+    private const float IdleAlpha = 0.35f;
 
     [MenuItem("Tools/Build Joystick")]
     public static void Build()
@@ -74,8 +82,9 @@ public static class JoystickArtBuilder
         EditorSceneManager.SaveScene(canvas.gameObject.scene);
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"[Joystick] Rebuilt in {canvas.gameObject.scene.name}: floating stick resting {RestMargin} " +
-                  "in from the right edge. Run this again in any other scene that has a stick.");
+        Debug.Log($"[Joystick] Rebuilt in {canvas.gameObject.scene.name}: floating stick resting centred, " +
+                  $"{RestMargin} up from the bottom, at alpha {IdleAlpha}. " +
+                  "Run this again in any other scene that has a stick.");
     }
 
     // ---- scene ------------------------------------------------------------
@@ -125,7 +134,7 @@ public static class JoystickArtBuilder
         rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = new Vector2(StickSize, StickSize);
-        rt.anchoredPosition = new Vector2(area.rect.width * 0.5f - RestMargin, 0f);
+        rt.anchoredPosition = new Vector2(0f, -(area.rect.height * 0.5f - RestMargin));
 
         var image = go.GetComponent<Image>();
         if (image == null) image = go.AddComponent<Image>();

@@ -97,6 +97,11 @@ public class TrapManager : MonoBehaviour
     public void Refresh()
     {
         if (countText != null) countText.text = TrapsOwned.ToString();
+        // The trap's slot in the ability bar. The bar owns the badge on each of
+        // its four buttons, so the count is reported to it rather than written
+        // straight into the label - which is also why countText is now empty.
+        if (AbilityBarUI.Instance != null)
+            AbilityBarUI.Instance.SetCount(AbilityBarUI.Ability.Trap, TrapsOwned);
         if (placeButton != null) placeButton.interactable = TrapsOwned > 0;
     }
 }

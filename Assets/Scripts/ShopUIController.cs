@@ -2,9 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Drives the Shop popup opened from the pause menu: refreshes the wallet
-// balance and the Extra Life item's price/owned/buy-state, and applies a
-// purchase through ShopManager when Buy is clicked.
+// Drives the Shop popup: refreshes the wallet balance and the Extra Life item's
+// price/owned/buy-state, and applies a purchase through ShopManager when Buy is
+// clicked.
+//
+// There are two ways in and closing has to undo whichever it was. From the pause
+// menu the game is already stopped and the pause card is only hidden, so closing
+// puts that card back and leaves time stopped. From the button on the HUD the
+// game is still running, so opening stops it and closing starts it again -
+// otherwise the ghosts keep hunting a player who is reading prices.
 public class ShopUIController : MonoBehaviour
 {
     public static ShopUIController Instance { get; private set; }
@@ -13,7 +19,8 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private GameObject shopPanel;
     [SerializeField] private GameObject pausePanel; // hidden while the shop is open so its dim backdrop doesn't stack/bleed through
     [SerializeField] private GameObject[] hudElementsToHide; // top HUD (coins/wallet/hearts) - hidden outright rather than trusted to the backdrop alone
-    [SerializeField] private Button openButton;
+    [SerializeField] private Button openButton;      // on the pause card
+    [SerializeField] private Button hudOpenButton;   // in the corner of the HUD, during play
     [SerializeField] private Button closeButton;
     [SerializeField] private Button buyExtraLifeButton;
     [SerializeField] private TextMeshProUGUI buyExtraLifeButtonText;
@@ -27,16 +34,35 @@ public class ShopUIController : MonoBehaviour
     {
         Instance = this;
         if (shopPanel != null) shopPanel.SetActive(false);
-        if (openButton != null) openButton.onClick.AddListener(Open);
+        if (openButton != null) openButton.onClick.AddListener(OpenFromPause);
+        if (hudOpenButton != null) hudOpenButton.onClick.AddListener(OpenFromHud);
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         if (buyExtraLifeButton != null) buyExtraLifeButton.onClick.AddListener(OnBuyExtraLifeClicked);
         if (buyTrapButton != null) buyTrapButton.onClick.AddListener(OnBuyTrapClicked);
     }
 
+    private bool _openedFromPause;
+
+    private void OpenFromPause()
+    {
+        _openedFromPause = true;
+        if (pausePanel != null) pausePanel.SetActive(false);
+        Open();
+    }
+
+    private void OpenFromHud()
+    {
+        // Nothing else is stopping the game on this route, so the shop does.
+        // Anything that already owns the screen has its own popup over the HUD
+        // button, so there is no state to check first.
+        _openedFromPause = false;
+        Time.timeScale = 0f;
+        Open();
+    }
+
     private void Open()
     {
         if (shopPanel != null) shopPanel.SetActive(true);
-        if (pausePanel != null) pausePanel.SetActive(false);
         SetHudVisible(false);
         Refresh();
     }
@@ -44,7 +70,14 @@ public class ShopUIController : MonoBehaviour
     private void Close()
     {
         if (shopPanel != null) shopPanel.SetActive(false);
-        if (pausePanel != null) pausePanel.SetActive(true);
+        if (_openedFromPause)
+        {
+            if (pausePanel != null) pausePanel.SetActive(true);
+        }
+        else
+        {
+            Time.timeScale = 1f;
+        }
         SetHudVisible(true);
     }
 
