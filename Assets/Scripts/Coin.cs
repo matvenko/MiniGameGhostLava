@@ -14,6 +14,11 @@ public class Coin : MonoBehaviour
     [SerializeField] private GameObject pickupEffect;
     [SerializeField] private float pickupEffectLifetime = 2f;
 
+    // The blob on the ground under the coin. It hangs off the prefab root, not
+    // off this disc, so that it stays flat while the disc tumbles - which also
+    // means the pickup animation has to shrink it by hand.
+    [SerializeField] private Transform shadow;
+
     private bool _collected;
 
     // How fast the coin turns about world Y, as a share of its flip speed about
@@ -66,6 +71,7 @@ public class Coin : MonoBehaviour
         Transform root = transform.parent != null ? transform.parent : transform;
         Vector3 startScale = transform.localScale;
         Vector3 startPos = root.position;
+        Vector3 startShadow = shadow != null ? shadow.localScale : Vector3.zero;
         float t = 0f;
         while (t < pickupDuration)
         {
@@ -73,6 +79,7 @@ public class Coin : MonoBehaviour
             float p = t / pickupDuration;
             transform.localScale = Vector3.Lerp(startScale, Vector3.zero, p);
             root.position = startPos + Vector3.up * (p * 0.5f);
+            if (shadow != null) shadow.localScale = Vector3.Lerp(startShadow, Vector3.zero, p);
             yield return null;
         }
         Destroy(root.gameObject);

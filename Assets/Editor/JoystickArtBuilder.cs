@@ -21,8 +21,8 @@ using UnityEngine.UI;
 //         Handle     the knob
 //
 // Follows GhoulEnemySetup's rule about scenes: this works on whatever is open
-// and never discards it. Both LavaScene and MeadowScene have a stick, so open
-// each in turn and run it again. Running it twice on one scene is safe.
+// and never discards it. Open each scene with a stick in it in turn and run this
+// again for each. Running it twice on one scene is safe.
 public static class JoystickArtBuilder
 {
     private const string IconFolder = "Assets/UI/Icons";
@@ -55,7 +55,7 @@ public static class JoystickArtBuilder
 
         if (canvas == null)
         {
-            Debug.LogError("[Joystick] No Canvas in the open scene. Open LavaScene or MeadowScene first - " +
+            Debug.LogError("[Joystick] No Canvas in the open scene. Open a game scene first - " +
                            "this will not discard whatever you have open to do it.");
             return;
         }
@@ -75,7 +75,7 @@ public static class JoystickArtBuilder
         AssetDatabase.SaveAssets();
 
         Debug.Log($"[Joystick] Rebuilt in {canvas.gameObject.scene.name}: floating stick resting {RestMargin} " +
-                  "in from the right edge. Open the other scene and run this again to do the same there.");
+                  "in from the right edge. Run this again in any other scene that has a stick.");
     }
 
     // ---- scene ------------------------------------------------------------
