@@ -6,6 +6,13 @@ using TMPro;
 // Plays a big centered "3... 2... 1..." countdown, timed to match the
 // portal warning duration, so that warm-up period before enemies appear
 // reads as a deliberate beat instead of a silent pause.
+//
+// It is the only thing on the screen that is mid-animation when a popup opens,
+// so it is also the only thing that has to be told to get out of the way. The
+// settings popup and the shop both say so on their way up and take it back on
+// their way down: the beat itself is not cancelled, only taken off the screen,
+// and since both of them stop time as well it is frozen where it was and carries
+// on from there.
 public class SpawnCountdownController : MonoBehaviour
 {
     public static SpawnCountdownController Instance { get; private set; }
@@ -18,11 +25,15 @@ public class SpawnCountdownController : MonoBehaviour
     [SerializeField] private float punchInDuration = 0.15f;
     [SerializeField] private float punchOutDuration = 0.25f;
 
+    // Whether a countdown is running, and whether something has the screen in
+    // front of it. It shows only when both agree.
+    private bool _counting;
+    private bool _covered;
+
     void Awake()
     {
         Instance = this;
-        if (countdownText != null) countdownText.gameObject.SetActive(false);
-        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(false);
+        Show();
     }
 
     public void PlayCountdown(float duration)
@@ -38,15 +49,30 @@ public class SpawnCountdownController : MonoBehaviour
     public void StopAndHide()
     {
         StopAllCoroutines();
-        if (countdownText != null) countdownText.gameObject.SetActive(false);
-        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(false);
+        _counting = false;
+        Show();
+    }
+
+    // Called by whatever is putting a popup over the board. The countdown keeps
+    // its place: this only decides whether it can be seen.
+    public void SetCovered(bool covered)
+    {
+        _covered = covered;
+        Show();
+    }
+
+    private void Show()
+    {
+        bool visible = _counting && !_covered;
+        if (countdownText != null) countdownText.gameObject.SetActive(visible);
+        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(visible);
     }
 
     private IEnumerator CountdownRoutine(float duration)
     {
         int startNumber = Mathf.Max(1, Mathf.CeilToInt(duration));
-        countdownText.gameObject.SetActive(true);
-        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(true);
+        _counting = true;
+        Show();
 
         for (int i = startNumber; i >= 1; i--)
         {
@@ -54,8 +80,8 @@ public class SpawnCountdownController : MonoBehaviour
             yield return StartCoroutine(PulseOnce());
         }
 
-        countdownText.gameObject.SetActive(false);
-        if (countdownBackdrop != null) countdownBackdrop.gameObject.SetActive(false);
+        _counting = false;
+        Show();
     }
 
     // one "beat": pops in oversized+transparent, settles to full size and

@@ -64,6 +64,7 @@ public class ShopUIController : MonoBehaviour
     {
         if (shopPanel != null) shopPanel.SetActive(true);
         SetHudVisible(false);
+        SetCountdownCovered(true);
         Refresh();
     }
 
@@ -79,6 +80,16 @@ public class ShopUIController : MonoBehaviour
             Time.timeScale = 1f;
         }
         SetHudVisible(true);
+        // Closing back into the pause menu is not being back on the board: the
+        // countdown stays off until that closes too.
+        SetCountdownCovered(_openedFromPause);
+    }
+
+    // Opened during the warm-up beat at the start of a level, the shop would have
+    // the countdown sitting frozen behind it.
+    private static void SetCountdownCovered(bool covered)
+    {
+        if (SpawnCountdownController.Instance != null) SpawnCountdownController.Instance.SetCovered(covered);
     }
 
     private void SetHudVisible(bool visible)

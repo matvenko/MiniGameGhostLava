@@ -58,6 +58,7 @@ public class PauseMenuController : MonoBehaviour
         _isOpen = true;
         if (pausePanel != null) pausePanel.SetActive(true);
         Time.timeScale = 0f;
+        Cover(true);
     }
 
     private void Close()
@@ -65,6 +66,15 @@ public class PauseMenuController : MonoBehaviour
         _isOpen = false;
         if (pausePanel != null) pausePanel.SetActive(false);
         Time.timeScale = 1f;
+        Cover(false);
+    }
+
+    // Opened during the warm-up beat at the start of a level, the popup would
+    // have the countdown sitting frozen behind it. It goes away and comes back
+    // where it was.
+    private static void Cover(bool covered)
+    {
+        if (SpawnCountdownController.Instance != null) SpawnCountdownController.Instance.SetCovered(covered);
     }
 
     private void OnQuit()
