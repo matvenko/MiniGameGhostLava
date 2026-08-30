@@ -28,18 +28,18 @@ Material:
     - _BroadScale: 0.3
     - _BroadWeight: 0.28
     - _CellContrast: 0.95
-    - _CellRound: 1.7
+    - _CellRound: 2.1
     - _CellScale: 3.6
     - _CreaseStrength: 0.22
     - _CreaseWidth: 0.3
     - _DetailScale: 2.3
     - _DetailWeight: 0.38
-    - _LightWrap: 0.4
+    - _LightWrap: 1
     - _SparkleCoverage: 0.35
     - _SparklePower: 14
     - _SparkleStrength: 0.22
     - _Speed: 0.06
-    - _SunStrength: 0.7
+    - _SunStrength: 1.79
     - _Warp: 0.09
     - _WarpSpeed: 0.5
     m_Colors:

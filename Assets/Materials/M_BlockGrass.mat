@@ -35,17 +35,17 @@ Material:
     m_Floats:
     - _BlendSharpness: 8
     - _CellVariation: 0.09
-    - _LightWrap: 0.45
-    - _SeamStrength: 0.312
+    - _LightWrap: 0.504
+    - _SeamStrength: 0.35
     - _SeamWidth: 0.035
-    - _SideBrightness: 1.7
+    - _SideBrightness: 2.27
     - _SideOffset: 0
     - _SideScale: 0.87
-    - _SideStretch: 3.4
+    - _SideStretch: 0.7
     - _Smoothness: 0
     - _TopScale: 4.32
     m_Colors:
-    - _AmbientColor: {r: 0.34, g: 0.37, b: 0.42, a: 1}
+    - _AmbientColor: {r: 0.9245283, g: 0.9245283, b: 0.9245283, a: 1}
     - _AmbientGround: {r: 0.28, g: 0.27, b: 0.24, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
