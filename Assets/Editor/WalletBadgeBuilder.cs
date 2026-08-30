@@ -5,10 +5,9 @@ using UnityEngine.UI;
 
 // Fits the drawn wallet to the HUD and rebuilds it in the open scene.
 //
-// wallet.png is a gold bar with a bag of coins spilling out of its left end, a
-// balance painted across it, and a shop badge on its right. Same as the coin
-// counter: the painted figure comes out and EconomyManager's own total goes in
-// its place.
+// wallet.png is a gold bar with a coin in its left end, a balance painted across
+// it, and a shop badge on its right. Same as the coin counter: the painted figure
+// comes out and EconomyManager's own total goes in its place.
 //
 // The badge on the end is why the whole bar is a button: it is the way into the
 // shop now, so the separate shop button that used to sit under this is gone.
@@ -34,37 +33,35 @@ public static class WalletBadgeBuilder
 
     // ---- the art, in source pixels (y counted from the bottom) --------------
 
-    private const float SrcWidth = 1983f, SrcHeight = 793f;
-    private const float ContentRight = 1906f, ContentTop = 682f;
+    private const float SrcWidth = 1881f, SrcHeight = 836f;
+    private const float ContentRight = 1770f, ContentTop = 655f;
 
     // The field to clear: the four painted figures with their outline, and enough
     // of the interior's height either side that the shading is rebuilt in one
-    // piece. The bands it is filled from are narrow because the bar is crowded -
-    // the coin's shadow ends at 828 and the shop badge's glow starts at 1400,
-    // leaving about 20 clean columns on the left and 50 on the right.
-    private static readonly RectInt BalanceField = new RectInt(846, 240, 504, 310);
+    // piece. The bands it is filled from stop short of the coin on one side and
+    // the rule before the shop badge on the other, which is why they are narrow.
+    private static readonly RectInt BalanceField = new RectInt(599, 270, 591, 310);
     private const int SampleWidth = 16;
     private const int Downscale = 2;
 
-    // Where the painted figures sat, as fractions of the image: 857..1343 across
-    // and 313..463 up.
-    private const float PaintedCentreX = ((857f + 1343f) * 0.5f) / SrcWidth;
-    private const float PaintedCentreY = ((313f + 463f) * 0.5f) / SrcHeight;
-    private const float PaintedCapHeight = (463f - 313f) / SrcHeight;
+    // Where the painted figures sat, as fractions of the image: 621..1167 across
+    // and 347..516 up.
+    private const float PaintedCentreX = ((621f + 1167f) * 0.5f) / SrcWidth;
+    private const float PaintedCentreY = ((347f + 516f) * 0.5f) / SrcHeight;
+    private const float PaintedCapHeight = (516f - 347f) / SrcHeight;
 
     // Half the label's box either side of that centre - as much as the slot
-    // between the coin and the shop badge allows. Taller than the figures are,
-    // because TMP fits a whole line rather than the height of a numeral.
-    private const float LabelHalfWidth = 0.13f;
+    // between the coin and the rule allows. Taller than the figures are, because
+    // TMP fits a whole line rather than the height of a numeral.
+    private const float LabelHalfWidth = 0.17f;
     private const float LabelHalfHeight = 0.21f;
 
     // ---- layout ------------------------------------------------------------
 
     // Canvas units against the 1920x1080 reference the scaler matches on width.
-    // 139 puts the capsule itself at about 70 tall, matching the lives pill it
-    // hangs under; the bag of coins spills out past that top and bottom, which is
-    // why the panel is taller than the bar looks.
-    private const float PanelHeight = 139f;
+    // 127 puts the bar itself at about 70 tall, matching the lives pill it hangs
+    // under; the rest of the panel is the transparent margin round the drawing.
+    private const float PanelHeight = 127f;
     private const float PanelWidth = PanelHeight * SrcWidth / SrcHeight;
     private const float ContentMarginRight = 36f;
     private const float ContentMarginTop = 105f;   // clear of the lives pill, which ends at 89
@@ -78,7 +75,15 @@ public static class WalletBadgeBuilder
         Canvas canvas = HudScene.FindCanvas();
         if (canvas == null) return;
 
-        Sprite panel = HudArt.BuildSprite(SourcePath, PanelPath, BalanceField, SampleWidth, Downscale);
+        // This one came on black rather than with an alpha channel, so the paper
+        // comes off before the painted balance does.
+        Color[] px = HudArt.Load(SourcePath, out int w, out int h);
+        if (px == null) return;
+
+        Color[] cut = HudArt.CutFromPaper(px, w, h);
+        if (!HudArt.ErasePaintedValue(cut, w, h, BalanceField, SampleWidth)) return;
+
+        Sprite panel = HudArt.Write(PanelPath, cut, w, h, Downscale);
         if (panel == null) return;
 
         RectTransform root = BuildPanel(canvas, panel);

@@ -30,18 +30,7 @@ internal static class HudArt
     public static Sprite BuildSprite(string sourcePath, string outPath, RectInt field, int sampleWidth, int downscale)
     {
         Color[] pixels = Load(sourcePath, out int w, out int h);
-        if (pixels == null) return null;
-
-        if (field.xMin - sampleWidth < 0 || field.xMax + sampleWidth > w ||
-            field.yMin < 0 || field.yMax > h)
-        {
-            Debug.LogError("[HudArt] " + sourcePath + " is " + w + "x" + h + ", which the field " + field +
-                           " and its " + sampleWidth + "px sample bands do not fit inside. " +
-                           "Re-measure the field against the new art.");
-            return null;
-        }
-
-        ErasePaintedValue(pixels, w, field, sampleWidth);
+        if (pixels == null || !ErasePaintedValue(pixels, w, h, field, sampleWidth)) return null;
         return Write(outPath, pixels, w, h, downscale);
     }
 
@@ -214,7 +203,25 @@ internal static class HudArt
                            border / downscale);
     }
 
-    private static void ErasePaintedValue(Color[] pixels, int w, RectInt field, int sampleWidth)
+    // Public because some of this art has to be cut off its background first, and
+    // that has to happen before the field is filled in from the pixels around it -
+    // so those builders do the two steps themselves rather than calling
+    // BuildSprite. Returns false, having said why, if the field does not fit.
+    public static bool ErasePaintedValue(Color[] pixels, int w, int h, RectInt field, int sampleWidth)
+    {
+        if (field.xMin - sampleWidth < 0 || field.xMax + sampleWidth > w ||
+            field.yMin < 0 || field.yMax > h)
+        {
+            Debug.LogError("[HudArt] The art is " + w + "x" + h + ", which the field " + field + " and its " +
+                           sampleWidth + "px sample bands do not fit inside. Re-measure the field against it.");
+            return false;
+        }
+
+        Erase(pixels, w, field, sampleWidth);
+        return true;
+    }
+
+    private static void Erase(Color[] pixels, int w, RectInt field, int sampleWidth)
     {
         // An average belongs at the middle of the band it was taken from, not at
         // the edge of the field, and the interpolation is run between those two
