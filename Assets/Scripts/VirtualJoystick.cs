@@ -5,11 +5,15 @@ using UnityEngine.EventSystems;
 // event system treats mouse drags the same way), so it can be tested in
 // the Editor or the Device Simulator without a physical device.
 //
-// The stick floats. It rests at the bottom of the screen, where it is visible
-// enough to say "this is the control" and out of the way of the readouts down
-// either side, but a press anywhere picks it up and puts it under the finger. A thumb never lands twice in the same spot on a
-// phone, and a stick nailed to one corner makes the player look down mid-run to
+// The stick floats. It rests along the bottom of the screen, on the side the
+// ability bar is not, where it is visible enough to say "this is the control"
+// and clear of the buttons the other thumb wants; but a press anywhere picks it
+// up and puts it under the finger. A thumb never lands twice in the same spot on
+// a phone, and a stick nailed to one corner makes the player look down mid-run to
 // find it; letting it come to the finger means they never have to.
+//
+// The player can also turn the picture of it off in the settings. Steering does
+// not go with it - this component is the full-screen press area, not the drawing.
 //
 // This component lives on the full-screen press area, not on the stick itself -
 // it has to hear about presses that land nowhere near the stick's current
@@ -27,8 +31,10 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
 
     [Tooltip("How far from the stick's centre the handle can travel, in canvas units.")]
     [SerializeField] private float handleRange = 80f;
-    [Tooltip("Where the stick waits: centred, this far up from the bottom edge.")]
+    [Tooltip("Where the stick waits: this far up from the bottom edge.")]
     [SerializeField] private float restMargin = 230f;
+    [Tooltip("And this far in from whichever side edge the ability bar is not on.")]
+    [SerializeField] private float restSideMargin = 260f;
     [Tooltip("How visible the stick is while nobody is holding it.")]
     [SerializeField, Range(0f, 1f)] private float idleAlpha = 0.35f;
     [Tooltip("How quickly the stick drifts back to its resting place after release.")]
@@ -44,6 +50,11 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     private RectTransform _area;
     private int _pointer = NoPointer;
 
+    // Which way along the bottom edge the stick rests: away from the ability bar,
+    // so a left thumb on the buttons and a right thumb on the stick never meet.
+    private int _restSide = -1;
+    private bool _drawn = true;
+
     void Awake()
     {
         Instance = this;
@@ -52,8 +63,26 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
 
     void OnEnable()
     {
+        GameSettings.Changed += ApplyPreferences;
+        ApplyPreferences();
         Release();
         if (stick != null) stick.anchoredPosition = RestPosition();
+    }
+
+    void OnDisable()
+    {
+        GameSettings.Changed -= ApplyPreferences;
+    }
+
+    // Hiding the stick takes the picture away and nothing else: the press area is
+    // this object, not the stick, so steering carries on working exactly as it
+    // did. The stick is still moved about underneath - it has to be somewhere
+    // when the player turns it back on.
+    private void ApplyPreferences()
+    {
+        _drawn = !GameSettings.HideJoystick;
+        _restSide = GameSettings.AbilitiesOnLeft ? 1 : -1;
+        SetStickAlpha(_pointer == NoPointer ? idleAlpha : 1f);
     }
 
     void Update()
@@ -74,7 +103,7 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
 
         _pointer = eventData.pointerId;
         PlaceUnder(eventData);
-        if (stickGroup != null) stickGroup.alpha = 1f;
+        SetStickAlpha(1f);
         OnDrag(eventData);
     }
 
@@ -98,9 +127,15 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     }
 
     // Read off the press area rather than stored, so the stick still finds the
-    // bottom of the screen after a rotation or a resolution change.
+    // corner of the screen after a rotation or a resolution change.
     private Vector2 RestPosition() =>
-        new Vector2(0f, -(_area.rect.height * 0.5f - restMargin));
+        new Vector2(_restSide * (_area.rect.width * 0.5f - restSideMargin),
+                    -(_area.rect.height * 0.5f - restMargin));
+
+    private void SetStickAlpha(float alpha)
+    {
+        if (stickGroup != null) stickGroup.alpha = _drawn ? alpha : 0f;
+    }
 
     // Drops the stick on the press point, kept far enough inside the screen that
     // the whole ring stays visible - a stick half off the edge is one the player
@@ -125,6 +160,6 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
         _pointer = NoPointer;
         InputDirection = Vector2.zero;
         if (handle != null) handle.anchoredPosition = Vector2.zero;
-        if (stickGroup != null) stickGroup.alpha = idleAlpha;
+        SetStickAlpha(idleAlpha);
     }
 }

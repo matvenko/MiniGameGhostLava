@@ -19,10 +19,11 @@ using UnityEngine.UI;
 // Safe to run twice: it works on whatever scene is open, reuses the objects it
 // made last time rather than piling up duplicates, and never discards the scene.
 //
-// This is the look only. The checkboxes and the four position cards are dressed
-// in the state the design shows but do not yet answer a press; Resume, Quit, the
-// close cross and the two audio switches are wired to the pause menu that was
-// already there, and the rest is the next step.
+// Nothing in here decides anything. Resume, Quit, the close cross and the two
+// audio switches go to PauseMenuController; the checkboxes and the four position
+// cards go to SettingsPopupUI, which writes to GameSettings and lets the stick
+// and the ability bar hear about it. This only builds them and points them at
+// each other.
 public static class SettingsPopupBuilder
 {
     private const string AtlasPath = "Assets/UI/Icons/settings-popup-sprite.png";
@@ -62,9 +63,13 @@ public static class SettingsPopupBuilder
         new Cut("btn_resume", 1020, 616, 480, 123, 12),
         new Cut("btn_info", 1020, 470, 480, 119, 12),
         new Cut("btn_quit", 1020, 320, 480, 124, 12),
-        new Cut("check_off", 645, 541, 73, 71, 4),
+        // The empty box and the ticked one, the empty ring and the lit one, are
+        // cut to matching sizes - a couple of rows more than the art needs on the
+        // empty ones - so that swapping the sprite at runtime swaps the picture
+        // and nothing else.
+        new Cut("check_off", 645, 540, 73, 73, 4),
         new Cut("check_on", 645, 459, 73, 73, 4),
-        new Cut("radio_off", 738, 541, 72, 71, 4),
+        new Cut("radio_off", 738, 540, 72, 73, 4),
         new Cut("radio_on", 738, 459, 72, 73, 4),
         new Cut("switch_on", 843, 542, 139, 62, 4),
         new Cut("switch_off", 843, 385, 139, 61, 4),
@@ -123,11 +128,12 @@ public static class SettingsPopupBuilder
             return;
         }
 
-        // The placeholder card the pause menu used to be is left in the scene but
-        // switched off: PauseMenuController still points at its buttons, and the
-        // references are re-pointed below rather than left dangling.
+        // The popup replaces the placeholder card the pause menu used to be, so
+        // the card goes. Everything that pointed into it is re-pointed below;
+        // the one thing that is not is the shop button it carried, and the shop
+        // has its own way in from the wallet bar on the HUD.
         Transform oldCard = pausePanel.Find("Card");
-        if (oldCard != null) oldCard.gameObject.SetActive(false);
+        if (oldCard != null) Object.DestroyImmediate(oldCard.gameObject);
 
         var dimmer = pausePanel.GetComponent<Image>();
         if (dimmer != null) dimmer.color = new Color(0f, 0f, 0f, 0.55f);
@@ -386,13 +392,15 @@ public static class SettingsPopupBuilder
                                   new Vector2(-ColumnX, ContentTop - 120f)).rectTransform;
         Heading(box, "HUD OPTIONS", 82f);
 
-        RectTransform row = Sheet(box, "Row_Joystick", "panel_row", RowW, new Vector2(0f, 19f)).rectTransform;
+        // The row is the press target rather than the box drawn on it: the box is
+        // fifty units across and a thumb is not.
+        RectTransform row = Press(box, "Row_Joystick", "panel_row", RowW, new Vector2(0f, 19f)).rectTransform;
         Sheet(row, "Check", "check_off", 52f, new Vector2(-225f, 0f));
         Sheet(row, "Icon", "icon_joystick", 44f, new Vector2(-160f, 0f));
         Label(row, "Label", "Hide Joystick", _semi, 25f, LabelInk,
               TextAlignmentOptions.Left, new Vector2(74f, 0f), new Vector2(392f, 40f));
 
-        RectTransform tall = Sheet(box, "Row_Abilities", "panel_row", RowW, new Vector2(0f, -65f)).rectTransform;
+        RectTransform tall = Press(box, "Row_Abilities", "panel_row", RowW, new Vector2(0f, -65f)).rectTransform;
         Sheet(tall, "Check", "check_on", 52f, new Vector2(-225f, 0f));
         Sheet(tall, "Icon", "icon_ghost", 56f, new Vector2(-160f, 0f));
         Label(tall, "Label", "Hide Abilities When Count is Zero", _medium, 22f, LabelInk,
@@ -417,7 +425,7 @@ public static class SettingsPopupBuilder
     private static void Card(RectTransform box, string name, string title, string kind, bool picked,
                              Vector2 at, bool left, bool vertical)
     {
-        RectTransform card = Sheet(box, name, picked ? "panel_card_picked" : "panel_card", 285f, at).rectTransform;
+        RectTransform card = Press(box, name, picked ? "panel_card_picked" : "panel_card", 285f, at).rectTransform;
 
         Sheet(card, "Radio", picked ? "radio_on" : "radio_off", 44f, new Vector2(-104f, 44f));
         Label(card, "Title", title, _semi, 22f, LabelInk,
@@ -551,6 +559,49 @@ public static class SettingsPopupBuilder
     // ---- what the pause menu already knows how to do -----------------------
 
     private static void Rewire(RectTransform popup)
+    {
+        WireControls(popup);
+        WirePauseMenu(popup);
+    }
+
+    // The two checkboxes and the four cards, handed to the component that answers
+    // for them along with the pair of sprites each one switches between.
+    private static void WireControls(RectTransform popup)
+    {
+        var ui = popup.GetComponent<SettingsPopupUI>();
+        if (ui == null) ui = popup.gameObject.AddComponent<SettingsPopupUI>();
+
+        var so = new SerializedObject(ui);
+        so.FindProperty("hideJoystickRow").objectReferenceValue = Find<Button>(popup, "HudOptionsBox/Row_Joystick");
+        so.FindProperty("hideJoystickBox").objectReferenceValue = Find<Image>(popup, "HudOptionsBox/Row_Joystick/Check");
+        so.FindProperty("hideEmptyAbilitiesRow").objectReferenceValue = Find<Button>(popup, "HudOptionsBox/Row_Abilities");
+        so.FindProperty("hideEmptyAbilitiesBox").objectReferenceValue = Find<Image>(popup, "HudOptionsBox/Row_Abilities/Check");
+        so.FindProperty("boxChecked").objectReferenceValue = Art["check_on"];
+        so.FindProperty("boxUnchecked").objectReferenceValue = Art["check_off"];
+        so.FindProperty("cardPicked").objectReferenceValue = Art["panel_card_picked"];
+        so.FindProperty("cardUnpicked").objectReferenceValue = Art["panel_card"];
+        so.FindProperty("radioPicked").objectReferenceValue = Art["radio_on"];
+        so.FindProperty("radioUnpicked").objectReferenceValue = Art["radio_off"];
+
+        // In the order GameSettings.AbilityCorner is in, because that is the index
+        // a press on card n turns into.
+        string[] cards = { "Card_LeftTop", "Card_RightTop", "Card_LeftBottom", "Card_RightBottom" };
+        SerializedProperty buttons = so.FindProperty("cardButtons");
+        SerializedProperty panels = so.FindProperty("cardPanels");
+        SerializedProperty radios = so.FindProperty("cardRadios");
+        buttons.arraySize = panels.arraySize = radios.arraySize = cards.Length;
+        for (int i = 0; i < cards.Length; i++)
+        {
+            string path = "AbilitiesPositionBox/" + cards[i];
+            buttons.GetArrayElementAtIndex(i).objectReferenceValue = Find<Button>(popup, path);
+            panels.GetArrayElementAtIndex(i).objectReferenceValue = Find<Image>(popup, path);
+            radios.GetArrayElementAtIndex(i).objectReferenceValue = Find<Image>(popup, path + "/Radio");
+        }
+
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void WirePauseMenu(RectTransform popup)
     {
         var pause = Object.FindAnyObjectByType<PauseMenuController>(FindObjectsInactive.Include);
         if (pause == null)
