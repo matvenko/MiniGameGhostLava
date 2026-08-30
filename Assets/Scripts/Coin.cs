@@ -6,7 +6,13 @@ public class Coin : MonoBehaviour
     private float rotationSpeed = 200f;
     [SerializeField] private AudioClip pickupSound;
     [SerializeField] private float pickupDuration = 0.3f;
-    [SerializeField] private int walletValue = 50;
+    // What a coin is worth is drawn from this when it is taken, not when it is
+    // spawned: nothing on the board shows the value, so rolling it at the moment
+    // of pickup is the same thing to the player and leaves no state to carry
+    // around. Flat odds - every entry is as likely as any other, so adding a
+    // fifth number here changes the odds of all of them.
+    [Tooltip("One of these is paid into the wallet, picked at random, each time a coin is taken.")]
+    [SerializeField] private int[] walletValues = { 50, 100, 150, 200 };
 
     // Optional burst played where the coin was taken. It is spawned unparented:
     // the pickup animation destroys the coin's whole prefab root a moment later,
@@ -62,9 +68,16 @@ public class Coin : MonoBehaviour
             Destroy(fx, pickupEffectLifetime);
         }
         RewardSystem.CollectCoin();
-        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(walletValue);
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(RollWalletValue());
         StartCoroutine(PickupAnimation());
     }
+
+    // Pays nothing rather than throwing if the list is emptied in the Inspector,
+    // so a mis-set field costs the player their reward but not the run.
+    private int RollWalletValue() =>
+        walletValues == null || walletValues.Length == 0
+            ? 0
+            : walletValues[Random.Range(0, walletValues.Length)];
 
     private IEnumerator PickupAnimation()
     {

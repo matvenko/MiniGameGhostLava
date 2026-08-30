@@ -253,7 +253,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   pickupSound: {fileID: 8300000, guid: a57fe974cf59a4f4b96b7a336a3b63cc, type: 3}
   pickupDuration: 0.3
-  walletValue: 50
+  walletValues: 320000006400000096000000c8000000
   pickupEffect: {fileID: 2388317371847013002, guid: a8df9e8c230731c4ca6e9aa9373a2034, type: 3}
   pickupEffectLifetime: 1.2
   shadow: {fileID: 9121137329741977628}
