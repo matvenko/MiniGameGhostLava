@@ -163,6 +163,8 @@ MonoBehaviour:
   pickupSound: {fileID: 8300000, guid: a57fe974cf59a4f4b96b7a336a3b63cc, type: 3}
   pickupDuration: 0.3
   walletValue: 50
+  pickupEffect: {fileID: 2388317371847013002, guid: a8df9e8c230731c4ca6e9aa9373a2034, type: 3}
+  pickupEffectLifetime: 1.2
 --- !u!114 &8412663590127440215
 MonoBehaviour:
   m_ObjectHideFlags: 0

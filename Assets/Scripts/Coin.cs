@@ -8,6 +8,12 @@ public class Coin : MonoBehaviour
     [SerializeField] private float pickupDuration = 0.3f;
     [SerializeField] private int walletValue = 50;
 
+    // Optional burst played where the coin was taken. It is spawned unparented:
+    // the pickup animation destroys the coin's whole prefab root a moment later,
+    // and a child effect would be torn down with it mid-flash.
+    [SerializeField] private GameObject pickupEffect;
+    [SerializeField] private float pickupEffectLifetime = 2f;
+
     private bool _collected;
 
     // How fast the coin turns about world Y, as a share of its flip speed about
@@ -45,6 +51,11 @@ public class Coin : MonoBehaviour
         GetComponent<Collider>().enabled = false;
         if (pickupSound != null && !AudioManager.SfxMuted)
             AudioSource.PlayClipAtPoint(pickupSound, transform.position);
+        if (pickupEffect != null)
+        {
+            var fx = Instantiate(pickupEffect, transform.position, pickupEffect.transform.rotation);
+            Destroy(fx, pickupEffectLifetime);
+        }
         RewardSystem.CollectCoin();
         if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(walletValue);
         StartCoroutine(PickupAnimation());
