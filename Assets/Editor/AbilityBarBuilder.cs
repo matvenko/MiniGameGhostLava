@@ -52,8 +52,11 @@ public static class AbilityBarBuilder
     // ---- layout ------------------------------------------------------------
 
     // Canvas units against the 1920x1080 reference the scaler matches on width.
-    private const float IconSize = 132f;
-    private const float Gap = 14f;
+    // A fifth off what they were: four of them down the left is a lot of screen,
+    // and the badge on each is still legible at this size. The gap comes down
+    // with them so the column keeps its rhythm.
+    private const float IconSize = 106f;
+    private const float Gap = 11f;
     private const float MarginLeft = 36f;
     private const float FirstTop = 132f;   // clear of the coin counter, which ends at 120
 
