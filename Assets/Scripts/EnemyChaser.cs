@@ -39,18 +39,52 @@ public class EnemyChaser : MonoBehaviour
     private bool _hasGoal;
     private float _stunTimer;
     private float _yieldTimer;
+    private Animator _animator;
+    private float _animatorSpeed = 1f;
+    private FreezeVisual _freezeVisual;
 
     public bool IsStunned => _stunTimer > 0f;
 
-    // Called by Trap when this enemy walks onto one. The trap's own effect
-    // stays on the tile for the duration, so the frozen state is visible
-    // there - these materials expose no color property to tint.
+    // Called by Trap when this enemy walks onto one, and by the freeze ability
+    // for every enemy at once. Being stopped has to be visible from across the
+    // board, so it is shown twice over: the animator is held on the frame it
+    // was on - a ghost caught mid-drift stays mid-drift - and FreezeVisual
+    // closes a shell of ice over it. Neither touches the enemy's own
+    // materials, which come from three different packs and share no colour
+    // property to tint.
     public void Stun(float duration)
     {
         _stunTimer = Mathf.Max(_stunTimer, duration);
+
+        if (_animator == null) _animator = GetComponentInChildren<Animator>();
+        if (_animator != null && _animator.speed > 0f)
+        {
+            _animatorSpeed = _animator.speed;
+            _animator.speed = 0f;
+        }
+
+        if (_freezeVisual == null) _freezeVisual = gameObject.AddComponent<FreezeVisual>();
+        _freezeVisual.Show();
+    }
+
+    // Coming to: the pose starts moving again and the ice breaks off.
+    private void EndStun()
+    {
+        if (_animator != null) _animator.speed = _animatorSpeed;
+        if (_freezeVisual != null) _freezeVisual.Shatter();
     }
 
     private static readonly List<EnemyChaser> AllChasers = new List<EnemyChaser>();
+
+    // Every enemy currently on the board, stunned at once - what the freeze
+    // ability spends a charge on. Returns how many were caught, so a press on
+    // an empty board (the portal warm-up, where they are all still inactive)
+    // can be told from one that did something and refunded by not spending.
+    public static int StunAll(float duration)
+    {
+        foreach (var chaser in AllChasers) chaser.Stun(duration);
+        return AllChasers.Count;
+    }
 
     void OnEnable()
     {
@@ -67,6 +101,11 @@ public class EnemyChaser : MonoBehaviour
         _stunTimer = 0f;
         _repathTimer = 0f;
         _yieldTimer = 0f;
+
+        // A respawn can happen with the ice still on. Nothing shattered - the
+        // enemy is being put back on the board - so it just goes.
+        if (_animator != null) _animator.speed = _animatorSpeed;
+        if (_freezeVisual != null) _freezeVisual.HideImmediate();
     }
 
     void OnDisable()
@@ -108,7 +147,11 @@ public class EnemyChaser : MonoBehaviour
             _stunTimer -= Time.deltaTime;
             // drop the queued path so it repaths from wherever it's standing
             // once it comes to, instead of resuming a now-stale route
-            if (_stunTimer <= 0f) _path.Clear();
+            if (_stunTimer <= 0f)
+            {
+                _path.Clear();
+                EndStun();
+            }
             return;
         }
 

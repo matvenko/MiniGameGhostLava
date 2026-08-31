@@ -16,6 +16,9 @@ public class ShopManager : MonoBehaviour
     private const int TrapCost = 400;
     private const int TrapsPerPurchase = 1;
 
+    private const int FreezeCost = 1500;
+    private const int FreezesPerPurchase = 1;
+
     void Awake()
     {
         Instance = this;
@@ -66,6 +69,29 @@ public class ShopManager : MonoBehaviour
         if (!EconomyManager.Instance.SpendCoins(TrapCost)) return false;
 
         TrapManager.Instance.AddTraps(TrapsPerPurchase);
+        return true;
+    }
+
+    // Freeze charges are stock like traps - no cap, carried between runs, and
+    // priced well above a trap since one stops the whole board rather than
+    // whichever enemy happens to walk onto a tile.
+    public int GetFreezeCost()
+    {
+        return FreezeCost;
+    }
+
+    public bool CanBuyFreeze()
+    {
+        return EconomyManager.Instance != null && EconomyManager.Instance.TotalCoins >= FreezeCost;
+    }
+
+    public bool BuyFreeze()
+    {
+        if (!CanBuyFreeze()) return false;
+        if (FreezeManager.Instance == null) return false;
+        if (!EconomyManager.Instance.SpendCoins(FreezeCost)) return false;
+
+        FreezeManager.Instance.AddFreezes(FreezesPerPurchase);
         return true;
     }
 }

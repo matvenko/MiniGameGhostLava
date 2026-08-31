@@ -3,9 +3,9 @@ using UnityEngine;
 
 // A placed trap: sits armed on its tile pulsing gently, and the first enemy
 // to step on it is frozen. The trap then stays visible as an expanded
-// "snare" for the stun duration - that patch is what shows the player why
-// the enemy stopped, since the enemy's own materials expose no tint to
-// change - before fading out and destroying itself.
+// "snare" for the stun duration - the tile the catch happened on, under the
+// ice the enemy itself is now wearing (see FreezeVisual) - before fading out
+// and destroying itself.
 public class Trap : MonoBehaviour
 {
     [SerializeField] private float stunDuration = 4f;

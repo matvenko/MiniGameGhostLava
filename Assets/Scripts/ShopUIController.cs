@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Drives the Shop popup: refreshes the wallet balance and the Extra Life item's
-// price/owned/buy-state, and applies a purchase through ShopManager when Buy is
-// clicked.
+// Drives the Shop popup: refreshes the wallet balance and each item's
+// price/owned/buy-state - extra life, traps, freeze charges - and applies a
+// purchase through ShopManager when that item's Buy is clicked.
 //
 // There are two ways in and closing has to undo whichever it was. From the pause
 // menu the game is already stopped and the pause card is only hidden, so closing
@@ -28,6 +28,9 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private Button buyTrapButton;
     [SerializeField] private TextMeshProUGUI buyTrapButtonText;
     [SerializeField] private TextMeshProUGUI trapStatusText;
+    [SerializeField] private Button buyFreezeButton;
+    [SerializeField] private TextMeshProUGUI buyFreezeButtonText;
+    [SerializeField] private TextMeshProUGUI freezeStatusText;
     [SerializeField] private TextMeshProUGUI walletText;
 
     void Awake()
@@ -39,6 +42,7 @@ public class ShopUIController : MonoBehaviour
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         if (buyExtraLifeButton != null) buyExtraLifeButton.onClick.AddListener(OnBuyExtraLifeClicked);
         if (buyTrapButton != null) buyTrapButton.onClick.AddListener(OnBuyTrapClicked);
+        if (buyFreezeButton != null) buyFreezeButton.onClick.AddListener(OnBuyFreezeClicked);
     }
 
     private bool _openedFromPause;
@@ -113,6 +117,12 @@ public class ShopUIController : MonoBehaviour
         Refresh();
     }
 
+    private void OnBuyFreezeClicked()
+    {
+        if (ShopManager.Instance != null) ShopManager.Instance.BuyFreeze();
+        Refresh();
+    }
+
     private void Refresh()
     {
         if (walletText != null && EconomyManager.Instance != null)
@@ -138,5 +148,14 @@ public class ShopUIController : MonoBehaviour
 
         if (buyTrapButton != null)
             buyTrapButton.interactable = ShopManager.Instance.CanBuyTrap();
+
+        if (freezeStatusText != null && FreezeManager.Instance != null)
+            freezeStatusText.text = "Owned: " + FreezeManager.Instance.FreezesOwned;
+
+        if (buyFreezeButtonText != null)
+            buyFreezeButtonText.text = ShopManager.Instance.GetFreezeCost().ToString();
+
+        if (buyFreezeButton != null)
+            buyFreezeButton.interactable = ShopManager.Instance.CanBuyFreeze();
     }
 }
