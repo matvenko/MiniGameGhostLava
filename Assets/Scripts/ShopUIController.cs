@@ -3,8 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 
 // Drives the Shop popup: refreshes the wallet balance and each item's
-// price/owned/buy-state - extra life, traps, freeze charges - and applies a
-// purchase through ShopManager when that item's Buy is clicked.
+// price/owned/buy-state - extra life, traps, freeze and teleport charges - and
+// applies a purchase through ShopManager when that item's Buy is clicked.
 //
 // There are two ways in and closing has to undo whichever it was. From the pause
 // menu the game is already stopped and the pause card is only hidden, so closing
@@ -31,6 +31,9 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private Button buyFreezeButton;
     [SerializeField] private TextMeshProUGUI buyFreezeButtonText;
     [SerializeField] private TextMeshProUGUI freezeStatusText;
+    [SerializeField] private Button buyTeleportButton;
+    [SerializeField] private TextMeshProUGUI buyTeleportButtonText;
+    [SerializeField] private TextMeshProUGUI teleportStatusText;
     [SerializeField] private TextMeshProUGUI walletText;
 
     void Awake()
@@ -43,6 +46,7 @@ public class ShopUIController : MonoBehaviour
         if (buyExtraLifeButton != null) buyExtraLifeButton.onClick.AddListener(OnBuyExtraLifeClicked);
         if (buyTrapButton != null) buyTrapButton.onClick.AddListener(OnBuyTrapClicked);
         if (buyFreezeButton != null) buyFreezeButton.onClick.AddListener(OnBuyFreezeClicked);
+        if (buyTeleportButton != null) buyTeleportButton.onClick.AddListener(OnBuyTeleportClicked);
     }
 
     private bool _openedFromPause;
@@ -123,6 +127,12 @@ public class ShopUIController : MonoBehaviour
         Refresh();
     }
 
+    private void OnBuyTeleportClicked()
+    {
+        if (ShopManager.Instance != null) ShopManager.Instance.BuyTeleport();
+        Refresh();
+    }
+
     private void Refresh()
     {
         if (walletText != null && EconomyManager.Instance != null)
@@ -157,5 +167,14 @@ public class ShopUIController : MonoBehaviour
 
         if (buyFreezeButton != null)
             buyFreezeButton.interactable = ShopManager.Instance.CanBuyFreeze();
+
+        if (teleportStatusText != null && TeleportManager.Instance != null)
+            teleportStatusText.text = "Owned: " + TeleportManager.Instance.TeleportsOwned;
+
+        if (buyTeleportButtonText != null)
+            buyTeleportButtonText.text = ShopManager.Instance.GetTeleportCost().ToString();
+
+        if (buyTeleportButton != null)
+            buyTeleportButton.interactable = ShopManager.Instance.CanBuyTeleport();
     }
 }

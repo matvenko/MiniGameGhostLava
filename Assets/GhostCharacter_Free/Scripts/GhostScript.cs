@@ -27,6 +27,7 @@ public class GhostScript : MonoBehaviour
     private bool isDead;
     private bool _invincible;
     private Coroutine _invincibilityRoutine;
+    private Coroutine _teleportRoutine;
     // set while the spawn countdown holds the character still, so the
     // first unfrozen frame can pick the move animation back up
     private bool _wasFrozen;
@@ -34,6 +35,10 @@ public class GhostScript : MonoBehaviour
     // moving speed
     [SerializeField] private float Speed = 4;
     [SerializeField] private float deathAnimDuration = 1.2f;
+    [Tooltip("How long the character takes to dissolve away at the tile it teleports off.")]
+    [SerializeField] private float teleportFadeOut = 0.18f;
+    [Tooltip("And to come back together on the one it lands on - slower, so the arrival is the half you watch.")]
+    [SerializeField] private float teleportFadeIn = 0.28f;
 
     void Start()
     {
@@ -122,6 +127,14 @@ public class GhostScript : MonoBehaviour
     // only need to supply a valid X/Z tile position
     public void RespawnAt(Vector3 position)
     {
+        // Dying part-way through a teleport leaves that jump owning the
+        // dissolve; the respawn takes it back.
+        if (_teleportRoutine != null)
+        {
+            StopCoroutine(_teleportRoutine);
+            _teleportRoutine = null;
+        }
+
         HP = maxHP;
         if (HP_text != null) HP_text.text = "HP " + HP.ToString();
 
@@ -138,6 +151,68 @@ public class GhostScript : MonoBehaviour
         DissolveFlg = false;
         Anim.CrossFade(IdleState, 0.1f, 0, 0);
         isDead = false;
+    }
+
+    // The teleport ability's move. It is the respawn move with everything that
+    // belongs to dying left out - no HP reset, no facing snapped back to north
+    // - because the character is not coming back from anywhere, it is simply
+    // somewhere else now.
+    //
+    // What it is not is a cut: the character dissolves away where it stood and
+    // reassembles on the tile it lands on, through the same _Dissolve the death
+    // animation uses, with a flare of light at each end. The move itself
+    // happens at the darkest point in the middle, so the eye never sees the
+    // character in two places.
+    public void TeleportTo(Vector3 position)
+    {
+        if (isDead) return;
+
+        if (_teleportRoutine != null) StopCoroutine(_teleportRoutine);
+        _teleportRoutine = StartCoroutine(TeleportRoutine(position));
+    }
+
+    private IEnumerator TeleportRoutine(Vector3 position)
+    {
+        TeleportFlare.Play(transform.position, false);
+
+        yield return DissolveOver(teleportFadeOut, 1f, 0f);
+
+        // A CharacterController overrides transform writes made while it is
+        // enabled, the same reason RespawnAt cycles it.
+        Ctrl.enabled = false;
+        transform.position = new Vector3(position.x, spawnPosition.y, position.z);
+        Ctrl.enabled = true;
+
+        TeleportFlare.Play(transform.position, true);
+
+        yield return DissolveOver(teleportFadeIn, 0f, 1f);
+
+        _teleportRoutine = null;
+    }
+
+    private IEnumerator DissolveOver(float duration, float from, float to)
+    {
+        float t = 0f;
+        while (t < duration)
+        {
+            // A death landing mid-teleport owns the dissolve from here on, so
+            // this gets out of its way rather than fighting it for the value.
+            if (isDead) yield break;
+
+            t += Time.deltaTime;
+            SetDissolve(Mathf.Lerp(from, to, Mathf.Clamp01(t / duration)));
+            yield return null;
+        }
+        SetDissolve(to);
+    }
+
+    private void SetDissolve(float value)
+    {
+        Dissolve_value = value;
+        for (int i = 0; i < MeshR.Length; i++)
+        {
+            if (MeshR[i] != null) MeshR[i].material.SetFloat("_Dissolve", value);
+        }
     }
 
     void Update()

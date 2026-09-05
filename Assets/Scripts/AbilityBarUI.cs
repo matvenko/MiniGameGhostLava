@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 // The four ability buttons on the HUD, and the number in each one's badge.
 //
-// The abilities themselves do not exist yet - this is the art and the counters
-// going in ahead of them. So all this does is hold a count per ability and put
-// it in the badge; pressing a button does nothing until something subscribes to
-// it. Whatever ends up owning trap, freeze, shield and teleport calls SetCount
-// as it spends and buys them, and takes the buttons from GetButton.
+// All this does is hold a count per ability and put it in the badge; pressing a
+// button does nothing until something subscribes to it. Trap, freeze and
+// teleport each have a manager that does - it calls SetCount as it spends and
+// buys them, and takes its button from GetButton. Shield has none yet, so its
+// count is still whatever startingCounts hands it.
 //
 // Where the bar sits is the player's, not ours: any of the four corners, a column
 // in the top two and a row along the bottom two, which is what the pictures in

@@ -19,6 +19,9 @@ public class ShopManager : MonoBehaviour
     private const int FreezeCost = 1500;
     private const int FreezesPerPurchase = 1;
 
+    private const int TeleportCost = 2500;
+    private const int TeleportsPerPurchase = 1;
+
     void Awake()
     {
         Instance = this;
@@ -92,6 +95,29 @@ public class ShopManager : MonoBehaviour
         if (!EconomyManager.Instance.SpendCoins(FreezeCost)) return false;
 
         FreezeManager.Instance.AddFreezes(FreezesPerPurchase);
+        return true;
+    }
+
+    // Teleport charges are stock like the other two, and the dearest of them:
+    // a freeze buys five seconds of standing still, a teleport takes the player
+    // out of the corner it was about to be caught in entirely.
+    public int GetTeleportCost()
+    {
+        return TeleportCost;
+    }
+
+    public bool CanBuyTeleport()
+    {
+        return EconomyManager.Instance != null && EconomyManager.Instance.TotalCoins >= TeleportCost;
+    }
+
+    public bool BuyTeleport()
+    {
+        if (!CanBuyTeleport()) return false;
+        if (TeleportManager.Instance == null) return false;
+        if (!EconomyManager.Instance.SpendCoins(TeleportCost)) return false;
+
+        TeleportManager.Instance.AddTeleports(TeleportsPerPurchase);
         return true;
     }
 }

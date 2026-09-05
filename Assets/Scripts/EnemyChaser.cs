@@ -76,6 +76,11 @@ public class EnemyChaser : MonoBehaviour
 
     private static readonly List<EnemyChaser> AllChasers = new List<EnemyChaser>();
 
+    // Every enemy currently on the board, for anything that needs to know where
+    // they are rather than to touch them - the teleport ability measures how
+    // clear a tile is against this before dropping the player onto it.
+    public static IReadOnlyList<EnemyChaser> Active => AllChasers;
+
     // Every enemy currently on the board, stunned at once - what the freeze
     // ability spends a charge on. Returns how many were caught, so a press on
     // an empty board (the portal warm-up, where they are all still inactive)
