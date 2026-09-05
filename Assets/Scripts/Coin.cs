@@ -1,8 +1,27 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Coin : MonoBehaviour
 {
+    private static readonly List<Coin> Uncollected = new List<Coin>();
+
+    // Every coin still out on the board. A coin leaves this the instant it is
+    // taken rather than when its pickup animation finishes destroying it, so
+    // anything counting what is left - the last-coin indicator - never counts
+    // one that is already shrinking away.
+    public static IReadOnlyList<Coin> Active => Uncollected;
+
+    void OnEnable()
+    {
+        if (!_collected) Uncollected.Add(this);
+    }
+
+    void OnDisable()
+    {
+        Uncollected.Remove(this);
+    }
+
     private float rotationSpeed = 200f;
     [SerializeField] private AudioClip pickupSound;
     [SerializeField] private float pickupDuration = 0.3f;
@@ -58,6 +77,7 @@ public class Coin : MonoBehaviour
     {
         if (_collected || !other.CompareTag("Ghost")) return;
         _collected = true;
+        Uncollected.Remove(this);
 
         GetComponent<Collider>().enabled = false;
         if (pickupSound != null && !AudioManager.SfxMuted)

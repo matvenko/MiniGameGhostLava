@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 // The burst of light at each end of a teleport: one where the character was
@@ -12,9 +11,9 @@ using UnityEngine;
 // is about to be standing on. Same shapes, read backwards, so the two ends
 // belong to the same trick.
 //
-// The meshes are generated here and shared by every flare, and the material is
-// the generated flare shader, so the effect needs no art asset, no prefab and
-// nothing wired in the scene - TeleportFlare.Play is the whole interface.
+// The shapes come generated from FlareMeshes and the material is the generated
+// flare shader, so the effect needs no art asset, no prefab and nothing wired
+// in the scene - TeleportFlare.Play is the whole interface.
 public class TeleportFlare : MonoBehaviour
 {
     private const float Duration = 0.55f;
@@ -22,8 +21,6 @@ public class TeleportFlare : MonoBehaviour
     private const float RingRadius = 1.9f;
     private const float ColumnHeight = 2.9f;
 
-    private static Mesh _ringMesh;
-    private static Mesh _columnMesh;
     private static readonly int FadeId = Shader.PropertyToID("_Fade");
 
     private Transform _ring;
@@ -50,8 +47,8 @@ public class TeleportFlare : MonoBehaviour
         _arriving = arriving;
         _material = new Material(shader);
 
-        _ring = MakePiece("Ring", RingMesh());
-        _column = MakePiece("Column", ColumnMesh());
+        _ring = MakePiece("Ring", FlareMeshes.Ring());
+        _column = MakePiece("Column", FlareMeshes.Column());
         Apply(0f);
     }
 
@@ -111,112 +108,5 @@ public class TeleportFlare : MonoBehaviour
     void OnDestroy()
     {
         if (_material != null) Destroy(_material);
-    }
-
-    // A flat band on the floor, one unit across, sitting just clear of the
-    // tile so it doesn't fight the tile's own surface for depth. Three rows of
-    // vertices: the middle one carries the light and the two edges are at zero,
-    // which is what gives the band its soft edges without a texture.
-    private static Mesh RingMesh()
-    {
-        if (_ringMesh != null) return _ringMesh;
-
-        const int segments = 56;
-        const float lift = 0.06f;
-        float[] radii = { 0.55f, 0.8f, 1f };
-        float[] energy = { 0f, 1f, 0f };
-
-        var verts = new List<Vector3>();
-        var uvs = new List<Vector2>();
-        var colors = new List<Color>();
-        var tris = new List<int>();
-
-        for (int s = 0; s <= segments; s++)
-        {
-            float u = s / (float)segments;
-            float angle = u * Mathf.PI * 2f;
-            float sin = Mathf.Sin(angle), cos = Mathf.Cos(angle);
-
-            for (int r = 0; r < radii.Length; r++)
-            {
-                verts.Add(new Vector3(cos * radii[r], lift, sin * radii[r]));
-                uvs.Add(new Vector2(u, r * 0.5f));
-                colors.Add(new Color(1f, 1f, 1f, energy[r]));
-            }
-        }
-
-        for (int s = 0; s < segments; s++)
-        {
-            int a = s * radii.Length;
-            int b = (s + 1) * radii.Length;
-            for (int r = 0; r < radii.Length - 1; r++)
-            {
-                tris.Add(a + r); tris.Add(a + r + 1); tris.Add(b + r);
-                tris.Add(b + r); tris.Add(a + r + 1); tris.Add(b + r + 1);
-            }
-        }
-
-        _ringMesh = Finish("TeleportRing", verts, uvs, colors, tris);
-        return _ringMesh;
-    }
-
-    // An open tube standing on the floor, one unit tall and one across, bright
-    // at the bottom and fading out at the top so it ends in air rather than in
-    // a hard edge. No caps: seeing straight up the inside of it is what makes
-    // it a shaft of light instead of a cylinder.
-    private static Mesh ColumnMesh()
-    {
-        if (_columnMesh != null) return _columnMesh;
-
-        const int segments = 40;
-        const int rows = 5;
-
-        var verts = new List<Vector3>();
-        var uvs = new List<Vector2>();
-        var colors = new List<Color>();
-        var tris = new List<int>();
-
-        for (int s = 0; s <= segments; s++)
-        {
-            float u = s / (float)segments;
-            float angle = u * Mathf.PI * 2f;
-            float sin = Mathf.Sin(angle), cos = Mathf.Cos(angle);
-
-            for (int r = 0; r < rows; r++)
-            {
-                float v = r / (float)(rows - 1);
-                // The tube narrows as it rises, which reads as the light
-                // tapering off rather than being cut off.
-                float radius = Mathf.Lerp(1f, 0.45f, v);
-                verts.Add(new Vector3(cos * radius, v, sin * radius));
-                uvs.Add(new Vector2(u, v));
-                colors.Add(new Color(1f, 1f, 1f, (1f - v) * (1f - v)));
-            }
-        }
-
-        for (int s = 0; s < segments; s++)
-        {
-            int a = s * rows;
-            int b = (s + 1) * rows;
-            for (int r = 0; r < rows - 1; r++)
-            {
-                tris.Add(a + r); tris.Add(a + r + 1); tris.Add(b + r);
-                tris.Add(b + r); tris.Add(a + r + 1); tris.Add(b + r + 1);
-            }
-        }
-
-        _columnMesh = Finish("TeleportColumn", verts, uvs, colors, tris);
-        return _columnMesh;
-    }
-
-    private static Mesh Finish(string name, List<Vector3> verts, List<Vector2> uvs, List<Color> colors, List<int> tris)
-    {
-        var mesh = new Mesh { name = name };
-        mesh.SetVertices(verts);
-        mesh.SetUVs(0, uvs);
-        mesh.SetColors(colors);
-        mesh.SetTriangles(tris, 0);
-        mesh.RecalculateBounds();
-        return mesh;
     }
 }
