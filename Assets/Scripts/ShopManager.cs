@@ -22,6 +22,9 @@ public class ShopManager : MonoBehaviour
     private const int TeleportCost = 2500;
     private const int TeleportsPerPurchase = 1;
 
+    private const int ShieldCost = 1000;
+    private const int ShieldsPerPurchase = 1;
+
     void Awake()
     {
         Instance = this;
@@ -118,6 +121,29 @@ public class ShopManager : MonoBehaviour
         if (!EconomyManager.Instance.SpendCoins(TeleportCost)) return false;
 
         TeleportManager.Instance.AddTeleports(TeleportsPerPurchase);
+        return true;
+    }
+
+    // The cheapest of the four charges, and the one that asks the most of the
+    // player: it buys seconds rather than a way out, and those seconds are
+    // only worth anything if they are spent walking somewhere.
+    public int GetShieldCost()
+    {
+        return ShieldCost;
+    }
+
+    public bool CanBuyShield()
+    {
+        return EconomyManager.Instance != null && EconomyManager.Instance.TotalCoins >= ShieldCost;
+    }
+
+    public bool BuyShield()
+    {
+        if (!CanBuyShield()) return false;
+        if (ShieldManager.Instance == null) return false;
+        if (!EconomyManager.Instance.SpendCoins(ShieldCost)) return false;
+
+        ShieldManager.Instance.AddShields(ShieldsPerPurchase);
         return true;
     }
 }

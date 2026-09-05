@@ -25,9 +25,12 @@ public class GhostScript : MonoBehaviour
     private Text HP_text;
     private Vector3 spawnPosition;
     private bool isDead;
-    private bool _invincible;
+    private bool _graceInvincible;
     private Coroutine _invincibilityRoutine;
     private Coroutine _teleportRoutine;
+    private bool _shielded;
+    private Coroutine _shieldRoutine;
+    private ShieldBubble _shieldBubble;
     // set while the spawn countdown holds the character still, so the
     // first unfrozen frame can pick the move animation back up
     private bool _wasFrozen;
@@ -67,11 +70,59 @@ public class GhostScript : MonoBehaviour
 
     private void Die()
     {
-        if (isDead || _invincible) return;
+        if (isDead || Invulnerable) return;
         isDead = true;
         Ctrl.enabled = false;
         if (GameOverManager.Instance != null)
             GameOverManager.Instance.TriggerGameOver(this);
+    }
+
+    // Two different things can make the character untouchable, and they can
+    // overlap - respawning onto a tile and shielding on the same beat - so
+    // neither one ending is allowed to speak for the other.
+    private bool Invulnerable => _graceInvincible || _shielded;
+
+    // The shield ability is up: for its few seconds nothing on the board can
+    // kill the character - an enemy walking into it, the lava under it, any of
+    // it. Being in the middle of one is also what stops a second charge being
+    // spent on top of it, which is why the manager can ask.
+    public bool ShieldActive => _shielded;
+
+    public void ActivateShield(float duration)
+    {
+        if (isDead) return;
+
+        if (_shieldRoutine != null) StopCoroutine(_shieldRoutine);
+        _shieldRoutine = StartCoroutine(ShieldRoutine(duration));
+    }
+
+    private IEnumerator ShieldRoutine(float duration)
+    {
+        _shielded = true;
+
+        // Built on first use and kept afterwards, the way the ice on an enemy
+        // is - there is nothing to add to the character in the scene.
+        if (_shieldBubble == null) _shieldBubble = gameObject.AddComponent<ShieldBubble>();
+        _shieldBubble.Show(duration);
+
+        yield return new WaitForSeconds(duration);
+
+        _shielded = false;
+        if (_shieldBubble != null) _shieldBubble.Burst();
+        _shieldRoutine = null;
+    }
+
+    // For a shield that is being taken away rather than running out - a
+    // respawn, where the character is being put back on the board fresh.
+    private void EndShield()
+    {
+        if (_shieldRoutine != null)
+        {
+            StopCoroutine(_shieldRoutine);
+            _shieldRoutine = null;
+        }
+        _shielded = false;
+        if (_shieldBubble != null) _shieldBubble.HideImmediate();
     }
 
     // brief post-respawn grace window (blinking) so landing back on/near a
@@ -84,7 +135,7 @@ public class GhostScript : MonoBehaviour
 
     private IEnumerator InvincibilityRoutine(float duration)
     {
-        _invincible = true;
+        _graceInvincible = true;
         const float blinkInterval = 0.12f;
         float t = 0f;
         while (t < duration)
@@ -100,7 +151,7 @@ public class GhostScript : MonoBehaviour
         {
             if (MeshR[i] != null) MeshR[i].enabled = true;
         }
-        _invincible = false;
+        _graceInvincible = false;
         _invincibilityRoutine = null;
     }
 
@@ -128,12 +179,14 @@ public class GhostScript : MonoBehaviour
     public void RespawnAt(Vector3 position)
     {
         // Dying part-way through a teleport leaves that jump owning the
-        // dissolve; the respawn takes it back.
+        // dissolve; the respawn takes it back. Any shield goes with the life
+        // it was protecting rather than carrying over into the next one.
         if (_teleportRoutine != null)
         {
             StopCoroutine(_teleportRoutine);
             _teleportRoutine = null;
         }
+        EndShield();
 
         HP = maxHP;
         if (HP_text != null) HP_text.text = "HP " + HP.ToString();

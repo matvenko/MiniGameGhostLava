@@ -3,8 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 
 // Drives the Shop popup: refreshes the wallet balance and each item's
-// price/owned/buy-state - extra life, traps, freeze and teleport charges - and
-// applies a purchase through ShopManager when that item's Buy is clicked.
+// price/owned/buy-state - extra life, traps, freeze, teleport and shield
+// charges - and applies a purchase through ShopManager when that item's Buy
+// is clicked.
 //
 // There are two ways in and closing has to undo whichever it was. From the pause
 // menu the game is already stopped and the pause card is only hidden, so closing
@@ -34,6 +35,9 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private Button buyTeleportButton;
     [SerializeField] private TextMeshProUGUI buyTeleportButtonText;
     [SerializeField] private TextMeshProUGUI teleportStatusText;
+    [SerializeField] private Button buyShieldButton;
+    [SerializeField] private TextMeshProUGUI buyShieldButtonText;
+    [SerializeField] private TextMeshProUGUI shieldStatusText;
     [SerializeField] private TextMeshProUGUI walletText;
 
     void Awake()
@@ -47,6 +51,7 @@ public class ShopUIController : MonoBehaviour
         if (buyTrapButton != null) buyTrapButton.onClick.AddListener(OnBuyTrapClicked);
         if (buyFreezeButton != null) buyFreezeButton.onClick.AddListener(OnBuyFreezeClicked);
         if (buyTeleportButton != null) buyTeleportButton.onClick.AddListener(OnBuyTeleportClicked);
+        if (buyShieldButton != null) buyShieldButton.onClick.AddListener(OnBuyShieldClicked);
     }
 
     private bool _openedFromPause;
@@ -133,6 +138,12 @@ public class ShopUIController : MonoBehaviour
         Refresh();
     }
 
+    private void OnBuyShieldClicked()
+    {
+        if (ShopManager.Instance != null) ShopManager.Instance.BuyShield();
+        Refresh();
+    }
+
     private void Refresh()
     {
         if (walletText != null && EconomyManager.Instance != null)
@@ -176,5 +187,14 @@ public class ShopUIController : MonoBehaviour
 
         if (buyTeleportButton != null)
             buyTeleportButton.interactable = ShopManager.Instance.CanBuyTeleport();
+
+        if (shieldStatusText != null && ShieldManager.Instance != null)
+            shieldStatusText.text = "Owned: " + ShieldManager.Instance.ShieldsOwned;
+
+        if (buyShieldButtonText != null)
+            buyShieldButtonText.text = ShopManager.Instance.GetShieldCost().ToString();
+
+        if (buyShieldButton != null)
+            buyShieldButton.interactable = ShopManager.Instance.CanBuyShield();
     }
 }
