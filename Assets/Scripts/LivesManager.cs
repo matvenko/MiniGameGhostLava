@@ -2,13 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Tracks the player's remaining ghost-icon lives for the current run and
-// drives the HUD row. Always starts at 3 each run; the shop can top lives
-// back up to HardCap (6) as a consumable purchase (see AddLife) - never
-// touches EconomyManager's persistent coin wallet.
+// drives the HUD row. Starts at 3 each run, or 4 in normal mode (see
+// DifficultySettings); the shop can top lives back up to HardCap (6) as a
+// consumable purchase (see AddLife) - never touches EconomyManager's
+// persistent coin wallet.
 public class LivesManager : MonoBehaviour
 {
     public static LivesManager Instance { get; private set; }
-    private const int StartingLives = 3;
+    private const int AuthoredStartingLives = 3;
+    private static int StartingLives => DifficultySettings.StartingLives(AuthoredStartingLives);
     public const int HardCap = 6;
 
     [SerializeField] private Image[] ghostIcons; // HardCap slots; only the living ones are shown

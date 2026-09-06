@@ -94,10 +94,13 @@ public class Coin : MonoBehaviour
 
     // Pays nothing rather than throwing if the list is emptied in the Inspector,
     // so a mis-set field costs the player their reward but not the run.
+    // Normal mode pays the good end of the roll every time rather than rolling
+    // (see DifficultySettings), so a younger player's shop progress does not
+    // depend on the dice.
     private int RollWalletValue() =>
         walletValues == null || walletValues.Length == 0
             ? 0
-            : walletValues[Random.Range(0, walletValues.Length)];
+            : DifficultySettings.CoinWalletValue(walletValues[Random.Range(0, walletValues.Length)]);
 
     private IEnumerator PickupAnimation()
     {

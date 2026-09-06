@@ -26,6 +26,12 @@ public class EnemyChaser : MonoBehaviour
     [SerializeField] private float waypointTolerance = 0.15f;
     [SerializeField] private float separationRadius = 0.8f;
     [SerializeField] private float separationStrength = 2f;
+
+    // The authored speed is the hard-mode speed; normal plays it back slower
+    // (see DifficultySettings). Read per step rather than cached, so a mode
+    // chosen after this component woke up still applies. Lane-giving compares
+    // authored speeds, which rank the hunters the same either way.
+    private float ChaseSpeed => DifficultySettings.EnemySpeed(speed);
     // How close a faster enemy has to get before this one gives way, and how
     // long it stays out of the lane once it has - long enough to be passed.
     [SerializeField] private float yieldRadius = 1.6f;
@@ -265,10 +271,10 @@ public class EnemyChaser : MonoBehaviour
         // only when the resulting step stays on the grid, otherwise fall
         // back to the pure chase step.
         Vector3 separation = GetSeparation(current);
-        Vector3 move = ClampToWalkable(current, (chaseDir * speed + separation * separationStrength) * Time.fixedDeltaTime, toDestination.magnitude);
+        Vector3 move = ClampToWalkable(current, (chaseDir * ChaseSpeed + separation * separationStrength) * Time.fixedDeltaTime, toDestination.magnitude);
         if (move == Vector3.zero)
         {
-            move = ClampToWalkable(current, chaseDir * speed * Time.fixedDeltaTime, toDestination.magnitude);
+            move = ClampToWalkable(current, chaseDir * ChaseSpeed * Time.fixedDeltaTime, toDestination.magnitude);
         }
 
         _rb.MovePosition(current + move);

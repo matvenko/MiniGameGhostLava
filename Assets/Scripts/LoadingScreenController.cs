@@ -25,8 +25,8 @@ public class LoadingScreenController : MonoBehaviour
     private RectTransform safeRoot, hero, orbit, fill, playRect;
     private CanvasGroup entrance;
     private Image curtain;
-    private TextMeshProUGUI percent, caption, soundLabel, playLabel;
-    private Button play;
+    private TextMeshProUGUI percent, caption, soundLabel, playLabel, modeHint;
+    private Button play, normalPill, hardPill;
     private AudioSource music, effects;
     private AudioClip ambience, readySound, startSound;
     private RectTransform[] embers;
@@ -137,22 +137,27 @@ public class LoadingScreenController : MonoBehaviour
         rightGhost.rectTransform.localRotation=Quaternion.Euler(0,0,16);
 
         controls=Rect(design,"Play area",new Vector2(0,-320),new Vector2(620,260));
-        caption=Label(controls,"Getting the fun ready...",new Vector2(-52,89),new Vector2(385,36),20,new Color(.89f,.85f,1));
+        caption=Label(controls,"Getting the fun ready...",new Vector2(-52,112),new Vector2(385,36),20,new Color(.89f,.85f,1));
         caption.alignment=TextAlignmentOptions.Left;
-        percent=Label(controls,"0%",new Vector2(214,89),new Vector2(80,36),20,new Color(1,.86f,.38f));
+        percent=Label(controls,"0%",new Vector2(214,112),new Vector2(80,36),20,new Color(1,.86f,.38f));
         percent.alignment=TextAlignmentOptions.Right;
-        var track=Rounded(controls,"Progress border",new Vector2(0,49),new Vector2(520,22),new Color(.22f,.13f,.40f));
+        var track=Rounded(controls,"Progress border",new Vector2(0,74),new Vector2(520,22),new Color(.22f,.13f,.40f));
         var inner=Rounded(track.transform,"Progress well",Vector2.zero,new Vector2(510,12),new Color(.31f,.20f,.49f));
         fill=Rounded(inner.transform,"Progress",Vector2.zero,Vector2.zero,new Color(.55f,.96f,.72f)).rectTransform;
         fill.anchorMin=Vector2.zero; fill.anchorMax=new Vector2(0,1); fill.offsetMin=fill.offsetMax=Vector2.zero;
-        Rounded(controls,"Button shadow",new Vector2(0,-36),new Vector2(420,92),new Color(.55f,.24f,.09f));
-        play=MakeButton(controls,"Play",new Vector2(0,-25),new Vector2(420,94),new Color(1,.76f,.21f),BeginGame);
+        // The mode is picked before the run starts and nowhere else, so it sits
+        // on the way to the play button rather than behind a settings screen.
+        normalPill=ModePill(controls,"NORMAL",-108,Difficulty.Normal);
+        hardPill=ModePill(controls,"HARD",108,Difficulty.Hard);
+        Rounded(controls,"Button shadow",new Vector2(0,-71),new Vector2(420,92),new Color(.55f,.24f,.09f));
+        play=MakeButton(controls,"Play",new Vector2(0,-60),new Vector2(420,94),new Color(1,.76f,.21f),BeginGame);
         var buttonImage=play.GetComponent<Image>(); buttonImage.sprite=roundSprite; buttonImage.type=Image.Type.Sliced;
         Rounded(play.transform,"Button shine",new Vector2(0,29),new Vector2(362,9),new Color(1,.91f,.48f));
         playRect=play.GetComponent<RectTransform>();
         playLabel=Label(play.transform,"LOADING...",new Vector2(0,-2),new Vector2(400,75),40,new Color(.35f,.20f,.15f));
         play.interactable=false;
-        Label(controls,"Grab coins. Make friends. Find your way!",new Vector2(0,-108),new Vector2(700,35),20,new Color(.83f,.77f,.95f));
+        modeHint=Label(controls,"",new Vector2(0,-136),new Vector2(760,35),20,new Color(.83f,.77f,.95f));
+        RefreshModePills();
         var sound=MakeButton(design,"Sound",Vector2.zero,new Vector2(160,46),new Color(.25f,.17f,.45f),ToggleSound);
         sound.GetComponent<Image>().sprite=roundSprite; sound.GetComponent<Image>().type=Image.Type.Sliced;
         sound.name="Sound control";
@@ -175,6 +180,50 @@ public class LoadingScreenController : MonoBehaviour
         heroBlock.localScale=Vector3.one*(portrait?.90f:1.1f);
         controls.anchoredPosition=new Vector2(0,portrait?-410:-320);
         design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(0,-620):new Vector2(665,418);
+    }
+
+    // One of the two mode pills. Both are built from the same call so they can
+    // never drift apart in size or wording, and the pair is redrawn from what
+    // DifficultySettings says rather than from which one was last pressed.
+    private Button ModePill(Transform parent,string word,float x,Difficulty mode)
+    {
+        var pill=MakeButton(parent,word,new Vector2(x,22),new Vector2(200,54),Color.white,()=>ChooseMode(mode));
+        var image=pill.GetComponent<Image>();
+        image.sprite=roundSprite; image.type=Image.Type.Sliced;
+        var label=Label(pill.transform,word,new Vector2(0,-1),new Vector2(190,50),24,Color.white);
+        label.name="Mode word";
+        return pill;
+    }
+
+    private void ChooseMode(Difficulty mode)
+    {
+        DifficultySettings.Current=mode;
+        RefreshModePills();
+        PlayEffect(readySound);
+    }
+
+    private void RefreshModePills()
+    {
+        if (normalPill==null||hardPill==null) return;
+        bool normal=DifficultySettings.IsNormal;
+        Dress(normalPill,normal);
+        Dress(hardPill,!normal);
+        modeHint.text=normal
+            ? "Normal: slower ghosts, kinder coins and a spare life - just right for little players."
+            : "Hard: full-speed ghosts and the coins as they fall. The grown-up chase!";
+    }
+
+    private void Dress(Button pill,bool picked)
+    {
+        var image=pill.GetComponent<Image>();
+        image.color=picked?new Color(.55f,.96f,.72f):new Color(.25f,.17f,.45f);
+        var colors=pill.colors;
+        colors.highlightedColor=picked?new Color(.70f,1f,.82f):new Color(.34f,.24f,.58f);
+        colors.pressedColor=new Color(.80f,.80f,.80f);
+        pill.colors=colors;
+        var label=pill.transform.Find("Mode word").GetComponent<TextMeshProUGUI>();
+        label.color=picked?new Color(.10f,.24f,.18f):new Color(.86f,.81f,1f);
+        label.fontStyle=picked?FontStyles.Bold:FontStyles.Normal;
     }
 
     private void LogoWord(Transform parent,string word,Vector2 position,Vector2 size,Color color,float angle)
