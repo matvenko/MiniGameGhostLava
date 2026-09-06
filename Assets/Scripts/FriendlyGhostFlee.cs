@@ -29,14 +29,36 @@ public class FriendlyGhostFlee : MonoBehaviour
     private float _repathTimer;
     private bool _caught;
 
+    // How it stands when it is not being whisked away. The vanish leaves the
+    // transform shrunk, spun and better than a metre in the air, and every one
+    // of those would otherwise be carried into its next life: a ghost hovering
+    // a metre up is out of reach of its own capture radius, so it cannot be
+    // caught again, and each catch lifts it another metre.
+    private float _restingHeight;
+    private Quaternion _restingRotation = Quaternion.identity;
+    private bool _restingKnown;
+
     void Awake()
     {
         _rb = GetComponent<Rigidbody>();
         _rb.isKinematic = true;
         _rb.useGravity = false;
 
+        RememberResting();
+
         var col = GetComponent<Collider>();
         if (col != null) col.isTrigger = true;
+    }
+
+    // The scene authors how high this ghost floats. Read once, and read before
+    // anything has had a chance to move it: the first placement can arrive
+    // while the object is still inactive, which is before Awake has run.
+    private void RememberResting()
+    {
+        if (_restingKnown) return;
+        _restingHeight = transform.position.y;
+        _restingRotation = transform.rotation;
+        _restingKnown = true;
     }
 
     void OnEnable()
@@ -44,14 +66,39 @@ public class FriendlyGhostFlee : MonoBehaviour
         ResetState();
     }
 
+    // Puts the ghost down for a new level. The move goes through the rigidbody
+    // as well as the transform: it is kinematic, so a transform written on its
+    // own leaves the body still standing on last level's tile, and the next
+    // MovePosition drags the ghost back there - onto whatever the new board put
+    // in that spot.
+    public void PlaceAt(Vector3 spot)
+    {
+        RememberResting();
+        if (_rb == null) _rb = GetComponent<Rigidbody>();
+        Vector3 landing = new Vector3(spot.x, _restingHeight, spot.z);
+        transform.SetPositionAndRotation(landing, _restingRotation);
+        if (_rb != null)
+        {
+            _rb.position = landing;
+            _rb.rotation = _restingRotation;
+        }
+        ResetState();
+    }
+
     // Called by LevelManager right before repositioning + reactivating this
     // ghost for a new level, so a previous capture doesn't carry over.
     public void ResetState()
     {
+        RememberResting();
         _caught = false;
         _path.Clear();
         _repathTimer = 0f;
         transform.localScale = Vector3.one;
+        // Undo the rest of the vanish, in case this is a plain re-enable rather
+        // than a placement - height included, or it comes back uncatchable.
+        transform.rotation = _restingRotation;
+        transform.position = new Vector3(transform.position.x, _restingHeight, transform.position.z);
+        if (_rb != null) _rb.position = transform.position;
 
         if (_target == null)
         {
@@ -70,11 +117,18 @@ public class FriendlyGhostFlee : MonoBehaviour
 
         // Distance-based catch check, independent of collider trigger
         // events - if the player is right on top of it, that's a catch
-        // regardless of whether the mesh-collider trigger fired.
-        if (_target != null && Vector3.Distance(transform.position, _target.position) <= captureRadius)
+        // regardless of whether the mesh-collider trigger fired. Measured
+        // across the board only: the two float at different heights, and how
+        // high a ghost hovers is not something the player can chase.
+        if (_target != null)
         {
-            Caught();
-            return;
+            Vector3 toPlayer = _target.position - transform.position;
+            toPlayer.y = 0f;
+            if (toPlayer.magnitude <= captureRadius)
+            {
+                Caught();
+                return;
+            }
         }
 
         if (_target == null || EnemyPathGrid.Instance.AllNodes.Count == 0) return;

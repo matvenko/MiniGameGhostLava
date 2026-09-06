@@ -497,12 +497,20 @@ public class LevelManager : MonoBehaviour
         var pool = farCandidates.Count > 0 ? farCandidates : candidates;
         var spot = pool[Random.Range(0, pool.Count)];
 
-        Vector3 pos = spot.position;
-        pos.y = friendlyGhost.transform.position.y;
-        friendlyGhost.transform.position = pos;
-
+        // The ghost puts itself down: after a catch its transform is left
+        // shrunk, spun and in the air by the vanish, so reading a height back
+        // off it here is reading the animation rather than the board.
         var flee = friendlyGhost.GetComponent<FriendlyGhostFlee>();
-        if (flee != null) flee.ResetState();
+        if (flee != null)
+        {
+            flee.PlaceAt(spot.position);
+        }
+        else
+        {
+            Vector3 pos = spot.position;
+            pos.y = friendlyGhost.transform.position.y;
+            friendlyGhost.transform.position = pos;
+        }
 
         friendlyGhost.SetActive(true);
     }
