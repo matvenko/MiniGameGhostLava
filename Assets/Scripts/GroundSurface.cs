@@ -119,6 +119,15 @@ public class GroundSurface : MonoBehaviour
         Rebuild();
     }
 
+    // Swapped when the board changes theme (see BoardThemes). The mesh carries
+    // its palette in vertex colours, so the material is the whole of the look.
+    public void SetMaterial(Material material)
+    {
+        if (material == null || material == groundMaterial) return;
+        groundMaterial = material;
+        Refresh();
+    }
+
     public void HideBlockTiles()
     {
         if (_blocksParent == null) return;

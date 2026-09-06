@@ -134,6 +134,30 @@ public class LevelManager : MonoBehaviour
         RespawnPlayerAndEnemies();
     }
 
+    // What the board is made of this level (see BoardThemes). Re-skins the tiles
+    // that are already down, so a theme applied outside a layout - previewing a
+    // setting in the editor - takes effect without waiting for the next level.
+    public void SetTileMaterials(Material block, Material lava)
+    {
+        bool changed = false;
+        if (block != null && block != blockMaterial) { blockMaterial = block; changed = true; }
+        if (lava != null && lava != lavaMaterial) { lavaMaterial = lava; changed = true; }
+        if (!changed) return;
+
+        Reskin(GameObject.Find("Blocks"), blockMaterial);
+        Reskin(GameObject.Find("Lava"), lavaMaterial);
+    }
+
+    private static void Reskin(GameObject parent, Material material)
+    {
+        if (parent == null || material == null) return;
+        foreach (Transform tile in parent.transform)
+        {
+            var mr = tile.GetComponent<MeshRenderer>();
+            if (mr != null) mr.sharedMaterial = material;
+        }
+    }
+
     private Vector2Int SizeForLevel(int level)
     {
         if (boardSizeByLevel == null || boardSizeByLevel.Length == 0) return new Vector2Int(30, 20);
@@ -148,6 +172,10 @@ public class LevelManager : MonoBehaviour
     // may not have run yet, and it will pick up the finished board on its own.
     private void ApplyLevelLayout()
     {
+        // Before anything is laid out: the theme decides what the tiles are made
+        // of, and the layout below is what skins them.
+        if (BoardThemes.Instance != null) BoardThemes.Instance.ApplyForLevel(_level);
+
         Vector2Int size = SizeForLevel(_level);
         ResizeBoard(size);
         ResizeWalls(size);

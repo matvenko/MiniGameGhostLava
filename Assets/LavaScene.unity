@@ -9708,6 +9708,87 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 187791527}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &188175352
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 188175354}
+  - component: {fileID: 188175353}
+  m_Layer: 0
+  m_Name: BoardThemes
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &188175353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188175352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84eaa289a76d36e4182f3651d74339d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoardThemes
+  themes:
+  - name: Meadow
+    fromLevel: 1
+    blockTile: {fileID: 2100000, guid: c67d21dd5ef65074db200f1e3625ca73, type: 2}
+    lavaTile: {fileID: 2100000, guid: 66b6f1e6eb3882a43802e39c59163cce, type: 2}
+    ground: {fileID: 2100000, guid: 096d4912731b1c14d915bd4050389c92, type: 2}
+    liquid: {fileID: 2100000, guid: 13d5d385820ce98574bdb943841ef1bf, type: 2}
+    liquidBed: {fileID: 0}
+    wall: {fileID: 2100000, guid: 2c05a773562f9403e7de3defb2cf07c0, type: 2}
+    dayNightCycle: 1
+    sunColour: {r: 0, g: 0, b: 0, a: 0}
+    sunIntensity: 0
+    ambient: {r: 0, g: 0, b: 0, a: 0}
+    fog: 0
+    fogColour: {r: 0, g: 0, b: 0, a: 0}
+    fogDensity: 0
+    flatBackground: 0
+    backgroundColour: {r: 0, g: 0, b: 0, a: 0}
+  - name: Cave
+    fromLevel: 6
+    blockTile: {fileID: 2100000, guid: 1c0ca638da1625b48b3004ead0b49d18, type: 2}
+    lavaTile: {fileID: 2100000, guid: 66b6f1e6eb3882a43802e39c59163cce, type: 2}
+    ground: {fileID: 2100000, guid: 1047ed7403579b94a95479f52aebaadc, type: 2}
+    liquid: {fileID: 2100000, guid: 8946f212ed789d24099759ee2386297c, type: 2}
+    liquidBed: {fileID: 0}
+    wall: {fileID: 2100000, guid: 5755d9a8244889541ab5906af4d55e14, type: 2}
+    dayNightCycle: 0
+    sunColour: {r: 1, g: 0.58, b: 0.34, a: 1}
+    sunIntensity: 0.6
+    ambient: {r: 0.27, g: 0.23, b: 0.27, a: 1}
+    fog: 1
+    fogColour: {r: 0.055, g: 0.04, b: 0.055, a: 1}
+    fogDensity: 0.035
+    flatBackground: 1
+    backgroundColour: {r: 0.045, g: 0.03, b: 0.045, a: 1}
+  sun: {fileID: 0}
+  boardCamera: {fileID: 0}
+--- !u!4 &188175354
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188175352}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &190872893
 GameObject:
   m_ObjectHideFlags: 0
@@ -78080,6 +78161,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1417792925}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1419521892 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7755208930759759146, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+  m_PrefabInstance: {fileID: 5393287933501293197}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1420127331
 GameObject:
   m_ObjectHideFlags: 0
@@ -82680,6 +82766,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1516267764}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1519086597 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3744882297666859897, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+  m_PrefabInstance: {fileID: 5393287933501293197}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1519682675
 GameObject:
   m_ObjectHideFlags: 0
@@ -101330,6 +101421,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1877418718}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1877851157 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 19588385245968726, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+  m_PrefabInstance: {fileID: 5393287933501293197}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1883616272
 GameObject:
   m_ObjectHideFlags: 0
@@ -116781,9 +116877,17 @@ PrefabInstance:
       value: -0.035
       objectReference: {fileID: 0}
     - target: {fileID: 839705036205447455, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 34aa65501bdb70a4094bd12ae0321362, type: 2}
+    - target: {fileID: 839705036205447455, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
       propertyPath: m_CastShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 839705036205447455, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 60d28841b1d15944896e745cec99b0ab, type: 2}
     - target: {fileID: 1893022538616854154, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
       propertyPath: m_Name
       value: GhostMesh
@@ -116843,19 +116947,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 19588385245968726, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5393287933501293201}
   m_SourcePrefab: {fileID: 100100000, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
 --- !u!114 &5393287933501293198 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4524755726158905661, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
   m_PrefabInstance: {fileID: 5393287933501293197}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1877851157}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f57bdc949fce340f8968c5bc86276031, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5393287933501293201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1877851157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bcd22026e879894da4b15a7df1370dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PinkGhostBlink
+  leftEye: {fileID: 1519086597}
+  rightEye: {fileID: 1419521892}
 --- !u!4 &5419243924111277331
 Transform:
   m_ObjectHideFlags: 0
@@ -118285,3 +118406,4 @@ SceneRoots:
   - {fileID: 700100121}
   - {fileID: 700100181}
   - {fileID: 700100191}
+  - {fileID: 188175354}

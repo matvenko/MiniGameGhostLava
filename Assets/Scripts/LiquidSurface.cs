@@ -94,6 +94,17 @@ public class LiquidSurface : MonoBehaviour
     // leave the rows the board just grew by with no liquid over them at all.
     // Then, since the set of cells that count as lava changed too, re-decide
     // which tile renderers are visible.
+    // Swapped when the board changes theme (see BoardThemes): the same pool of
+    // liquid, told to be lava instead of water. A null keeps what is there, so a
+    // theme that only means to change one of the two can leave the other out.
+    public void SetMaterials(Material liquid, Material bed)
+    {
+        bool changed = false;
+        if (liquid != null && liquid != liquidMaterial) { liquidMaterial = liquid; changed = true; }
+        if (bed != null && bed != bedMaterial) { bedMaterial = bed; changed = true; }
+        if (changed) Refresh();
+    }
+
     [ContextMenu("Refresh")]
     public void Refresh()
     {

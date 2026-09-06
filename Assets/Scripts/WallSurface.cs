@@ -120,6 +120,15 @@ public class WallSurface : MonoBehaviour
         Rebuild();
     }
 
+    // Swapped when the board changes theme (see BoardThemes). The stone is the
+    // same painted set either way; the material is what takes it underground.
+    public void SetMaterial(Material material)
+    {
+        if (material == null || material == wallMaterial) return;
+        wallMaterial = material;
+        Refresh();
+    }
+
     public void HideWallTiles()
     {
         if (_wallsParent == null) return;
