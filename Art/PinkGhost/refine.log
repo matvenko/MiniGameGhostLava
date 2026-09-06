@@ -1,0 +1,10 @@
+00:00.062  reports          | WARNING Unable to open 'C:\Users\matez\AppData\Roaming\Blender Foundation\Blender\5.2\config\userpref.blend': Permission denied
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+00:04.172  reports          | WARNING Path 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Dots Stroke'
+00:04.172  reports          | WARNING Path 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Material'
+00:04.187  image.write      | ERROR OpenImageIO write failed: Could not open file "\.thumbnails\large\blender_2152_0ba2388dc979143c047e9e88f0045002.png.png"
+Info: Removed 358 vertices
+Info: Saved as "PinkGhost.blend"
+REFINED 19006 36576
+
+Blender quit
