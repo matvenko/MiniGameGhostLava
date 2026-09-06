@@ -148,7 +148,10 @@ public class ShopUIController : MonoBehaviour
     // panel's quiet blue, so the count reads at a glance down the column.
     private static string Count(object value) => "<color=#FFD34A>" + value + "</color>";
 
-    private void Refresh()
+    // Public so anything that changes the wallet behind the shop's back - the
+    // test bar paying coins in while it is open - can have the prices and the
+    // buy buttons say so without the shop being closed and reopened.
+    public void Refresh()
     {
         if (walletText != null && EconomyManager.Instance != null)
             walletText.text = EconomyManager.Instance.TotalCoins.ToString();
