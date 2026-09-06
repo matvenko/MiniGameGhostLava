@@ -11135,6 +11135,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
   strategy: 0
   speed: 2
+  wanderInterest: 6
+  wanderMinDistance: 3
+  wanderPreferredDistance: 7
+  wanderSamples: 12
   repathInterval: 0.4
   waypointTolerance: 0.15
   separationRadius: 0.8
@@ -27516,7 +27520,7 @@ MonoBehaviour:
   - template: {fileID: 1365869697}
     countByLevel: 0000000000000000000000000000000001000000
   - template: {fileID: 1402746116}
-    countByLevel: 01000000010000000100000001000000010000000100000002000000
+    countByLevel: 02000000020000000300000003000000040000000400000005000000
   - template: {fileID: 214121208}
     countByLevel: 02000000
   - template: {fileID: 1001743491}
@@ -52926,6 +52930,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
   strategy: 1
   speed: 2.5
+  wanderInterest: 6
+  wanderMinDistance: 3
+  wanderPreferredDistance: 7
+  wanderSamples: 12
   repathInterval: 0.4
   waypointTolerance: 0.15
   separationRadius: 0.8
@@ -73939,6 +73947,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
   strategy: 0
   speed: 3
+  wanderInterest: 6
+  wanderMinDistance: 3
+  wanderPreferredDistance: 7
+  wanderSamples: 12
   repathInterval: 0.4
   waypointTolerance: 0.15
   separationRadius: 0.8
@@ -76239,8 +76251,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 327ae5492ec1cc247a97cb3af2cd32b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
-  strategy: 0
-  speed: 2
+  strategy: 2
+  speed: 1.5
+  wanderInterest: 6
+  wanderMinDistance: 3
+  wanderPreferredDistance: 7
+  wanderSamples: 12
   repathInterval: 0.4
   waypointTolerance: 0.15
   separationRadius: 0.8

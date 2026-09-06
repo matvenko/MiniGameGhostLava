@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sample;
 
-// Chases the player across the walkable (Blocks) grid using BFS
-// pathfinding, moving tile-center to tile-center so it never cuts
-// through lava or walls. Catching the player triggers the same fatal
-// sequence as falling into lava.
+// Moves an enemy across the walkable (Blocks) grid using BFS pathfinding,
+// tile-center to tile-center so it never cuts through lava or walls. Most
+// enemies path to the player; a wanderer paths to somewhere of its own
+// choosing (see PathingStrategy). Either way, touching the player triggers the
+// same fatal sequence as falling into lava.
 //
 // The grid itself (nodes/adjacency/nearest-node lookup) lives in the
 // shared EnemyPathGrid rather than being rebuilt and re-scanned per
@@ -18,10 +19,24 @@ public class EnemyChaser : MonoBehaviour
     // lookahead, so it can wander into dead ends and take longer routes
     // (dumb, so it's faster to compensate). Giving enemies different
     // strategies keeps them from marching the exact same route in lockstep.
-    public enum PathingStrategy { Optimal, Greedy }
+    //
+    // Wander doesn't chase at all: it walks the board on its own errands,
+    // picking somewhere to be and going there. It is still fatal to touch, so
+    // it reads as a haunting rather than a hunt - and because it never aims at
+    // the player, it is the one enemy that can be walked around on purpose.
+    public enum PathingStrategy { Optimal, Greedy, Wander }
 
     [SerializeField] private PathingStrategy strategy = PathingStrategy.Optimal;
     [SerializeField] private float speed = 4f;
+
+    [Header("Wander")]
+    [Tooltip("How long a wanderer keeps walking toward one spot before it changes its mind.")]
+    [SerializeField] private float wanderInterest = 6f;
+    [Tooltip("Tiles it will not bother crossing the board for, and the trip length it likes.")]
+    [SerializeField] private float wanderMinDistance = 3f;
+    [SerializeField] private float wanderPreferredDistance = 7f;
+    [Tooltip("Places it considers before setting off. More means a fussier, less random-looking route.")]
+    [SerializeField] private int wanderSamples = 12;
     [SerializeField] private float repathInterval = 0.4f;
     [SerializeField] private float waypointTolerance = 0.15f;
     [SerializeField] private float separationRadius = 0.8f;
@@ -45,6 +60,11 @@ public class EnemyChaser : MonoBehaviour
     private bool _hasGoal;
     private float _stunTimer;
     private float _yieldTimer;
+    private Vector3 _wanderGoal;
+    private bool _hasWanderGoal;
+    private float _wanderTimer;
+
+    private bool Wanders => strategy == PathingStrategy.Wander;
     private Animator _animator;
     private float _animatorSpeed = 1f;
     private FreezeVisual _freezeVisual;
@@ -109,6 +129,7 @@ public class EnemyChaser : MonoBehaviour
         // current grid.
         _path.Clear();
         _hasGoal = false;
+        _hasWanderGoal = false;
         _stunTimer = 0f;
         _repathTimer = 0f;
         _yieldTimer = 0f;
@@ -166,12 +187,14 @@ public class EnemyChaser : MonoBehaviour
             return;
         }
 
-        if (_target == null || EnemyPathGrid.Instance.AllNodes.Count == 0) return;
+        if (EnemyPathGrid.Instance.AllNodes.Count == 0) return;
+        if (_target == null && !Wanders) return;
 
         _repathTimer -= Time.deltaTime;
         _yieldTimer -= Time.deltaTime;
+        _wanderTimer -= Time.deltaTime;
         Vector3 start = EnemyPathGrid.Instance.NearestNode(transform.position);
-        Vector3 goal = EnemyPathGrid.Instance.NearestNode(_target.position);
+        Vector3 goal = Wanders ? WanderGoal(start) : EnemyPathGrid.Instance.NearestNode(_target.position);
 
         // Standing aside outranks chasing for as long as it takes to be passed.
         // Repathing mid-step would compute a route straight back down the lane
@@ -210,7 +233,7 @@ public class EnemyChaser : MonoBehaviour
     {
         if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
         if (_stunTimer > 0f) return;
-        if (_target == null) return;
+        if (_target == null && !Wanders) return;
 
         Vector3 current = _rb.position;
 
@@ -231,6 +254,10 @@ public class EnemyChaser : MonoBehaviour
         // lava - Update() will supply a fresh grid step immediately.
         if (_path.Count == 0)
         {
+            // A wanderer has nowhere it is owed: with no queued step it simply
+            // stands until Update lays the next one, rather than closing on the
+            // player the way a chaser does.
+            if (Wanders) return;
             Vector3 start = EnemyPathGrid.Instance.NearestNode(current);
             Vector3 goal = EnemyPathGrid.Instance.NearestNode(_target.position);
             if (start != goal) return;
@@ -278,6 +305,70 @@ public class EnemyChaser : MonoBehaviour
         }
 
         _rb.MovePosition(current + move);
+    }
+
+    // Where a wanderer is headed. It keeps one errand until it arrives, loses
+    // interest, or the board is rebuilt under it - anything shorter reads as
+    // twitching rather than as a ghost going somewhere.
+    private Vector3 WanderGoal(Vector3 start)
+    {
+        if (!_hasWanderGoal || _wanderTimer <= 0f || start == _wanderGoal || !IsOverWalkable(_wanderGoal))
+        {
+            _wanderGoal = PickWanderGoal(start);
+            _hasWanderGoal = true;
+            // Staggered so a pair of wanderers never turns on the same frame.
+            _wanderTimer = wanderInterest * Random.Range(.7f, 1.3f);
+        }
+        return _wanderGoal;
+    }
+
+    // Somewhere worth walking to: far enough to be a trip, near the length it
+    // likes, and - this is what keeps the ghosts off each other - in the part of
+    // the board the others are furthest from. Sampled rather than searched: the
+    // grid can be a thousand tiles and the answer only has to be plausible.
+    private Vector3 PickWanderGoal(Vector3 start)
+    {
+        var nodes = EnemyPathGrid.Instance.AllNodes;
+        if (nodes.Count == 0) return start;
+
+        Vector3 best = start;
+        float bestScore = float.NegativeInfinity;
+        for (int i = 0; i < Mathf.Max(1, wanderSamples); i++)
+        {
+            Vector3 candidate = nodes[Random.Range(0, nodes.Count)];
+            float trip = Vector3.Distance(start, candidate);
+            if (trip < wanderMinDistance) continue;
+            // Elbow room counts up to a point - past a few tiles of clearance
+            // one empty corner is as good as another, and the trip length is
+            // what should decide between them.
+            float score = Mathf.Min(ClearanceAt(candidate), 6f)
+                          - Mathf.Abs(trip - wanderPreferredDistance) * .35f;
+            if (score <= bestScore) continue;
+            bestScore = score;
+            best = candidate;
+        }
+
+        // On a board too small for a trip - or a very unlucky sample - step to a
+        // neighbour instead, so it always has somewhere to be going.
+        if (float.IsNegativeInfinity(bestScore))
+        {
+            var neighbours = EnemyPathGrid.Instance.GetNeighbors(start);
+            if (neighbours.Count > 0) best = neighbours[Random.Range(0, neighbours.Count)];
+        }
+        return best;
+    }
+
+    private float ClearanceAt(Vector3 point)
+    {
+        float nearest = float.PositiveInfinity;
+        foreach (var other in AllChasers)
+        {
+            if (other == this || other == null) continue;
+            Vector3 diff = point - other.transform.position;
+            diff.y = 0f;
+            nearest = Mathf.Min(nearest, diff.magnitude);
+        }
+        return float.IsPositiveInfinity(nearest) ? 6f : nearest;
     }
 
     // Caps the step at the remaining distance, then rejects it outright
