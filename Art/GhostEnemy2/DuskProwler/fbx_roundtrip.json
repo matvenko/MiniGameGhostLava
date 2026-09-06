@@ -1,0 +1,48 @@
+{
+  "objects": {
+    "DuskProwler": "ARMATURE",
+    "DuskProwler_Mesh": "MESH"
+  },
+  "bones": 5,
+  "triangles": 2700,
+  "materials": {
+    "01 \u2022 Deep indigo": [
+      0.023000000044703484,
+      0.02800000086426735,
+      0.07800000160932541,
+      1.0
+    ],
+    "02 \u2022 Charcoal violet": [
+      0.012000000104308128,
+      0.012000000104308128,
+      0.027000000700354576,
+      1.0
+    ],
+    "03 \u2022 Near-black mask": [
+      0.0024999999441206455,
+      0.003000000026077032,
+      0.00800000037997961,
+      1.0
+    ],
+    "04 \u2022 Ivory crown": [
+      0.7799999713897705,
+      0.7599999904632568,
+      0.6499999761581421,
+      1.0
+    ],
+    "05 \u2022 Ember orange": [
+      1.0,
+      0.2199999988079071,
+      0.00800000037997961,
+      1.0
+    ]
+  },
+  "imported_action": "DuskProwler|Ghost_Hover_Loop",
+  "frame_range": [
+    1.0,
+    61.0
+  ],
+  "seconds": 2.0,
+  "boundary_pose_error": 0.0,
+  "root_stationary": true
+}

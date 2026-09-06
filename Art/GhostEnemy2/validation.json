@@ -1,0 +1,15 @@
+{
+  "mesh_objects": 9,
+  "triangles": 2680,
+  "bones": 5,
+  "animation": "Ghost_Hover_Loop",
+  "fps": 30,
+  "duration_seconds": 2,
+  "source": "1m grid, player capsule height .7m radius .24m; camera offset 11m in LavaScene",
+  "files": [
+    "SpectralHunter.blend",
+    "SpectralHunter.fbx"
+  ],
+  "loop_matrix_error": 5.1682036222798806e-17,
+  "quarter_cycle_motion": 0.21512249112129211
+}

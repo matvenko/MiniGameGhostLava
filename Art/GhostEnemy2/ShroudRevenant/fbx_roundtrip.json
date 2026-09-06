@@ -1,0 +1,16 @@
+{
+  "objects": {
+    "ShroudRevenant": "ARMATURE",
+    "ShroudRevenant_GameMesh": "MESH"
+  },
+  "game_triangles": 3713,
+  "materials": 5,
+  "bones": 6,
+  "imported_action": "ShroudRevenant|Ghost_Hover_Loop",
+  "frame_range": [
+    1.0,
+    61.0
+  ],
+  "boundary_error": 0.0,
+  "root_stationary": true
+}

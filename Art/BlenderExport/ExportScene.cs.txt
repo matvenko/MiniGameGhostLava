@@ -1,0 +1,38 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEngine.SceneManagement;
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+internal class CommandScript : IRunCommand {
+ [Serializable] public class SceneData { public List<Node> nodes=new List<Node>(); public List<Mat> materials=new List<Mat>(); public List<string> excluded=new List<string>(); public List<string> errors=new List<string>(); public string source; }
+ [Serializable] public class Node { public int id,parent; public string name,root; public bool visible; public float[] matrix; public Vector3[] vertices,normals; public Vector2[] uv; public Color[] colors; public List<Sub> submeshes=new List<Sub>(); public int[] materials; public string kind="EMPTY"; public Color color; public float intensity,range,spot,fov,orthoSize; public bool ortho; }
+ [Serializable] public class Sub { public int[] triangles; }
+ [Serializable] public class Mat { public int id; public string name,shader; public List<Prop> properties=new List<Prop>(); }
+ [Serializable] public class Prop { public string name,type,path; public Color color; public float value; public Vector2 scale,offset; }
+ public void Execute(ExecutionResult result) {
+  var scene=SceneManager.GetActiveScene(); if(scene.path!="Assets/LavaScene.unity") throw new Exception("Unexpected scene");
+  var data=new SceneData{source=scene.path}; var mats=new Dictionary<int,Material>();
+  foreach(var root in scene.GetRootGameObjects()) {
+   if(new[]{"Ghost","Enemies","FriendlyGhost"}.Contains(root.name)){data.excluded.Add(root.name);continue;}
+   if(root.GetComponent<Canvas>()!=null) continue;
+   foreach(var t in root.GetComponentsInChildren<Transform>(true)) {
+    var n=new Node{id=t.GetInstanceID(),parent=t.parent?t.parent.GetInstanceID():0,name=t.name,root=root.name,visible=t.gameObject.activeInHierarchy};
+    var m=t.localToWorldMatrix; n.matrix=new float[16]; for(int r=0;r<4;r++)for(int c=0;c<4;c++)n.matrix[r*4+c]=m[r,c];
+    var mf=t.GetComponent<MeshFilter>();var mr=t.GetComponent<MeshRenderer>();
+    if(mf && mf.sharedMesh && mr) {
+     n.kind="MESH";n.visible=n.visible&&mr.enabled&&!mr.forceRenderingOff;
+     try {var mesh=mf.sharedMesh;n.vertices=mesh.vertices;n.normals=mesh.normals;n.uv=mesh.uv;n.colors=mesh.colors;for(int s=0;s<mesh.subMeshCount;s++)n.submeshes.Add(new Sub{triangles=mesh.GetTriangles(s)});}
+     catch(Exception e){data.errors.Add(t.name+": "+e.Message);continue;}
+     n.materials=mr.sharedMaterials.Select(a=>a?a.GetInstanceID():0).ToArray();foreach(var a in mr.sharedMaterials)if(a)mats[a.GetInstanceID()]=a;
+    }
+    var light=t.GetComponent<Light>();if(light){n.kind="LIGHT";n.color=light.color;n.intensity=light.intensity;n.range=light.range;n.spot=light.spotAngle;n.name=light.type+" | "+t.name;n.visible&=light.enabled;}
+    var cam=t.GetComponent<Camera>();if(cam){n.kind="CAMERA";n.fov=cam.fieldOfView;n.ortho=cam.orthographic;n.orthoSize=cam.orthographicSize;}
+    data.nodes.Add(n);
+   }
+  }
+  foreach(var entry in mats){var m=entry.Value;var a=new Mat{id=entry.Key,name=m.name,shader=m.shader.name};for(int i=0;i<ShaderUtil.GetPropertyCount(m.shader);i++){string p=ShaderUtil.GetPropertyName(m.shader,i);var type=ShaderUtil.GetPropertyType(m.shader,i);var v=new Prop{name=p,type=type.ToString()};if(type==ShaderUtil.ShaderPropertyType.TexEnv){v.path=AssetDatabase.GetAssetPath(m.GetTexture(p));v.scale=m.GetTextureScale(p);v.offset=m.GetTextureOffset(p);}else if(type==ShaderUtil.ShaderPropertyType.Color)v.color=m.GetColor(p);else if(type==ShaderUtil.ShaderPropertyType.Float||type==ShaderUtil.ShaderPropertyType.Range)v.value=m.GetFloat(p);a.properties.Add(v);}data.materials.Add(a);}
+  string dir=Path.GetFullPath("Art/BlenderExport");Directory.CreateDirectory(dir);File.WriteAllText(Path.Combine(dir,"scene.json"),JsonUtility.ToJson(data));result.Log("Exported "+data.nodes.Count+" nodes; visible meshes="+data.nodes.Count(n=>n.kind=="MESH"&&n.visible)+"; materials="+data.materials.Count+"; errors="+string.Join(";",data.errors));
+ }
+}

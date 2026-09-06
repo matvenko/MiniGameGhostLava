@@ -1,0 +1,16 @@
+{
+  "triangles": 19082,
+  "materials": 5,
+  "bones": 6,
+  "clip": "Ghost_Hover_Loop",
+  "fps": 30,
+  "seconds": 2,
+  "loop_exact": true,
+  "root_static": true,
+  "width_m": 0.9280000329017639,
+  "height_m": 1.3059872388839722,
+  "reference": "User-provided ragged ivory screaming ghost. New detailed sculptural mesh; no image texture.",
+  "game_triangles": 3723,
+  "game_mesh_materials": 5,
+  "detailed_mesh_preserved": true
+}

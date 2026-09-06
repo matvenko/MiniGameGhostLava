@@ -1,0 +1,20 @@
+{
+  "triangles": 2700,
+  "materials": 5,
+  "bones": 5,
+  "hot_surface_percent": 1.0376200377234934,
+  "loop_boundary_max_error": 0.0,
+  "root_stationary_all_61_samples": true,
+  "bob_total_m": 0.08,
+  "roll_degrees": 3,
+  "tail_phase_lag_degrees": 90,
+  "clip": "Ghost_Hover_Loop",
+  "fps": 30,
+  "seconds": 2,
+  "width_m": 0.8999999761581421,
+  "length_m": 1.1087783575057983,
+  "crown_m": 1.2259511947631836,
+  "lowest_rest_vertex_m": 0.20274074375629425,
+  "export_axes": "-Z forward / Y up",
+  "transforms_applied": true
+}
