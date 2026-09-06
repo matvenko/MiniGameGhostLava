@@ -59,7 +59,39 @@ public class GhostScript : MonoBehaviour
     //---------------------------------------------------------------------
     public void FallIntoLava()
     {
+        // Being untouchable is a promise about the hazard, not about the hole:
+        // the lava is a gap in the floor as well as a way to die, so a shielded
+        // character who walks into it survives the burn and then keeps falling
+        // out of the board. Surviving it has to mean being set back down on the
+        // edge of it instead.
+        if (Invulnerable)
+        {
+            StepBackOntoSolidGround();
+            return;
+        }
         Die();
+    }
+
+    // The nearest tile the enemies are allowed to walk on, which is the same
+    // set the character is meant to stand on. Standing over lava, that is
+    // whichever walkable tile is closest - the one just stepped off.
+    private void StepBackOntoSolidGround()
+    {
+        if (EnemyPathGrid.Instance.AllNodes.Count == 0) return;
+
+        Vector3 footing = EnemyPathGrid.Instance.NearestNode(transform.position);
+        // Only once there is nothing underfoot. The lava colliders reach a
+        // little past their own tiles, so being brushed by one while still
+        // standing on solid ground is leaning over the edge, not falling in -
+        // and a shielded character walking a lane beside lava would otherwise
+        // be tugged back to the middle of every tile.
+        if (Mathf.Abs(footing.x - transform.position.x) <= .5f &&
+            Mathf.Abs(footing.z - transform.position.z) <= .5f) return;
+        // A CharacterController overrides transform writes made while it is
+        // enabled, the same reason RespawnAt cycles it.
+        Ctrl.enabled = false;
+        transform.position = new Vector3(footing.x, spawnPosition.y, footing.z);
+        Ctrl.enabled = true;
     }
 
     // called by an enemy's catch trigger - same fatal sequence as lava
