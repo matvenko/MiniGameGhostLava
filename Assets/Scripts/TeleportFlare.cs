@@ -71,7 +71,11 @@ public class TeleportFlare : MonoBehaviour
 
     void Update()
     {
-        _t += Time.deltaTime / Duration;
+        // Unscaled: half a second of light is not gameplay, and anything that
+        // stops the clock in the middle of it - dying, finishing the level,
+        // opening the shop - would otherwise leave the flare standing there for
+        // as long as the game stayed stopped.
+        _t += Time.unscaledDeltaTime / Duration;
         if (_t >= 1f)
         {
             Destroy(gameObject);

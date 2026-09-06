@@ -141,7 +141,12 @@ public class EnemySpawnManager : MonoBehaviour
     // used at the start of the level, with freshly chosen random cells.
     public void RespawnEnemies()
     {
+        // Each portal is destroyed by the coroutine that opened it, so stopping
+        // the coroutines has to take the portals with it - otherwise a death or
+        // a level change during the warm-up leaves its mist standing on the
+        // board with nothing left alive to close it.
         StopAllCoroutines();
+        ClearPortals();
         foreach (var kind in enemyKinds)
         {
             foreach (var e in kind.Pool)
@@ -154,6 +159,10 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void TriggerSpawnSequence()
     {
+        // A sequence always opens on a clear board: the first one runs before
+        // anything else has opened a portal, and every later one is preceded by
+        // a stop that has already closed them.
+        ClearPortals();
         _freezeUntil = Time.time + WarningDuration;
 
         if (_camera != null) _camera.PlayIntro();
@@ -198,6 +207,7 @@ public class EnemySpawnManager : MonoBehaviour
         if (portalPrefab != null)
         {
             portal = Instantiate(portalPrefab, portalPos, Quaternion.Euler(90f, 0f, 0f));
+            _portals.Add(portal);
         }
 
         yield return new WaitForSeconds(WarningDuration);
@@ -205,7 +215,24 @@ public class EnemySpawnManager : MonoBehaviour
         enemy.transform.position = new Vector3(cell.x, enemy.transform.position.y, cell.z);
         enemy.SetActive(true);
 
-        if (portal != null) Destroy(portal);
+        if (portal != null)
+        {
+            _portals.Remove(portal);
+            Destroy(portal);
+        }
+    }
+
+    // Every portal currently open, so a sequence that is cut short can close
+    // the ones its coroutines will never reach.
+    private readonly List<GameObject> _portals = new List<GameObject>();
+
+    private void ClearPortals()
+    {
+        foreach (var portal in _portals)
+        {
+            if (portal != null) Destroy(portal);
+        }
+        _portals.Clear();
     }
 
     private Vector3 PickRandomCell(List<Vector3> avoid)
