@@ -144,6 +144,10 @@ public class ShopUIController : MonoBehaviour
         Refresh();
     }
 
+    // The shop card puts the number in gold and the word in front of it in the
+    // panel's quiet blue, so the count reads at a glance down the column.
+    private static string Count(object value) => "<color=#FFD34A>" + value + "</color>";
+
     private void Refresh()
     {
         if (walletText != null && EconomyManager.Instance != null)
@@ -153,7 +157,7 @@ public class ShopUIController : MonoBehaviour
 
         bool maxed = ShopManager.Instance.IsExtraLifeMaxed();
         if (extraLifeStatusText != null && LivesManager.Instance != null)
-            extraLifeStatusText.text = "Lives: " + LivesManager.Instance.CurrentLives + "/" + LivesManager.HardCap;
+            extraLifeStatusText.text = "Lives: " + Count(LivesManager.Instance.CurrentLives + "/" + LivesManager.HardCap);
 
         if (buyExtraLifeButtonText != null)
             buyExtraLifeButtonText.text = maxed ? "MAXED" : ShopManager.Instance.GetExtraLifeCost().ToString();
@@ -162,7 +166,7 @@ public class ShopUIController : MonoBehaviour
             buyExtraLifeButton.interactable = !maxed && ShopManager.Instance.CanBuyExtraLife();
 
         if (trapStatusText != null && TrapManager.Instance != null)
-            trapStatusText.text = "Owned: " + TrapManager.Instance.TrapsOwned;
+            trapStatusText.text = "Owned: " + Count(TrapManager.Instance.TrapsOwned);
 
         if (buyTrapButtonText != null)
             buyTrapButtonText.text = ShopManager.Instance.GetTrapCost().ToString();
@@ -171,7 +175,7 @@ public class ShopUIController : MonoBehaviour
             buyTrapButton.interactable = ShopManager.Instance.CanBuyTrap();
 
         if (freezeStatusText != null && FreezeManager.Instance != null)
-            freezeStatusText.text = "Owned: " + FreezeManager.Instance.FreezesOwned;
+            freezeStatusText.text = "Owned: " + Count(FreezeManager.Instance.FreezesOwned);
 
         if (buyFreezeButtonText != null)
             buyFreezeButtonText.text = ShopManager.Instance.GetFreezeCost().ToString();
@@ -180,7 +184,7 @@ public class ShopUIController : MonoBehaviour
             buyFreezeButton.interactable = ShopManager.Instance.CanBuyFreeze();
 
         if (teleportStatusText != null && TeleportManager.Instance != null)
-            teleportStatusText.text = "Owned: " + TeleportManager.Instance.TeleportsOwned;
+            teleportStatusText.text = "Owned: " + Count(TeleportManager.Instance.TeleportsOwned);
 
         if (buyTeleportButtonText != null)
             buyTeleportButtonText.text = ShopManager.Instance.GetTeleportCost().ToString();
@@ -189,7 +193,7 @@ public class ShopUIController : MonoBehaviour
             buyTeleportButton.interactable = ShopManager.Instance.CanBuyTeleport();
 
         if (shieldStatusText != null && ShieldManager.Instance != null)
-            shieldStatusText.text = "Owned: " + ShieldManager.Instance.ShieldsOwned;
+            shieldStatusText.text = "Owned: " + Count(ShieldManager.Instance.ShieldsOwned);
 
         if (buyShieldButtonText != null)
             buyShieldButtonText.text = ShopManager.Instance.GetShieldCost().ToString();
