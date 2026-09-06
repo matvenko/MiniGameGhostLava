@@ -1,0 +1,25 @@
+{
+  "visible_meshes": 481,
+  "all_meshes": 871,
+  "excluded_character_roots": [
+    "Ghost",
+    "Enemies",
+    "FriendlyGhost"
+  ],
+  "materials": 14,
+  "packed_images": 14,
+  "bounds": [
+    [
+      -13.479999542236328,
+      -9.5,
+      -0.6289998888969421
+    ],
+    [
+      17.520000457763672,
+      11.5,
+      1.371000051498413
+    ]
+  ],
+  "source": "Assets/LavaScene.unity",
+  "missing_textures": []
+}

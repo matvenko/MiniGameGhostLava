@@ -1,0 +1,7 @@
+00:00.046  reports          | WARNING Unable to open 'C:\Users\matez\AppData\Roaming\Blender Foundation\Blender\5.2\config\userpref.blend': Permission denied
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+Extensions: writing cache failed ([WinError 5] Access is denied: 'C:\\Users\\matez\\AppData\\Roaming\\Blender Foundation\\Blender\\5.2\\extensions').
+FBX version: 7400
+ROUNDTRIP_OK {'bones': 10, 'triangles': 6462, 'actions': {'VeilReaper|Catch': {'frames': [1, 55], 'boundary_error': 0.0, 'root_static': True}, 'VeilReaper|Glide_Loop': {'frames': [1, 41], 'boundary_error': 0.0, 'root_static': True}, 'VeilReaper|Hover_Loop': {'frames': [1, 61], 'boundary_error': 0.0, 'root_static': True}}}
+
+Blender quit

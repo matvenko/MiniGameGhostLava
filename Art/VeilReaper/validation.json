@@ -1,0 +1,37 @@
+{
+  "triangles": 21546,
+  "bones": 10,
+  "width_m": 0.9635731279850006,
+  "crown_m": 1.3157460689544678,
+  "lowest_rest_vertex_m": 0.16259518265724182,
+  "clips": {
+    "Hover_Loop": {
+      "frames": [
+        1,
+        61
+      ],
+      "seconds": 2.0,
+      "root_static": true,
+      "boundary_matches": true
+    },
+    "Glide_Loop": {
+      "frames": [
+        1,
+        41
+      ],
+      "seconds": 1.3333333333333333,
+      "root_static": true,
+      "boundary_matches": true
+    },
+    "Catch": {
+      "frames": [
+        1,
+        55
+      ],
+      "seconds": 1.8,
+      "root_static": true,
+      "boundary_matches": true
+    }
+  },
+  "game_triangles": 6462
+}

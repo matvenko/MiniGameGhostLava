@@ -1,0 +1,30 @@
+{
+  "bones": 10,
+  "triangles": 6462,
+  "actions": {
+    "VeilReaper|Catch": {
+      "frames": [
+        1,
+        55
+      ],
+      "boundary_error": 0.0,
+      "root_static": true
+    },
+    "VeilReaper|Glide_Loop": {
+      "frames": [
+        1,
+        41
+      ],
+      "boundary_error": 0.0,
+      "root_static": true
+    },
+    "VeilReaper|Hover_Loop": {
+      "frames": [
+        1,
+        61
+      ],
+      "boundary_error": 0.0,
+      "root_static": true
+    }
+  }
+}
