@@ -563,7 +563,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GHOST & LAVA
+  m_text: PAC GHOST
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1438,6 +1438,9 @@ MonoBehaviour:
   statusText: {fileID: 542146984}
   startPrompt: {fileID: 727625559}
   minimumDisplayTime: 2.5
+  introCharacterPrefab: {fileID: 19588385245968726, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+  introFont: {fileID: 11400000, guid: d41fc9c940af2ce4084a009b18008346, type: 2}
+  portraitShader: {fileID: 4800000, guid: a710d5bce2a24b968bf06d63b0479a8c, type: 3}
 --- !u!4 &2059379724
 Transform:
   m_ObjectHideFlags: 0
