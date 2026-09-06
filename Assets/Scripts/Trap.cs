@@ -39,6 +39,7 @@ public class Trap : MonoBehaviour
         if (enemy == null) return;
 
         _triggered = true;
+        AudioManager.Play(GameSound.TrapSnap);
         enemy.Stun(stunDuration);
         StartCoroutine(SnareThenExpire());
     }

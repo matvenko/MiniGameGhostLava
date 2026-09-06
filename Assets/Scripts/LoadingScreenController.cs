@@ -27,8 +27,8 @@ public class LoadingScreenController : MonoBehaviour
     private Image curtain;
     private TextMeshProUGUI percent, caption, soundLabel, playLabel, modeHint;
     private Button play, normalPill, hardPill;
-    private AudioSource music, effects;
-    private AudioClip ambience, readySound, startSound;
+    private AudioSource music;
+    private AudioClip readySound, startSound;
     private RectTransform[] embers;
     private float age, shownProgress;
     private bool ready, leaving;
@@ -528,63 +528,15 @@ public class LoadingScreenController : MonoBehaviour
     {
         music = gameObject.AddComponent<AudioSource>();
         music.playOnAwake = false;
-        music.loop = true;
-        music.volume = .22f;
-        music.spatialBlend = 0;
-        effects = gameObject.AddComponent<AudioSource>();
-        effects.playOnAwake = false;
-        effects.spatialBlend = 0;
-        ambience = MakeMusic();
-        readySound = Tone("Ready chime", .45f, 523.25f, false);
-        startSound = Tone("Escape sweep", .6f, 220, false);
-        music.clip = ambience;
-        AudioManager.RegisterMusicSource(music);
-        music.Play();
-    }
-
-    private static AudioClip Tone(string title, float seconds, float frequency, bool drone)
-    {
-        const int rate = 22050;
-        var samples = new float[Mathf.RoundToInt(seconds * rate)];
-        for (int i = 0; i < samples.Length; i++)
-        {
-            float t = (float)i / rate;
-            float envelope = drone ? .65f + .15f * Mathf.Sin(2 * Mathf.PI * t / seconds) : Mathf.Min(t * 35, 1) * Mathf.Pow(1 - t / seconds, 2);
-            float phase = 2 * Mathf.PI * frequency * t;
-            if (!drone) phase += 2 * Mathf.PI * 180 * t * t;
-            samples[i] = envelope * (.23f * Mathf.Sin(phase) + .1f * Mathf.Sin(phase * 1.5f) + .06f * Mathf.Sin(phase * 2));
-        }
-        var clip = AudioClip.Create(title, samples.Length, 1, rate, false);
-        clip.SetData(samples, 0);
-        return clip;
-    }
-
-    private static AudioClip MakeMusic()
-    {
-        const int rate = 22050;
-        const float beat = .38f;
-        int[] notes = { 72,76,79,76,74,77,81,77,72,76,79,84,81,79,76,74 };
-        var data = new float[Mathf.RoundToInt(notes.Length * beat * rate)];
-        for (int i = 0; i < data.Length; i++)
-        {
-            float t = (float)i / rate;
-            int note = Mathf.Min((int)(t / beat), notes.Length - 1);
-            float local = t - note * beat;
-            float hz = 440 * Mathf.Pow(2, (notes[note] - 69) / 12f);
-            float envelope = Mathf.Min(local * 80, 1) * Mathf.Exp(-local * 11) * Mathf.Clamp01((beat-local)*50);
-            float phase = 2 * Mathf.PI * hz * local;
-            data[i] = envelope * (.26f * Mathf.Sin(phase) + .045f * Mathf.Sin(phase * 2));
-        }
-        var clip = AudioClip.Create("Little ghost music box", data.Length, 1, rate, false);
-        clip.SetData(data, 0);
-        return clip;
+        readySound = GameAudioClips.Get(GameSound.Ready);
+        startSound = GameAudioClips.Get(GameSound.Start);
+        AudioManager.StartMusic(music);
     }
 
     private void PlayEffect(AudioClip clip)
     {
-        if (!AudioManager.SfxMuted && clip != null) effects.PlayOneShot(clip, .55f);
+        AudioManager.Play(clip == startSound ? GameSound.Start : GameSound.Ready);
     }
-
     void OnDestroy()
     {
         foreach (var material in portraitMaterials) if (material != null) Destroy(material);
@@ -597,10 +549,7 @@ public class LoadingScreenController : MonoBehaviour
             Destroy(characterTexture);
         }
         if (music != null) music.Stop();
-        if (effects != null) effects.Stop();
-        if (ambience != null) Destroy(ambience);
-        if (readySound != null) Destroy(readySound);
-        if (startSound != null) Destroy(startSound);
+
     }
 
     private static RectTransform Rect(Transform parent, string title, Vector2 position, Vector2 size)

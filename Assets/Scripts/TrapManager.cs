@@ -53,6 +53,7 @@ public class TrapManager : MonoBehaviour
         var go = Instantiate(trapPrefab, pos, Quaternion.identity);
         _placed.Add(go.GetComponent<Trap>());
 
+        AudioManager.Play(GameSound.TrapPlace);
         TrapsOwned--;
         Save();
         Refresh();

@@ -52,6 +52,7 @@ public class FreezeManager : MonoBehaviour
 
         if (EnemyChaser.StunAll(freezeDuration) == 0) return;
 
+        AudioManager.Play(GameSound.Freeze);
         FreezesOwned--;
         Save();
         Refresh();

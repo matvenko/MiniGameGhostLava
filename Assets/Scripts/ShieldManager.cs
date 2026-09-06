@@ -55,6 +55,7 @@ public class ShieldManager : MonoBehaviour
         if (LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive) return;
 
         player.ActivateShield(shieldDuration);
+        AudioManager.Play(GameSound.Shield);
 
         ShieldsOwned--;
         Save();

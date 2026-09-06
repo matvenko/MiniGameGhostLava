@@ -106,6 +106,8 @@ public class LevelManager : MonoBehaviour
 
     public void OnLevelComplete()
     {
+        if (IsLevelCompleteActive) return;
+        AudioManager.Play(GameSound.Victory);
         IsLevelCompleteActive = true;
         if (levelCompletePanel != null) levelCompletePanel.SetActive(true);
         Time.timeScale = 0f;

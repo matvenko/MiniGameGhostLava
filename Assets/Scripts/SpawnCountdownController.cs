@@ -77,6 +77,7 @@ public class SpawnCountdownController : MonoBehaviour
         for (int i = startNumber; i >= 1; i--)
         {
             countdownText.text = i.ToString();
+            AudioManager.Play(GameSound.Ready);
             yield return StartCoroutine(PulseOnce());
         }
 

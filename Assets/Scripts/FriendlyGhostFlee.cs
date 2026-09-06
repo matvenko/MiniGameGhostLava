@@ -211,6 +211,7 @@ public class FriendlyGhostFlee : MonoBehaviour
     {
         if (_caught) return;
         _caught = true;
+        AudioManager.Play(GameSound.Reward);
         _path.Clear();
 
         // Paid the moment it is caught rather than at the end of the vanish, so

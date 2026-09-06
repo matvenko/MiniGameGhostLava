@@ -104,6 +104,7 @@ public class GhostScript : MonoBehaviour
     {
         if (isDead || Invulnerable) return;
         isDead = true;
+        AudioManager.Play(GameSound.Death);
         Ctrl.enabled = false;
         if (GameOverManager.Instance != null)
             GameOverManager.Instance.TriggerGameOver(this);

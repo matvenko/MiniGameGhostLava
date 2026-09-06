@@ -61,6 +61,7 @@ public class TeleportManager : MonoBehaviour
         if (!TryFindDestination(out Vector3 destination)) return;
 
         player.TeleportTo(destination);
+        AudioManager.Play(GameSound.Teleport);
 
         TeleportsOwned--;
         Save();

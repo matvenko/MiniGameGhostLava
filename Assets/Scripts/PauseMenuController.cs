@@ -30,7 +30,7 @@ public class PauseMenuController : MonoBehaviour
 
     void Start()
     {
-        AudioManager.RegisterMusicSource(musicSource);
+        AudioManager.StartMusic(musicSource);
         RefreshIcons();
     }
 
@@ -55,6 +55,7 @@ public class PauseMenuController : MonoBehaviour
 
     private void Open()
     {
+        AudioManager.Play(GameSound.Click);
         _isOpen = true;
         if (pausePanel != null) pausePanel.SetActive(true);
         Time.timeScale = 0f;
@@ -63,6 +64,7 @@ public class PauseMenuController : MonoBehaviour
 
     private void Close()
     {
+        AudioManager.Play(GameSound.Click);
         _isOpen = false;
         if (pausePanel != null) pausePanel.SetActive(false);
         Time.timeScale = 1f;
