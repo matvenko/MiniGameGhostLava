@@ -22,14 +22,20 @@ public static class AudioManager
         musicSource = source;
         source.mute = MusicMuted;
     }
+    // A scene that brings its own music keeps it, at the volume it was mixed
+    // at; the written score is what plays where nobody has said otherwise - the
+    // menu, and anything added later that has no track of its own.
     public static void StartMusic(AudioSource source)
     {
         if (source == null) source = new GameObject("Game Music").AddComponent<AudioSource>();
         RegisterMusicSource(source);
-        source.clip = GameAudioClips.Music;
+        if (source.clip == null)
+        {
+            source.clip = GameAudioClips.Music;
+            source.volume = .32f;
+        }
         source.loop = true;
         source.spatialBlend = 0;
-        source.volume = .32f;
         source.Play();
     }
     public static void Play(GameSound sound)
