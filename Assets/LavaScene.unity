@@ -9746,15 +9746,16 @@ MonoBehaviour:
     liquid: {fileID: 2100000, guid: 13d5d385820ce98574bdb943841ef1bf, type: 2}
     liquidBed: {fileID: 0}
     wall: {fileID: 2100000, guid: 2c05a773562f9403e7de3defb2cf07c0, type: 2}
-    dayNightCycle: 1
-    sunColour: {r: 0, g: 0, b: 0, a: 0}
-    sunIntensity: 0
+    sunColour: {r: 1, g: 1, b: 1, a: 1}
+    sunIntensity: 1.2
+    flatAmbient: 0
     ambient: {r: 0, g: 0, b: 0, a: 0}
     fog: 0
     fogColour: {r: 0, g: 0, b: 0, a: 0}
     fogDensity: 0
     flatBackground: 0
     backgroundColour: {r: 0, g: 0, b: 0, a: 0}
+    skyAmbientIntensity: 1.6
   - name: Cave
     fromLevel: 6
     blockTile: {fileID: 2100000, guid: 1c0ca638da1625b48b3004ead0b49d18, type: 2}
@@ -9763,7 +9764,7 @@ MonoBehaviour:
     liquid: {fileID: 2100000, guid: 8946f212ed789d24099759ee2386297c, type: 2}
     liquidBed: {fileID: 0}
     wall: {fileID: 2100000, guid: 5755d9a8244889541ab5906af4d55e14, type: 2}
-    dayNightCycle: 0
+    flatAmbient: 1
     sunColour: {r: 1, g: 0.58, b: 0.34, a: 1}
     sunIntensity: 0.6
     ambient: {r: 0.27, g: 0.23, b: 0.27, a: 1}
@@ -9772,6 +9773,7 @@ MonoBehaviour:
     fogDensity: 0.035
     flatBackground: 1
     backgroundColour: {r: 0.045, g: 0.03, b: 0.045, a: 1}
+    skyAmbientIntensity: 1.6
   sun: {fileID: 0}
   boardCamera: {fileID: 0}
 --- !u!4 &188175354

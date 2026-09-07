@@ -37,11 +37,13 @@ public class BoardThemes : MonoBehaviour
         public Material wall;
 
         [Header("Light")]
-        [Tooltip("Off for anywhere the sun does not reach.")]
-        public bool dayNightCycle = true;
         [ColorUsage(false, true)] public Color sunColour = Color.white;
         public float sunIntensity = 1.2f;
+        [Tooltip("On for a flat ambient of the colour below - anywhere there is no sky to light the board. Off keeps the skybox's own ambient at the strength below it.")]
+        public bool flatAmbient;
         [ColorUsage(false, true)] public Color ambient = new Color(.44f, .47f, .52f);
+        [Tooltip("Strength of the skybox ambient, when the flat one is off.")]
+        public float skyAmbientIntensity = 1.6f;
 
         [Header("Air")]
         public bool fog;
@@ -118,23 +120,32 @@ public class BoardThemes : MonoBehaviour
         if (LiquidSurface.Instance != null) LiquidSurface.Instance.SetMaterials(theme.liquid, theme.liquidBed);
         if (WallSurface.Instance != null) WallSurface.Instance.SetMaterial(theme.wall);
 
-        // The day/night cycle writes the sun and the ambient every frame, so
-        // underground it has to be switched off rather than merely overridden.
+        // The sun does not move. A day/night cycle exists on the light and can
+        // still be switched on by hand, but it writes the sun and the ambient
+        // every frame, which would undo a theme a frame after it was applied -
+        // so a theme always takes the sun off it and leaves the light at the
+        // angle the scene authored.
         if (sun != null)
         {
             var cycle = sun.GetComponent<DayNightCycle>();
-            if (cycle != null) cycle.enabled = theme.dayNightCycle;
-            if (!theme.dayNightCycle)
-            {
-                sun.color = theme.sunColour;
-                sun.intensity = theme.sunIntensity;
-            }
+            if (cycle != null) cycle.enabled = false;
+            sun.color = theme.sunColour;
+            sun.intensity = theme.sunIntensity;
         }
 
-        if (!theme.dayNightCycle)
+        // Underground there is no sky to light the board, so the ambient is a
+        // flat colour; above it, the skybox is the light and only its strength
+        // is worth saying. Either way both are set, or a theme coming back from
+        // the cave would inherit the cave's.
+        if (theme.flatAmbient)
         {
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = theme.ambient;
+        }
+        else
+        {
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox;
+            RenderSettings.ambientIntensity = theme.skyAmbientIntensity;
         }
 
         RenderSettings.fog = theme.fog;
