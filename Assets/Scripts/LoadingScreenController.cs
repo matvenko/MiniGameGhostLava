@@ -35,6 +35,9 @@ public class LoadingScreenController : MonoBehaviour
     private TMP_FontAsset font;
     private Rect lastSafeArea;
     private int lastWidth, lastHeight;
+    private RectTransform bestPill, recordsOverlay, recordsCard;
+    private TextMeshProUGUI bestLabel, recordsTitle, recordsEmpty;
+    private TextMeshProUGUI[] recordPlace, recordTally;
     private RenderTexture characterTexture;
     private Transform characterPivot, portraitStage, portraitFraming;
     private Camera characterCamera;
@@ -163,6 +166,7 @@ public class LoadingScreenController : MonoBehaviour
         sound.name="Sound control";
         soundLabel=Label(sound.transform,"",Vector2.zero,new Vector2(150,40),17,new Color(.92f,.86f,1));
         RefreshSoundLabel();
+        BuildRecords();
         curtain=Box(root.transform,"Transition",Vector2.zero,Vector2.zero,new Color(ink.r,ink.g,ink.b,0));
         Stretch(curtain.rectTransform); curtain.raycastTarget=false;
         LayoutIntro();
@@ -179,7 +183,10 @@ public class LoadingScreenController : MonoBehaviour
         heroBlock.anchoredPosition=new Vector2(0,portrait?40:5);
         heroBlock.localScale=Vector3.one*(portrait?.90f:1.1f);
         controls.anchoredPosition=new Vector2(0,portrait?-410:-320);
-        design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(0,-620):new Vector2(665,418);
+        design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(0,-690):new Vector2(665,418);
+        // The record sits opposite the sound switch in landscape and stacks
+        // above it in portrait, so neither ever reaches into the artwork.
+        bestPill.anchoredPosition=portrait?new Vector2(0,-620):new Vector2(-640,418);
     }
 
     // One of the two mode pills. Both are built from the same call so they can
@@ -211,6 +218,7 @@ public class LoadingScreenController : MonoBehaviour
         modeHint.text=normal
             ? "Normal: slower ghosts, kinder coins and a spare life - just right for little players."
             : "Hard: full-speed ghosts and the coins as they fall. The grown-up chase!";
+        RefreshRecords();
     }
 
     private void Dress(Button pill,bool picked)
@@ -225,6 +233,85 @@ public class LoadingScreenController : MonoBehaviour
         label.color=picked?new Color(.10f,.24f,.18f):new Color(.86f,.81f,1f);
         label.fontStyle=picked?FontStyles.Bold:FontStyles.Normal;
     }
+
+    // The two ways a record reaches the menu: a pill that always says how far the
+    // chosen mode has ever got, and the full ten behind it.
+    //
+    // The mode pills above already say which board is about to be played, so the
+    // table simply follows them rather than growing tabs of its own - press HARD
+    // and the hint, the pill and the card all change under it. Nothing here is
+    // shared between the two modes; a normal run and a hard one are not the same
+    // achievement (see Leaderboard).
+    private void BuildRecords()
+    {
+        bestPill=MakeButton(design,"Best runs",Vector2.zero,new Vector2(340,52),new Color(.25f,.17f,.45f),OpenRecords).GetComponent<RectTransform>();
+        var pillImage=bestPill.GetComponent<Image>(); pillImage.sprite=roundSprite; pillImage.type=Image.Type.Sliced;
+        bestLabel=Label(bestPill,"",Vector2.zero,new Vector2(330,46),19,new Color(.92f,.86f,1));
+
+        recordsOverlay=Rect(design,"Records",Vector2.zero,Vector2.zero);
+        // Far wider than the design block so it still covers the screen on any
+        // shape of display: nothing behind the card can be pressed by accident,
+        // and pressing beside it is how the card is put away.
+        var dim=MakeButton(recordsOverlay,"Dim",Vector2.zero,new Vector2(3200,2400),new Color(.02f,.02f,.06f,.72f),CloseRecords);
+        dim.transition=Selectable.Transition.None;
+        var card=Rounded(recordsOverlay,"Records card",Vector2.zero,new Vector2(580,680),new Color(.16f,.11f,.33f));
+        card.raycastTarget=true;
+        recordsCard=card.rectTransform;
+        recordsTitle=Label(recordsCard,"",new Vector2(0,286),new Vector2(540,50),28,new Color(1,.86f,.38f));
+        Label(recordsCard,"DEEPEST RUNS FIRST",new Vector2(0,246),new Vector2(540,30),16,new Color(.72f,.66f,.92f));
+        recordPlace=new TextMeshProUGUI[Leaderboard.Capacity];
+        recordTally=new TextMeshProUGUI[Leaderboard.Capacity];
+        for(int i=0;i<Leaderboard.Capacity;i++)
+        {
+            float y=196-i*44;
+            if(i%2==0) Rounded(recordsCard,"Row",new Vector2(0,y),new Vector2(524,40),new Color(.21f,.15f,.40f));
+            recordPlace[i]=Label(recordsCard,"",new Vector2(-131,y),new Vector2(250,38),21,Color.white);
+            recordPlace[i].alignment=TextAlignmentOptions.Left;
+            recordTally[i]=Label(recordsCard,"",new Vector2(131,y),new Vector2(250,38),21,Color.white);
+            recordTally[i].alignment=TextAlignmentOptions.Right;
+        }
+        recordsEmpty=Label(recordsCard,"",new Vector2(0,60),new Vector2(500,150),22,new Color(.86f,.81f,1));
+        var close=MakeButton(recordsCard,"Close",new Vector2(0,-282),new Vector2(240,58),new Color(.55f,.96f,.72f),CloseRecords);
+        var closeImage=close.GetComponent<Image>(); closeImage.sprite=roundSprite; closeImage.type=Image.Type.Sliced;
+        Label(close.transform,"CLOSE",new Vector2(0,-1),new Vector2(230,52),24,new Color(.10f,.24f,.18f));
+        recordsOverlay.gameObject.SetActive(false);
+        // The mode pills were dressed before this existed, so the first fill is
+        // done here rather than waiting for the player to press one.
+        RefreshRecords();
+    }
+
+    // Redrawn from the table rather than remembered, so switching mode, or
+    // coming back to the menu having just beaten a record, always shows what is
+    // actually stored.
+    private void RefreshRecords()
+    {
+        if(bestLabel==null) return;
+        string mode=DifficultySettings.IsNormal?"NORMAL":"HARD";
+        var runs=Leaderboard.Top(DifficultySettings.Current);
+        bestLabel.text=runs.Count>0?mode+" BEST  ·  LEVEL "+runs[0].level:mode+" BEST  ·  NONE YET";
+        recordsTitle.text=mode+" RECORDS";
+        recordsEmpty.text=runs.Count>0?"":"Nothing on this board yet.\nThe first run to pick up a coin lands here.";
+        for(int i=0;i<recordPlace.Length;i++)
+        {
+            bool filled=i<runs.Count;
+            recordPlace[i].text=filled?(i+1)+".   LEVEL "+runs[i].level:"";
+            recordTally[i].text=filled?runs[i].coins+" coins   "+RunRecord.Clock(runs[i].seconds):"";
+            // The run at the top of its board is the one to beat, so it is
+            // lettered in the same gold as the coins.
+            var tint=i==0?new Color(1,.86f,.38f):new Color(.88f,.83f,1);
+            recordPlace[i].color=tint;
+            recordTally[i].color=tint;
+        }
+    }
+
+    private void OpenRecords()
+    {
+        RefreshRecords();
+        recordsOverlay.gameObject.SetActive(true);
+        PlayEffect(readySound);
+    }
+
+    private void CloseRecords() => recordsOverlay.gameObject.SetActive(false);
 
     private void LogoWord(Transform parent,string word,Vector2 position,Vector2 size,Color color,float angle)
     {
@@ -472,7 +559,9 @@ public class LoadingScreenController : MonoBehaviour
 #elif ENABLE_LEGACY_INPUT_MANAGER
         pressed = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space);
 #endif
-        if (pressed && ready && !leaving) BeginGame();
+        // Enter starts the run, but not from behind the record card - the key
+        // press belongs to whatever is actually in front of the player.
+        if (pressed && ready && !leaving && !recordsOverlay.gameObject.activeSelf) BeginGame();
     }
 
     private void UpdateSafeArea()

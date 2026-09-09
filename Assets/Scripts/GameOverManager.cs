@@ -23,6 +23,7 @@ public class GameOverManager : MonoBehaviour
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     private GhostScript _ghost;
+    private TextMeshProUGUI _runSummary;
 
     void Awake()
     {
@@ -87,7 +88,60 @@ public class GameOverManager : MonoBehaviour
                 : "Continue to keep playing";
         }
 
+        ShowRunSummary();
+
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
+    }
+
+    // What the run was worth, and where that puts it. Built here rather than
+    // authored into the scene: it is one line of text that always sits in the
+    // same gap between the coin warning and the buttons, and building it means
+    // the panel needs no rewiring to gain it.
+    //
+    // The run is not necessarily over at this point - the ad button can hand a
+    // life back and carry on - so this reads the standing the run has right now,
+    // which is exactly what the Leaderboard has already been told (see
+    // RunStats). Play on and the same screen will say something better later.
+    private void ShowRunSummary()
+    {
+        if (gameOverPanel == null || subText == null) return;
+
+        if (_runSummary == null)
+        {
+            var holder = new GameObject("Run summary", typeof(RectTransform));
+            var rect = holder.GetComponent<RectTransform>();
+            rect.SetParent(gameOverPanel.transform, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.anchoredPosition = new Vector2(0, 14);
+            rect.sizeDelta = new Vector2(760, 80);
+            _runSummary = holder.AddComponent<TextMeshProUGUI>();
+            _runSummary.font = subText.font;
+            _runSummary.fontSize = 26;
+            _runSummary.alignment = TextAlignmentOptions.Center;
+            _runSummary.color = new Color(.86f, .81f, 1f);
+            _runSummary.raycastTarget = false;
+        }
+
+        string mode = RunStats.Mode == Difficulty.Normal ? "NORMAL" : "HARD";
+        string tally = "Level " + RunStats.Level + "   ·   " + RunStats.Coins + " coins   ·   "
+                       + RunRecord.Clock(RunStats.Seconds);
+
+        int rank = Leaderboard.RankOf(RunStats.Mode, RunStats.RunId);
+        RunRecord toBeat = Leaderboard.BestExcluding(RunStats.Mode, RunStats.RunId);
+
+        string standing;
+        if (rank == 0)
+            // Nothing was collected and no level was cleared, so there is no
+            // place in the table to report and no point inventing one.
+            standing = "";
+        else if (rank == 1 && toBeat == null)
+            standing = "<color=#FFD24A>FIRST RUN ON THE " + mode + " BOARD!</color>";
+        else if (rank == 1)
+            standing = "<color=#FFD24A>NEW " + mode + " RECORD!</color>   Beaten: level " + toBeat.level;
+        else
+            standing = "#" + rank + " on " + mode + "   ·   best is level " + toBeat.level;
+
+        _runSummary.text = standing.Length > 0 ? tally + "\n" + standing : tally;
     }
 
     // Placeholder for a real rewarded-ad SDK: mocks the "watched to

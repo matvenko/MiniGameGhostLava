@@ -75,6 +75,11 @@ public class LevelManager : MonoBehaviour
         // scene loads, so a restart would otherwise keep pathing on the
         // previous run's layout. Enemies can't rebuild it themselves either -
         // they spawn disabled and only reach Start() after the portal delay.
+        // A board being laid out from Awake is a run starting: whatever brought
+        // the player here - the menu, a restart, giving up on the last one -
+        // this is attempt number one of a new one.
+        RunStats.Begin();
+
         CaptureBoardMetrics();
         ApplyLevelLayout();
         PlacePlayerOnBoard();
@@ -121,6 +126,7 @@ public class LevelManager : MonoBehaviour
 
         _level++;
         UpdateLevelText();
+        RunStats.ReachedLevel(_level);
 
         if (TrapManager.Instance != null) TrapManager.Instance.ClearPlacedTraps();
 

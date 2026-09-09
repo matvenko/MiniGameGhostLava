@@ -88,6 +88,7 @@ public class Coin : MonoBehaviour
             Destroy(fx, pickupEffectLifetime);
         }
         RewardSystem.CollectCoin();
+        RunStats.CoinCollected();
         if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(RollWalletValue());
         StartCoroutine(PickupAnimation());
     }
