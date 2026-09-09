@@ -9740,7 +9740,7 @@ MonoBehaviour:
   themes:
   - name: Meadow
     fromLevel: 1
-    blockTile: {fileID: 2100000, guid: c67d21dd5ef65074db200f1e3625ca73, type: 2}
+    blockTile: {fileID: 2100000, guid: 9dada95d9f484f3195cf574ac2cf871a, type: 2}
     lavaTile: {fileID: 2100000, guid: 66b6f1e6eb3882a43802e39c59163cce, type: 2}
     ground: {fileID: 2100000, guid: 096d4912731b1c14d915bd4050389c92, type: 2}
     liquid: {fileID: 2100000, guid: 13d5d385820ce98574bdb943841ef1bf, type: 2}
