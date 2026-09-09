@@ -17,6 +17,18 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private float mapMinZ;
     [SerializeField] private float mapMaxZ;
 
+    [Header("Zoom in near walls")]
+    [Tooltip("How close to the map edge, in world units (tiles), the zoom-in starts ramping in. Applies on whichever axis - X or Z - the player is nearer the edge on, so a corner engages it exactly like a straight wall does.")]
+    [SerializeField] private float edgeZoomMargin = 5f;
+    [Tooltip("How much camera height is shed once the player is right up against a wall, pulling the view in tighter for the precision a corner needs.")]
+    [SerializeField] private float maxZoomInHeight = 2f;
+    [Tooltip("Camera height never drops below this, whatever maxZoomInHeight asks for - keeps the zoom-in from ever crowding the shot.")]
+    [SerializeField] private float minHeight = 2.5f;
+    [Tooltip("How quickly the zoom eases toward its target. Slower than the position follow so it reads as a deliberate pull-in rather than a snap.")]
+    [SerializeField] private float zoomSmoothSpeed = 3f;
+
+    private float _zoomInAmount;
+
     [Header("Level intro")]
     [Tooltip("Seconds the whole board is held in frame. The spawn countdown runs across this.")]
     [SerializeField] private float overviewDuration = 3f;
@@ -101,9 +113,36 @@ public class CameraFollow : MonoBehaviour
             return;
         }
 
-        Vector3 desiredPosition = _ghostTransform.position + offset;
+        Vector3 ghostPos = _ghostTransform.position;
+        _zoomInAmount = Mathf.Lerp(_zoomInAmount, EdgeZoomIn(ghostPos), zoomSmoothSpeed * Time.deltaTime);
+
+        Vector3 desiredPosition = ghostPos + offset - Vector3.up * _zoomInAmount;
         transform.position = ClampToMap(
             Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime));
+    }
+
+    // How much height the wall-approach zoom wants to shed right now: 0 well
+    // clear of every edge, ramping up to maxZoomInHeight exactly at one, and
+    // never past what would take the camera below minHeight. Corners take the
+    // same reading as a straight wall does - the player is never closer than
+    // edgeZoomMargin to *some* edge for it to matter, and pulling the camera
+    // in helps regardless of which axis triggered it.
+    private float EdgeZoomIn(Vector3 ghostPos)
+    {
+        if (!clampToMap || edgeZoomMargin <= 0f) return 0f;
+
+        float proximity = Mathf.Max(
+            EdgeProximity(ghostPos.x, mapMinX, mapMaxX),
+            EdgeProximity(ghostPos.z, mapMinZ, mapMaxZ));
+        float available = Mathf.Max(0f, offset.y - minHeight);
+        return Mathf.SmoothStep(0f, Mathf.Min(maxZoomInHeight, available), proximity);
+    }
+
+    // 0 at edgeZoomMargin or further from either bound, 1 sitting on one.
+    private float EdgeProximity(float value, float min, float max)
+    {
+        float distanceFromNearestEdge = Mathf.Min(value - min, max - value);
+        return 1f - Mathf.Clamp01(distanceFromNearestEdge / edgeZoomMargin);
     }
 
     // Hold, then travel. The board is re-framed on every frame of the hold

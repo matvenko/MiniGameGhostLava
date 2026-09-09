@@ -1,15 +1,19 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 // Escape toggles a pause popup: freezes gameplay via Time.timeScale, offers
-// Resume/Quit, and lets the player mute music/SFX independently. Stays out
-// of the way while the death/game-over sequence owns the screen.
+// Resume/Main Menu, and lets the player mute music/SFX independently. Stays
+// out of the way while the death/game-over sequence owns the screen.
 public class PauseMenuController : MonoBehaviour
 {
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private Button openButton;   // the gear on the HUD, doing what Escape does
     [SerializeField] private Button resumeButton;
-    [SerializeField] private Button quitButton;
+    [FormerlySerializedAs("quitButton")]
+    [SerializeField] private Button mainMenuButton;
+    [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private Button musicToggleButton;
     [SerializeField] private Button sfxToggleButton;
     [SerializeField] private GameObject musicMuteSlash;
@@ -23,7 +27,7 @@ public class PauseMenuController : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(false);
         if (openButton != null) openButton.onClick.AddListener(Toggle);
         if (resumeButton != null) resumeButton.onClick.AddListener(Close);
-        if (quitButton != null) quitButton.onClick.AddListener(OnQuit);
+        if (mainMenuButton != null) mainMenuButton.onClick.AddListener(OnMainMenu);
         if (musicToggleButton != null) musicToggleButton.onClick.AddListener(ToggleMusic);
         if (sfxToggleButton != null) sfxToggleButton.onClick.AddListener(ToggleSfx);
     }
@@ -79,14 +83,10 @@ public class PauseMenuController : MonoBehaviour
         if (SpawnCountdownController.Instance != null) SpawnCountdownController.Instance.SetCovered(covered);
     }
 
-    private void OnQuit()
+    private void OnMainMenu()
     {
         Time.timeScale = 1f;
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
     private void ToggleMusic()
