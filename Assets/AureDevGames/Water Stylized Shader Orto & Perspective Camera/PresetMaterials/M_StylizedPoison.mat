@@ -48,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _IntersectionFoamTexture:
-        m_Texture: {fileID: 2800000, guid: 834c2a530966bd34eb9762c13c919276, type: 3}
+        m_Texture: {fileID: 2800000, guid: 85366bdf141e5b4479dfeb8854978eaf, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalTexture:
@@ -106,13 +106,14 @@ Material:
     - _FresnelPower: 1
     - _GradientRefractionScale: 10
     - _HorizonDistance: 200
+    - _Hue: 1
     - _IntersectionFoamBlend: 1.09
-    - _IntersectionFoamCutoff: 1.06
-    - _IntersectionFoamDepth: 2.43
-    - _IntersectionFoamDirection: 0
+    - _IntersectionFoamCutoff: 1.4
+    - _IntersectionFoamDepth: -8.45
+    - _IntersectionFoamDirection: 1.21
     - _IntersectionFoamFade: 1.48
-    - _IntersectionFoamSpeed: 0.38
-    - _IntersectionFoamTiling: 1.71
+    - _IntersectionFoamSpeed: 4.44
+    - _IntersectionFoamTiling: 0.99
     - _LightingHardness: 0.39
     - _LightingSmoothness: 12.34
     - _NormalScale: 1.61
@@ -130,7 +131,9 @@ Material:
     - _RefractionSpeed: 0.05
     - _RefractionStrength: 0.01
     - _RippleStrength: 83.62
+    - _Saturation: 1
     - _SecondaryFoamBlend: 0.06
+    - _Show: 0
     - _SkyboxForce: 2.5
     - _Steps: 50
     - _SurfaceFoamDirection: 1
@@ -138,14 +141,19 @@ Material:
     - _SurfaceFoamSpeed: 0.24
     - _SurfaceFoamTiling: 8.79
     - _TileSize: 200
+    - _Value: 1
     - _WORLD_SPACE_UV: 1
     - _WaterAlpha: 1
     - _WaterMetallic: 0.577
     - _WaterSmoothness: 0.581
     - _WaveLength: 1.82
+    - _WaveRiverLength: 0
+    - _WaveRiverWidth: 0
     - _WaveSpeed: 0.2
     - _WaveSteepness: 0
     - _WaveStepness: 0.35
+    - _WaveTileSize: 0
+    - _XRMotionVectorsPass: 1
     m_Colors:
     - _BaseColor: {r: 0, g: 0.1989687, b: 1.110646, a: 1}
     - _CaveColor: {r: 0.21881218, g: 0.21216798, b: 0.4867924, a: 0}

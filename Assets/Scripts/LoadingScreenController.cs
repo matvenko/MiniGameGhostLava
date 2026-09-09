@@ -43,6 +43,7 @@ public class LoadingScreenController : MonoBehaviour
     private Camera characterCamera;
     private Renderer[] portraitRenderers;
     private bool portraitFramed;
+    private bool portraitLooksUp;
 
     void Start()
     {
@@ -372,6 +373,8 @@ public class LoadingScreenController : MonoBehaviour
         var character = Instantiate(introCharacterPrefab, framing, false);
         character.transform.localPosition = Vector3.zero;
         character.transform.localRotation = Quaternion.identity;
+        foreach (var appearance in character.GetComponentsInChildren<WardenAppearance>(true))
+            appearance.PreparePortrait();
         foreach (var script in character.GetComponentsInChildren<MonoBehaviour>(true))
             script.enabled = false;
         foreach (var collider in character.GetComponentsInChildren<Collider>(true))
@@ -405,6 +408,29 @@ public class LoadingScreenController : MonoBehaviour
             {
                 if (materials[i] == null || portraitShader == null) continue;
                 var original = materials[i];
+                if (original.shader.name == "MiniGame/WardenSpirit")
+                {
+                    portraitLooksUp = true;
+                    continue;
+                }
+                // The UI portrait is LDR: keep Lumen's surface shading without
+                // clipping its gameplay HDR emission to a flat white silhouette.
+                if (original.shader.name == "MiniGame/LumenSpirit")
+                {
+                    portraitLooksUp = true;
+                    var portraitMaterial = new Material(original);
+                    portraitMaterial.SetFloat("_Dissolve", 1);
+                    if (original.name.StartsWith("Lumen_Pearl"))
+                    {
+                        portraitMaterial.SetFloat("_Emission", .04f);
+                        portraitMaterial.SetColor("_BaseColor", new Color(.84f, .90f, .95f));
+                        portraitMaterial.SetColor("_ShadeColor", new Color(.35f, .52f, .64f));
+                        portraitMaterial.SetColor("_GlowColor", new Color(.05f, .2f, .3f));
+                    }
+                    materials[i] = portraitMaterial;
+                    portraitMaterials.Add(portraitMaterial);
+                    continue;
+                }
                 var material = new Material(portraitShader);
                 Texture skin = original.HasProperty("_MainTexture") ? original.GetTexture("_MainTexture") : original.mainTexture;
                 material.SetTexture("_MainTex", skin);
@@ -479,7 +505,7 @@ public class LoadingScreenController : MonoBehaviour
         half = Mathf.Max(half, .05f);
         float reach = Mathf.Max(bounds.extents.magnitude, .1f);
         Vector3 focus = bounds.center + new Vector3(0, half * .06f, 0);
-        characterCamera.transform.position = focus + new Vector3(0, half * .18f, reach * 4);
+        characterCamera.transform.position = focus + new Vector3(0, portraitLooksUp ? reach * 2.2f : half * .18f, reach * 4);
         characterCamera.transform.LookAt(focus);
         characterCamera.orthographicSize = half * 1.12f;
         characterCamera.farClipPlane = reach * 9;

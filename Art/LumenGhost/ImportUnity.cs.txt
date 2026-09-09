@@ -1,0 +1,67 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+internal class CommandScript : IRunCommand
+{
+ public void Execute(ExecutionResult result)
+ {
+  const string dir="Assets/Characters/LumenGhost/";
+  AssetDatabase.Refresh();
+  var importer=(ModelImporter)AssetImporter.GetAtPath(dir+"LumenGhost.fbx");
+  importer.animationType=ModelImporterAnimationType.Generic;
+  importer.importAnimation=true;
+  importer.materialImportMode=ModelImporterMaterialImportMode.ImportStandard;
+  var clips=importer.defaultClipAnimations;
+  foreach(var c in clips){c.name="Lumen_Hover_Loop";c.loopTime=true;c.lockRootPositionXZ=true;c.lockRootHeightY=true;c.lockRootRotation=true;}
+  importer.clipAnimations=clips;importer.SaveAndReimport();
+  var shader=Shader.Find("MiniGame/LumenSpirit");
+  if(shader==null || ShaderUtil.ShaderHasError(shader))throw new System.Exception("Lumen shader did not compile.");
+  string[] names={"Lumen_Pearl","Lumen_Ink","Lumen_Glint","Lumen_Iris","Lumen_Smile"};
+  Color[] colors={new Color(.95f,.98f,1),new Color(.009f,.02f,.028f),new Color(.92f,1,1),new Color(.012f,.095f,.095f),new Color(.47f,.16f,.095f)};
+  var mats=new Dictionary<string,Material>();
+  for(int i=0;i<names.Length;i++){
+   var m=AssetDatabase.LoadAssetAtPath<Material>(dir+names[i]+".mat");
+   if(m==null){m=new Material(shader);AssetDatabase.CreateAsset(m,dir+names[i]+".mat");}
+   m.shader=shader;m.SetColor("_BaseColor",colors[i]);
+   m.SetColor("_ShadeColor",i==0?new Color(.64f,.78f,.85f):colors[i]*.75f);
+   m.SetColor("_GlowColor",i==0?new Color(.35f,3.2f,5.0f):Color.black);
+   m.SetFloat("_Emission",i==0?1.0f:i==2?.6f:0);
+   m.SetFloat("_Gloss",i==1?.08f:0.03f);m.SetFloat("_Dissolve",1);
+   EditorUtility.SetDirty(m);mats[names[i]]=m;
+  }
+  var model=AssetDatabase.LoadAssetAtPath<GameObject>(dir+"LumenGhost.fbx");
+  var instance=(GameObject)PrefabUtility.InstantiatePrefab(model);
+  result.RegisterObjectCreation(instance);
+  try{
+   instance.name="LumenGhost_Visual";instance.transform.localScale=Vector3.one*.50f;
+   foreach(var renderer in instance.GetComponentsInChildren<Renderer>(true)){
+    renderer.sharedMaterials=renderer.sharedMaterials.Select(m=>mats.ContainsKey(m.name)?mats[m.name]:mats["Lumen_Pearl"]).ToArray();
+   }
+   var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(dir+"LumenGhost.controller");
+   if(controller==null)controller=AnimatorController.CreateAnimatorControllerAtPath(dir+"LumenGhost.controller");
+   var clip=AssetDatabase.LoadAllAssetsAtPath(dir+"LumenGhost.fbx").OfType<AnimationClip>().First(c=>!c.name.StartsWith("__preview__"));
+   var sm=controller.layers[0].stateMachine;
+   var state=sm.states.Length==0?sm.AddState("Hover"):sm.states[0].state;
+   state.motion=clip;sm.defaultState=state;
+   var anim=instance.GetComponent<Animator>();if(anim==null)anim=instance.AddComponent<Animator>();
+   anim.runtimeAnimatorController=controller;anim.applyRootMotion=false;anim.cullingMode=AnimatorCullingMode.AlwaysAnimate;
+   var lamp=new GameObject("Soft cyan ground light");lamp.transform.SetParent(instance.transform,false);
+   lamp.transform.localPosition=new Vector3(0,.7f,0);
+   var light=lamp.AddComponent<Light>();light.type=LightType.Point;light.color=new Color(.25f,.8f,1);light.intensity=.65f;light.range=1.6f;light.shadows=LightShadows.None;
+   PrefabUtility.SaveAsPrefabAsset(instance,dir+"LumenGhost_Visual.prefab");
+   AssetDatabase.SaveAssets();
+   clip.SampleAnimation(instance,0);
+   var before=instance.GetComponentsInChildren<Transform>().ToDictionary(t=>t,t=>t.localPosition);
+   clip.SampleAnimation(instance,.75f);
+   float movement=before.Max(p=>Vector3.Distance(p.Value,p.Key.localPosition));
+   result.Log("Prefab saved. Clip="+clip.name+" duration="+clip.length+" sampled bone movement="+movement);
+   if(movement<.00001f)throw new System.Exception("Animation failed to move bones.");
+   File.WriteAllText("Art/LumenGhost/unity_validation.json","{\"shader_compiled\":true,\"clip_seconds\":"+clip.length.ToString(System.Globalization.CultureInfo.InvariantCulture)+",\"bone_motion\":"+movement.ToString(System.Globalization.CultureInfo.InvariantCulture)+",\"scene_installed\":false}");
+  }finally{result.DestroyObject(instance);}
+ }
+}

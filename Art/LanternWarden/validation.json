@@ -1,0 +1,19 @@
+{
+  "triangles_default": 14684,
+  "bones": 8,
+  "loop_errors": {
+    "Warden_Idle": 1.4695763554510994e-17,
+    "Warden_Move": 3.429011385761817e-17
+  },
+  "actions": [
+    "Warden_Idle",
+    "Warden_Move",
+    "Warden_Caught",
+    "Warden_Death"
+  ],
+  "eye_styles": [
+    "Oval",
+    "Crescent",
+    "Diamond"
+  ]
+}

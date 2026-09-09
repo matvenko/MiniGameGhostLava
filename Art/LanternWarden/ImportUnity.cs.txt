@@ -1,0 +1,102 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.Animations;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+internal class CommandScript:IRunCommand{
+ UnityEngine.Mesh EyeMesh(SkinnedMeshRenderer source,string path){
+ var original=source.sharedMesh;int index=original.boneWeights[0].boneIndex0;
+ var bind=original.bindposes[index];var normalMatrix=bind.inverse.transpose;
+ var mesh=new UnityEngine.Mesh();mesh.name=Path.GetFileNameWithoutExtension(path);
+ mesh.vertices=original.vertices.Select(v=>bind.MultiplyPoint3x4(v)).ToArray();
+ mesh.normals=original.normals.Select(n=>normalMatrix.MultiplyVector(n).normalized).ToArray();
+ mesh.uv=original.uv;mesh.triangles=original.triangles;mesh.RecalculateBounds();
+ var existing=AssetDatabase.LoadAssetAtPath<UnityEngine.Mesh>(path);
+ if(existing){EditorUtility.CopySerialized(mesh,existing);Object.DestroyImmediate(mesh);EditorUtility.SetDirty(existing);return existing;}
+ AssetDatabase.CreateAsset(mesh,path);return mesh;
+ }
+ public void Execute(ExecutionResult result){
+ const string dir="Assets/Characters/LanternWarden/";
+ Directory.CreateDirectory(dir+"Skins");Directory.CreateDirectory(dir+"Eyes");AssetDatabase.Refresh();
+ var importer=(ModelImporter)AssetImporter.GetAtPath(dir+"LanternWarden.fbx");
+ importer.animationType=ModelImporterAnimationType.Generic;importer.importAnimation=true;importer.optimizeGameObjects=false;importer.animationCompression=ModelImporterAnimationCompression.Off;
+ var definitions=importer.defaultClipAnimations;
+ foreach(var c in definitions){c.name=c.name.Substring(c.name.LastIndexOf('|')+1);c.loopTime=c.name.EndsWith("Idle")||c.name.EndsWith("Move");c.lockRootPositionXZ=true;c.lockRootHeightY=true;c.lockRootRotation=true;}
+ importer.clipAnimations=definitions;importer.SaveAndReimport();
+ var shader=Shader.Find("MiniGame/WardenSpirit");if(shader==null||ShaderUtil.ShaderHasError(shader))throw new System.Exception("Warden shader failed");
+ string[] ids={"ivory","ice","midnight","apricot"};string[] labels={"1 - Ivory / Gold","2 - Ice / Amber","3 - Midnight / Gold","4 - Apricot / Cyan (Default)"};
+ Color[] bases={new Color(.94f,.89f,.77f),new Color(.48f,.73f,.97f),new Color(.20f,.32f,.56f),new Color(1,.56f,.22f)};
+ Color[] shadows={new Color(.44f,.49f,.55f),new Color(.12f,.28f,.51f),new Color(.05f,.09f,.19f),new Color(.38f,.115f,.022f)};
+ var skins=new WardenSkin[4];
+ for(int i=0;i<4;i++){
+  string path=dir+"Skins/"+ids[i]+".asset";var skin=AssetDatabase.LoadAssetAtPath<WardenSkin>(path);
+  if(!skin){skin=ScriptableObject.CreateInstance<WardenSkin>();AssetDatabase.CreateAsset(skin,path);}
+  skin.skinId="warden."+ids[i];skin.displayName=labels[i];skin.shell=bases[i];skin.shadow=shadows[i];skin.face=new Color(.008f,.014f,.03f);
+  skin.rim=i==3?new Color(.18f,1.3f,1.9f):new Color(1.6f,.83f,.17f);
+  skin.eyes=i==3?new Color(.55f,1.7f,2.0f):new Color(1.9f,1.15f,.38f);
+  EditorUtility.SetDirty(skin);skins[i]=skin;
+ }
+ string[] names={"Warden_Shell","Warden_Face","Warden_Rim","Warden_Eyes","Warden_Mouth"};
+ var mats=new Dictionary<string,Material>();
+ for(int i=0;i<names.Length;i++){
+  string path=dir+names[i]+".mat";var m=AssetDatabase.LoadAssetAtPath<Material>(path);if(!m){m=new Material(shader);AssetDatabase.CreateAsset(m,path);}m.shader=shader;m.SetFloat("_Dissolve",1);
+  m.SetColor("_BaseColor",i==0?skins[3].shell:i==1?skins[3].face:i==2?skins[3].rim*.3f:i==3?skins[3].eyes*.25f:Color.black);
+  m.SetColor("_ShadeColor",i==0?skins[3].shadow:i==1?skins[3].face*.55f:Color.black);
+  m.SetColor("_EmissionColor",i==2?skins[3].rim:i==3?skins[3].eyes:Color.black);EditorUtility.SetDirty(m);mats[names[i]]=m;
+ }
+ var model=AssetDatabase.LoadAssetAtPath<GameObject>(dir+"LanternWarden.fbx");
+ var renders=model.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+ var eyeStyles=new WardenEyeStyle[3];string[] styles={"Oval","Crescent","Diamond"};
+ for(int i=0;i<3;i++){
+  var style=AssetDatabase.LoadAssetAtPath<WardenEyeStyle>(dir+"Eyes/"+styles[i]+".asset");
+  if(!style){style=ScriptableObject.CreateInstance<WardenEyeStyle>();AssetDatabase.CreateAsset(style,dir+"Eyes/"+styles[i]+".asset");}
+  style.styleId=styles[i].ToLowerInvariant();style.leftMesh=EyeMesh(renders.First(r=>r.name=="Eye"+styles[i]+".L"),dir+"Eyes/"+styles[i]+"_L.asset");style.rightMesh=EyeMesh(renders.First(r=>r.name=="Eye"+styles[i]+".R"),dir+"Eyes/"+styles[i]+"_R.asset");
+  if(styles[i]=="Diamond") style.leftMesh=style.rightMesh; // Symmetric socket-local geometry shares one verified mesh.
+  foreach(string side in new[]{"L","R"}){
+   var baseline=renders.First(r=>r.name=="EyeOval."+side);var variant=renders.First(r=>r.name=="Eye"+styles[i]+"."+side);
+   if(!baseline.bones.Select(b=>b.name).SequenceEqual(variant.bones.Select(b=>b.name)))throw new System.Exception("Eye bone mapping differs");
+   if(!baseline.sharedMesh.bindposes.SequenceEqual(variant.sharedMesh.bindposes))throw new System.Exception("Eye bind poses differ");
+  }
+  EditorUtility.SetDirty(style);eyeStyles[i]=style;
+ }
+ var clips=AssetDatabase.LoadAllAssetsAtPath(dir+"LanternWarden.fbx").OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__preview__")).ToDictionary(c=>c.name);
+ var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(dir+"LanternWarden.controller");
+ if(!controller)controller=AnimatorController.CreateAnimatorControllerAtPath(dir+"LanternWarden.controller");
+ var sm=controller.layers[0].stateMachine;
+ string[] states={"idle","move","caught","dissolve","surprised","attack_shift"};string[] motion={"Warden_Idle","Warden_Move","Warden_Caught","Warden_Death","Warden_Caught","Warden_Move"};
+ for(int i=0;i<states.Length;i++){
+  var s=sm.states.Select(x=>x.state).FirstOrDefault(x=>x.name==states[i])??sm.AddState(states[i],new Vector3(250,i*75,0));s.motion=clips[motion[i]];s.speed=1;
+  if(states[i]=="idle")sm.defaultState=s;if(states[i]=="attack_shift")s.tag="Attack";
+ }
+ foreach(string name in new[]{"surprised","attack_shift"}){
+  var s=sm.states.First(x=>x.state.name==name).state;
+  if(s.transitions.Length==0){var t=s.AddTransition(sm.defaultState);t.hasExitTime=true;t.exitTime=name=="surprised"?.9f:.5f;t.duration=.08f;t.hasFixedDuration=true;}
+ }
+ EditorUtility.SetDirty(controller);
+ var root=new GameObject("LanternWarden_Visual");result.RegisterObjectCreation(root);
+ try{
+  root.transform.localScale=Vector3.one*.72f;root.AddComponent<WardenMotion>();
+  var body=(GameObject)PrefabUtility.InstantiatePrefab(model,root.transform);body.name="Model";
+  foreach(var rr in body.GetComponentsInChildren<Renderer>(true)){rr.sharedMaterials=rr.sharedMaterials.Select(m=>mats[m.name]).ToArray();}
+  foreach(string side in new[]{"L","R"}){
+   var source=body.GetComponentsInChildren<SkinnedMeshRenderer>().First(r=>r.name=="EyeOval."+side);
+   var socket=source.bones.First(b=>b.name=="Eye."+side);
+   var eye=new GameObject("Eye."+side,typeof(MeshFilter),typeof(MeshRenderer));eye.transform.SetParent(socket,false);
+   eye.GetComponent<MeshFilter>().sharedMesh=side=="L"?eyeStyles[0].leftMesh:eyeStyles[0].rightMesh;
+   eye.GetComponent<MeshRenderer>().sharedMaterial=mats["Warden_Eyes"];
+  }
+  foreach(var alt in body.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(r=>r.name.StartsWith("Eye")).ToArray())result.DestroyObject(alt.gameObject);
+  var a=body.GetComponent<Animator>();if(a==null)a=body.AddComponent<Animator>();a.runtimeAnimatorController=controller;a.applyRootMotion=false;a.cullingMode=AnimatorCullingMode.AlwaysAnimate;
+  var glow=new GameObject("Lantern light");glow.transform.SetParent(body.transform,false);glow.transform.localPosition=new Vector3(0,.6f,.12f);
+  var light=glow.AddComponent<Light>();light.type=LightType.Point;light.range=1.4f;light.intensity=.5f;light.color=new Color(.2f,.8f,1);light.shadows=LightShadows.None;
+  var appearance=body.AddComponent<WardenAppearance>();var rrall=body.GetComponentsInChildren<Renderer>(true);
+  appearance.skin=skins[3];appearance.availableSkins=skins;appearance.eyeStyle=eyeStyles[0];appearance.availableEyes=eyeStyles;
+  appearance.shellRenderers=rrall.Where(r=>r.sharedMaterial.name=="Warden_Shell").Cast<Renderer>().ToArray();
+  appearance.faceRenderer=rrall.First(r=>r.name=="Recessed face");appearance.rimRenderer=rrall.First(r=>r.name=="Inner luminous trim");
+  appearance.leftEye=rrall.First(r=>r.name=="Eye.L");appearance.rightEye=rrall.First(r=>r.name=="Eye.R");appearance.glowLight=light;appearance.ApplyAppearance();
+  PrefabUtility.SaveAsPrefabAsset(root,dir+"LanternWarden_Visual.prefab");AssetDatabase.SaveAssets();
+  result.Log("Warden prefab: "+rrall.Length+" renderers, 4 skins, 3 interchangeable eye styles, "+clips.Count+" distinct animation clips. Default Apricot/Cyan.");
+ }finally{result.DestroyObject(root);}
+ }
+}

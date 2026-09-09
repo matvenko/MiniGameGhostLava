@@ -1,0 +1,30 @@
+{
+    "passed": true,
+    "checks": [
+        "New visual exclusively bound",
+        "Animator state idle",
+        "Animator state move",
+        "Animator state surprised",
+        "Animator state attack_shift",
+        "Animator state dissolve",
+        "Joystick moves CharacterController",
+        "Movement selects move animation",
+        "Visual follows movement facing",
+        "Countdown freezes movement",
+        "Countdown returns to idle",
+        "Held joystick resumes after countdown",
+        "Joystick release returns to idle",
+        "Teleport fades all surfaces and moves to destination",
+        "Teleport restores body and light",
+        "Grace blink hides face, body and light together",
+        "Grace blink restores complete visual",
+        "Respawn during blink restores all parts",
+        "Shield protects new player from enemy catch",
+        "Shield expires",
+        "Lava disables movement on death",
+        "Death dissolves all parts and extinguishes light",
+        "Respawn restores movement and complete visual",
+        "Enemy catch still kills unshielded player"
+    ],
+    "failure": ""
+}

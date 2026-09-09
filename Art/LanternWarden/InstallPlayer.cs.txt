@@ -1,0 +1,23 @@
+using UnityEngine;using UnityEditor;using UnityEditor.SceneManagement;using System.Linq;using System.IO;
+internal class CommandScript:IRunCommand{public void Execute(ExecutionResult result){
+ if(EditorApplication.isPlaying)throw new System.Exception("Finish Play mode first.");
+ var player=GameObject.Find("Ghost");if(!player)throw new System.Exception("Open LavaScene first.");
+ const string backup="Assets/_Recovery/LavaScene_before_Warden_install.unity";
+ if(!File.Exists(backup))EditorSceneManager.SaveScene(player.scene,backup,true);
+ var root=player.transform.Find("LanternWarden_Visual");
+ if(!root){var o=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/LanternWarden/LanternWarden_Visual.prefab"),player.transform);result.RegisterObjectCreation(o);root=o.transform;}
+ root.localPosition=Vector3.zero;root.localRotation=Quaternion.identity;root.localScale=Vector3.one*.72f;
+ foreach(string name in new[]{"LumenGhost_Visual","GhostMesh","GhostArmature"}){var old=player.transform.Find(name);if(old){result.RegisterObjectModification(old.gameObject);old.gameObject.SetActive(false);}}
+ var legacy=player.GetComponent<Animator>();if(legacy){result.RegisterObjectModification(legacy);legacy.enabled=false;}
+ var blink=player.GetComponent<PinkGhostBlink>();if(blink){result.RegisterObjectModification(blink);blink.enabled=false;}
+ var script=player.GetComponent<Sample.GhostScript>();result.RegisterObjectModification(script);var so=new SerializedObject(script);
+ var rr=root.GetComponentsInChildren<Renderer>(true);var list=so.FindProperty("MeshR");list.arraySize=rr.Length;
+ for(int i=0;i<rr.Length;i++)list.GetArrayElementAtIndex(i).objectReferenceValue=rr[i];
+ so.FindProperty("visualAnimator").objectReferenceValue=root.GetComponentInChildren<Animator>();so.FindProperty("visualLight").objectReferenceValue=root.GetComponentInChildren<Light>();so.ApplyModifiedProperties();
+ var appearance=root.GetComponentInChildren<WardenAppearance>();appearance.ApplyAppearance();
+ EditorSceneManager.MarkSceneDirty(player.scene);EditorSceneManager.SaveScene(player.scene);AssetDatabase.SaveAssets();
+ var menu=EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity",OpenSceneMode.Additive);
+ try{var loader=menu.GetRootGameObjects().SelectMany(o=>o.GetComponentsInChildren<LoadingScreenController>(true)).First();result.RegisterObjectModification(loader);var menuSo=new SerializedObject(loader);menuSo.FindProperty("introCharacterPrefab").objectReferenceValue=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/LanternWarden/LanternWarden_Visual.prefab");menuSo.ApplyModifiedProperties();EditorSceneManager.SaveScene(menu);}
+ finally{EditorSceneManager.CloseScene(menu,true);}
+ Selection.activeGameObject=appearance.gameObject;result.Log("Installed Warden on player and menu. Active skinned renderers="+rr.Length+" skin="+appearance.skin.skinId);
+}}

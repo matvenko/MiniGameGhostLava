@@ -1,0 +1,50 @@
+using UnityEngine;using UnityEditor;using UnityEngine.Rendering.Universal;using System.Linq;using System.IO;
+internal class CommandScript:IRunCommand{
+ void RenderPose(Camera camera,GameObject ghost,ExecutionResult result){
+ var skins=ghost.GetComponentsInChildren<SkinnedMeshRenderer>().Where(r=>r.enabled).ToArray();
+ var meshes=new System.Collections.Generic.List<UnityEngine.Mesh>();
+ var objects=new System.Collections.Generic.List<GameObject>();
+ try{
+ foreach(var r in skins){
+  var mesh=new UnityEngine.Mesh();r.BakeMesh(mesh);meshes.Add(mesh);
+  var o=new GameObject("Pose snapshot",typeof(MeshFilter),typeof(MeshRenderer));result.RegisterObjectCreation(o);o.transform.SetParent(r.transform,false);
+  var scale=r.transform.lossyScale;o.transform.localScale=new Vector3(1/scale.x,1/scale.y,1/scale.z);
+  o.GetComponent<MeshFilter>().sharedMesh=mesh;var draw=o.GetComponent<MeshRenderer>();draw.sharedMaterials=r.sharedMaterials;
+  var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);draw.SetPropertyBlock(block);
+  r.enabled=false;objects.Add(o);
+ }
+ camera.Render();
+ }finally{foreach(var r in skins)r.enabled=true;foreach(var o in objects)result.DestroyObject(o);foreach(var m in meshes)Object.DestroyImmediate(m);}
+ }
+ public void Execute(ExecutionResult result){
+ var original=GameObject.Find("Ghost");var hidden=original.GetComponentsInChildren<Renderer>(true);var enabled=hidden.Select(r=>r.enabled).ToArray();
+ var ghost=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/LanternWarden/LanternWarden_Visual.prefab"));result.RegisterObjectCreation(ghost);
+ var cameraObject=new GameObject("Warden review camera");result.RegisterObjectCreation(cameraObject);
+ var rt=new RenderTexture(600,600,24,RenderTextureFormat.ARGBHalf);var tile=new Texture2D(600,600,TextureFormat.RGB24,false);var atlas=new Texture2D(2400,1200,TextureFormat.RGB24,false);
+ var oldActive=RenderTexture.active;var camera=cameraObject.AddComponent<Camera>();camera.orthographic=true;camera.nearClipPlane=.01f;camera.farClipPlane=30;camera.allowHDR=true;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.03f,.04f,.075f);camera.targetTexture=rt;
+ var data=cameraObject.AddComponent<UniversalAdditionalCameraData>();data.renderPostProcessing=true;data.antialiasing=AntialiasingMode.FastApproximateAntialiasing;
+ try{
+  foreach(var r in hidden)r.enabled=false;
+  var appearance=ghost.GetComponentInChildren<WardenAppearance>();var animator=ghost.GetComponentInChildren<Animator>();
+  var clips=AssetDatabase.LoadAllAssetsAtPath("Assets/Characters/LanternWarden/LanternWarden.fbx").OfType<AnimationClip>().Where(c=>!c.name.StartsWith("__preview__")).ToDictionary(c=>c.name);
+  for(int i=0;i<4;i++){
+   appearance.SetSkin(appearance.availableSkins[i]);clips["Warden_Idle"].SampleAnimation(animator.gameObject,0);
+   ghost.transform.position=new Vector3(0,100,0);camera.orthographicSize=.69f;camera.transform.position=ghost.transform.position+new Vector3(-1.55f,1.65f,2.9f);camera.transform.LookAt(ghost.transform.position+new Vector3(0,.55f,-.04f));
+   RenderPose(camera,ghost,result);RenderTexture.active=rt;tile.ReadPixels(new Rect(0,0,600,600),0,0);tile.Apply();atlas.SetPixels(i*600,600,600,600,tile.GetPixels());
+   if(i==3)File.WriteAllBytes("Art/LanternWarden/unity_portrait.png",tile.EncodeToPNG());
+   ghost.transform.position=original.transform.position;camera.orthographicSize=2.6f;camera.transform.position=ghost.transform.position+Vector3.up*10;camera.transform.rotation=Quaternion.Euler(90,180,0);
+   RenderPose(camera,ghost,result);RenderTexture.active=rt;tile.ReadPixels(new Rect(0,0,600,600),0,0);tile.Apply();atlas.SetPixels(i*600,0,600,600,tile.GetPixels());
+   if(i==3)File.WriteAllBytes("Art/LanternWarden/unity_board.png",tile.EncodeToPNG());
+  }
+  atlas.Apply();File.WriteAllBytes("Art/LanternWarden/unity_palettes.png",atlas.EncodeToPNG());
+  appearance.SetSkin(appearance.availableSkins[3]);ghost.transform.position=new Vector3(0,100,0);camera.orthographicSize=.69f;camera.transform.position=ghost.transform.position+new Vector3(-1.55f,1.65f,2.9f);camera.transform.LookAt(ghost.transform.position+new Vector3(0,.55f,-.04f));
+  string[] actions={"Warden_Idle","Warden_Move","Warden_Caught","Warden_Death"};float[] times={0,.25f,.13f,.75f};
+  for(int i=0;i<4;i++){
+   clips[actions[i]].SampleAnimation(animator.gameObject,times[i]);RenderPose(camera,ghost,result);RenderTexture.active=rt;tile.ReadPixels(new Rect(0,0,600,600),0,0);tile.Apply();atlas.SetPixels(i*600,600,600,600,tile.GetPixels());
+   appearance.SetEyes(appearance.availableEyes[i%3]);clips["Warden_Idle"].SampleAnimation(animator.gameObject,0);RenderPose(camera,ghost,result);RenderTexture.active=rt;tile.ReadPixels(new Rect(0,0,600,600),0,0);tile.Apply();atlas.SetPixels(i*600,0,600,600,tile.GetPixels());appearance.SetEyes(appearance.availableEyes[0]);
+  }
+  atlas.Apply();File.WriteAllBytes("Art/LanternWarden/unity_actions_eyes.png",atlas.EncodeToPNG());
+  result.Log("Saved actual Unity palette, board, action and eye-style renders");
+ }finally{for(int i=0;i<hidden.Length;i++)if(hidden[i])hidden[i].enabled=enabled[i];camera.targetTexture=null;RenderTexture.active=oldActive;rt.Release();Object.DestroyImmediate(rt);Object.DestroyImmediate(tile);Object.DestroyImmediate(atlas);result.DestroyObject(ghost);result.DestroyObject(cameraObject);}
+ }
+}

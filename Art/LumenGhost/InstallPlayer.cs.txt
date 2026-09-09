@@ -1,0 +1,77 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using System.Linq;
+using System.IO;
+internal class CommandScript : IRunCommand {
+ public void Execute(ExecutionResult result){
+  var g=GameObject.Find("Ghost");
+  if(g==null || EditorApplication.isPlaying)throw new System.Exception("Need Ghost in edit mode.");
+  const string dir="Assets/Characters/LumenGhost/";
+  const string backup="Assets/_Recovery/LavaScene_before_Lumen_install.unity";
+  if(!File.Exists(backup)){Directory.CreateDirectory("Assets/_Recovery");EditorSceneManager.SaveScene(g.scene,backup,true);}
+  var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>(dir+"LumenGhost.controller");
+  var sm=controller.layers[0].stateMachine;
+  var clip=AssetDatabase.LoadAllAssetsAtPath(dir+"LumenGhost.fbx").OfType<AnimationClip>().First(c=>!c.name.StartsWith("__preview__"));
+  string[] names={"idle","move","surprised","attack_shift","dissolve"};
+  float[] speeds={1,1.65f,1.5f,1.8f,0};
+  for(int i=0;i<names.Length;i++){
+   var state=sm.states.Select(s=>s.state).FirstOrDefault(s=>s.name==names[i]);
+   if(state==null)state=sm.AddState(names[i],new Vector3(250,i*70,0));
+   state.motion=clip;state.speed=speeds[i];
+   if(names[i]=="attack_shift")state.tag="Attack";
+  }
+  sm.defaultState=sm.states.First(s=>s.state.name=="idle").state;
+  foreach(var s in sm.states.Where(s=>s.state.name=="Hover").ToArray())sm.RemoveState(s.state);
+  foreach(string name in new[]{"surprised","attack_shift"}){
+   var state=sm.states.First(s=>s.state.name==name).state;
+   if(state.transitions.Length==0){var transition=state.AddTransition(sm.defaultState);transition.hasExitTime=true;transition.exitTime=.2f;transition.duration=.08f;}
+  }
+  EditorUtility.SetDirty(controller);
+  var visual=g.transform.Find("LumenGhost_Visual");
+  if(visual==null){
+   var o=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(dir+"LumenGhost_Visual.prefab"),g.transform);
+   result.RegisterObjectCreation(o);visual=o.transform;
+  }
+  result.RegisterObjectModification(visual);
+  visual.localPosition=Vector3.zero;visual.localRotation=Quaternion.identity;visual.localScale=Vector3.one*.5f;
+  foreach(string name in new[]{"GhostMesh","GhostArmature"}){
+   var old=g.transform.Find(name);if(old!=null){result.RegisterObjectModification(old.gameObject);old.gameObject.SetActive(false);}
+  }
+  var legacy=g.GetComponent<Animator>();if(legacy){result.RegisterObjectModification(legacy);legacy.enabled=false;}
+  var blink=g.GetComponent<PinkGhostBlink>();if(blink){result.RegisterObjectModification(blink);blink.enabled=false;}
+  var script=g.GetComponent<Sample.GhostScript>();result.RegisterObjectModification(script);
+  var serialized=new SerializedObject(script);
+  var renderers=visual.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+  var list=serialized.FindProperty("MeshR");list.arraySize=renderers.Length;
+  for(int i=0;i<renderers.Length;i++)list.GetArrayElementAtIndex(i).objectReferenceValue=renderers[i];
+  serialized.FindProperty("visualAnimator").objectReferenceValue=visual.GetComponent<Animator>();
+  serialized.FindProperty("visualLight").objectReferenceValue=visual.GetComponentInChildren<Light>();
+  serialized.ApplyModifiedProperties();
+  var camera=Camera.main ?? Object.FindFirstObjectByType<Camera>();
+  if(camera){
+   result.RegisterObjectModification(camera);camera.allowHDR=true;
+   var data=camera.GetComponent<UniversalAdditionalCameraData>();
+   if(data){result.RegisterObjectModification(data);data.renderPostProcessing=true;}
+  }
+  var volume=Object.FindFirstObjectByType<Volume>();
+  if(volume && volume.sharedProfile){
+   var profile=volume.sharedProfile;
+   if(!profile.TryGet<Bloom>(out var bloom)){bloom=profile.Add<Bloom>(true);AssetDatabase.AddObjectToAsset(bloom,profile);}
+   result.RegisterObjectModification(bloom);
+   bloom.active=true;bloom.intensity.Override(.45f);bloom.threshold.Override(1);bloom.scatter.Override(.55f);
+   EditorUtility.SetDirty(bloom);EditorUtility.SetDirty(profile);
+  }
+  EditorSceneManager.MarkSceneDirty(g.scene);EditorSceneManager.SaveScene(g.scene);
+  AssetDatabase.SaveAssets();
+  result.Log("Installed Lumen on Ghost. Bound "+renderers.Length+" skinned renderers, Animator and light. Saved "+g.scene.path);
+  var menu=EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity",OpenSceneMode.Additive);
+  try{
+   var loading=menu.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<LoadingScreenController>(true)).FirstOrDefault();
+   if(loading){result.RegisterObjectModification(loading);var so=new SerializedObject(loading);so.FindProperty("introCharacterPrefab").objectReferenceValue=AssetDatabase.LoadAssetAtPath<GameObject>(dir+"LumenGhost_Visual.prefab");so.ApplyModifiedProperties();EditorSceneManager.SaveScene(menu);result.Log("Main menu portrait uses Lumen.");}
+  }finally{EditorSceneManager.CloseScene(menu,true);}
+ }
+}

@@ -17,7 +17,19 @@ public class GhostScript : MonoBehaviour
     private static readonly int DissolveState = Animator.StringToHash("Base Layer.dissolve");
     private static readonly int AttackTag = Animator.StringToHash("Attack");
     // dissolve
-    [SerializeField] private SkinnedMeshRenderer[] MeshR;
+    [SerializeField] private Renderer[] MeshR;
+    [Tooltip("Optional visual rig; otherwise the original root Animator is used.")]
+    [SerializeField] private Animator visualAnimator;
+    [SerializeField] private Light visualLight;
+    private MaterialPropertyBlock _visualProperties;
+    private float _lightIntensity;
+    private bool _renderersVisible = true;
+    private bool _moving;
+    private WardenMotion _wardenMotion;
+    private float _caughtAt;
+    private bool _hasCaughtAnimation;
+    private static readonly int CaughtState = Animator.StringToHash("Base Layer.caught");
+    private const float CatchReactionDuration = .35f;
     private float Dissolve_value = 1;
     private bool DissolveFlg = false;
     private const int maxHP = 3;
@@ -45,7 +57,11 @@ public class GhostScript : MonoBehaviour
 
     void Start()
     {
-        Anim = this.GetComponent<Animator>();
+        Anim = visualAnimator != null ? visualAnimator : GetComponent<Animator>();
+        _visualProperties = new MaterialPropertyBlock();
+        _lightIntensity = visualLight != null ? visualLight.intensity : 0f;
+        _wardenMotion = GetComponentInChildren<WardenMotion>();
+        _hasCaughtAnimation = Anim != null && Anim.HasState(0, CaughtState);
         Ctrl = this.GetComponent<CharacterController>();
         var hpObj = GameObject.Find("Canvas/HP");
         if (hpObj != null) HP_text = hpObj.GetComponent<Text>();
@@ -104,6 +120,9 @@ public class GhostScript : MonoBehaviour
     {
         if (isDead || Invulnerable) return;
         isDead = true;
+        _caughtAt = Time.time;
+        if (_hasCaughtAnimation) Anim.CrossFadeInFixedTime(CaughtState, .06f, 0, 0);
+        if (_wardenMotion != null) _wardenMotion.SetIncapacitated(true);
         AudioManager.Play(GameSound.Death);
         Ctrl.enabled = false;
         if (GameOverManager.Instance != null)
@@ -173,17 +192,11 @@ public class GhostScript : MonoBehaviour
         float t = 0f;
         while (t < duration)
         {
-            for (int i = 0; i < MeshR.Length; i++)
-            {
-                if (MeshR[i] != null) MeshR[i].enabled = !MeshR[i].enabled;
-            }
+            SetRenderersVisible(!_renderersVisible);
             yield return new WaitForSeconds(blinkInterval);
             t += blinkInterval;
         }
-        for (int i = 0; i < MeshR.Length; i++)
-        {
-            if (MeshR[i] != null) MeshR[i].enabled = true;
-        }
+        SetRenderersVisible(true);
         _graceInvincible = false;
         _invincibilityRoutine = null;
     }
@@ -192,16 +205,19 @@ public class GhostScript : MonoBehaviour
     // (GameOverManager) awaits this before showing the Game Over popup
     public IEnumerator PlayDeathAnimation()
     {
-        Anim.CrossFade(DissolveState, 0.1f, 0, 0);
+        // Let the impact read before the model collapses and dissolves. A final
+        // game-over camera move may already have provided this interval.
+        if (_hasCaughtAnimation)
+        {
+            float remaining = CatchReactionDuration - (Time.time - _caughtAt);
+            if (remaining > 0) yield return new WaitForSeconds(remaining);
+        }
+        Anim.CrossFadeInFixedTime(DissolveState, 0.08f, 0, 0);
         float t = 0f;
         while (t < deathAnimDuration)
         {
             t += Time.deltaTime;
-            Dissolve_value = 1f - Mathf.Clamp01(t / deathAnimDuration);
-            for (int i = 0; i < MeshR.Length; i++)
-            {
-                MeshR[i].material.SetFloat("_Dissolve", Dissolve_value);
-            }
+            SetDissolve(1f - Mathf.Clamp01(t / deathAnimDuration));
             yield return null;
         }
     }
@@ -221,6 +237,11 @@ public class GhostScript : MonoBehaviour
         }
         EndShield();
 
+        if (_invincibilityRoutine != null) StopCoroutine(_invincibilityRoutine);
+        _invincibilityRoutine = null;
+        _graceInvincible = false;
+        SetRenderersVisible(true);
+
         HP = maxHP;
         if (HP_text != null) HP_text.text = "HP " + HP.ToString();
 
@@ -229,11 +250,9 @@ public class GhostScript : MonoBehaviour
         transform.rotation = Quaternion.identity;
         Ctrl.enabled = true;
 
-        Dissolve_value = 1f;
-        for (int i = 0; i < MeshR.Length; i++)
-        {
-            MeshR[i].material.SetFloat("_Dissolve", Dissolve_value);
-        }
+        SetDissolve(1f);
+        _moving = false;
+        if (_wardenMotion != null) _wardenMotion.ResetPose();
         DissolveFlg = false;
         Anim.CrossFade(IdleState, 0.1f, 0, 0);
         isDead = false;
@@ -294,11 +313,30 @@ public class GhostScript : MonoBehaviour
 
     private void SetDissolve(float value)
     {
-        Dissolve_value = value;
+        Dissolve_value = Mathf.Clamp01(value);
+        if (_visualProperties == null) _visualProperties = new MaterialPropertyBlock();
         for (int i = 0; i < MeshR.Length; i++)
         {
-            if (MeshR[i] != null) MeshR[i].material.SetFloat("_Dissolve", value);
+            if (MeshR[i] == null) continue;
+            MeshR[i].GetPropertyBlock(_visualProperties);
+            _visualProperties.SetFloat("_Dissolve", Dissolve_value);
+            MeshR[i].SetPropertyBlock(_visualProperties);
         }
+        UpdateVisualLight();
+    }
+
+    private void SetRenderersVisible(bool visible)
+    {
+        _renderersVisible = visible;
+        foreach (var renderer in MeshR)
+            if (renderer != null) renderer.enabled = visible;
+        UpdateVisualLight();
+    }
+
+    private void UpdateVisualLight()
+    {
+        if (visualLight != null)
+            visualLight.intensity = _renderersVisible ? _lightIntensity * Dissolve_value : 0f;
     }
 
     void Update()
@@ -315,6 +353,8 @@ public class GhostScript : MonoBehaviour
             // its enemy appears
             if (EnemySpawnManager.PlayerFrozen)
             {
+                if (_moving) Anim.CrossFade(IdleState, 0.1f, 0, 0);
+                _moving = false;
                 _wasFrozen = true;
             }
             else
@@ -407,11 +447,7 @@ public class GhostScript : MonoBehaviour
     // dissolve shading
     private void PlayerDissolve ()
     {
-        Dissolve_value -= Time.deltaTime;
-        for(int i = 0; i < MeshR.Length; i++)
-        {
-            MeshR[i].material.SetFloat("_Dissolve", Dissolve_value);
-        }
+        SetDissolve(Dissolve_value - Time.deltaTime);
         if(Dissolve_value <= 0)
         {
             Ctrl.enabled = false;
@@ -484,13 +520,12 @@ public class GhostScript : MonoBehaviour
         x -= Input.GetAxis("GamepadHorizontal");
         z -= Input.GetAxis("GamepadVertical");
 
-        // a key held through the freeze never fired KEY_DOWN, so the move
-        // animation has to be started here on the first frame back
-        if (_wasFrozen)
-        {
-            _wasFrozen = false;
-            if (x != 0f || z != 0f) Anim.CrossFade(MoveState, 0.1f, 0, 0);
-        }
+        // Held input resumes after the countdown, including joystick/gamepad.
+        bool moving = x != 0f || z != 0f;
+        if (_wasFrozen || moving != _moving)
+            Anim.CrossFade(moving ? MoveState : IdleState, 0.1f, 0, 0);
+        _wasFrozen = false;
+        _moving = moving;
 
         if (x != 0f || z != 0f)
         {
@@ -499,8 +534,7 @@ public class GhostScript : MonoBehaviour
             MOVE_Velocity(dir * Speed, rot);
         }
 
-        KEY_DOWN();
-        KEY_UP();
+        // All input sources share the same animation transition above.
     }
     //---------------------------------------------------------------------
     // value for moving
@@ -515,62 +549,6 @@ public class GhostScript : MonoBehaviour
         MoveDirection.x = 0;
         MoveDirection.z = 0;
         this.transform.rotation = Quaternion.Euler(rot);
-    }
-    //---------------------------------------------------------------------
-    // whether arrow key is key down
-    //---------------------------------------------------------------------
-    private void KEY_DOWN ()
-    {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            Anim.CrossFade(MoveState, 0.1f, 0, 0);
-        }
-        else if (Input.GetKeyDown(KeyCode.S))
-        {
-            Anim.CrossFade(MoveState, 0.1f, 0, 0);
-        }
-        else if (Input.GetKeyDown(KeyCode.A))
-        {
-            Anim.CrossFade(MoveState, 0.1f, 0, 0);
-        }
-        else if (Input.GetKeyDown(KeyCode.D))
-        {
-            Anim.CrossFade(MoveState, 0.1f, 0, 0);
-        }
-    }
-    //---------------------------------------------------------------------
-    // whether arrow key is key up
-    //---------------------------------------------------------------------
-    private void KEY_UP ()
-    {
-        if (Input.GetKeyUp(KeyCode.W))
-        {
-            if(!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            {
-                Anim.CrossFade(IdleState, 0.1f, 0, 0);
-            }
-        }
-        else if (Input.GetKeyUp(KeyCode.S))
-        {
-            if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            {
-                Anim.CrossFade(IdleState, 0.1f, 0, 0);
-            }
-        }
-        else if (Input.GetKeyUp(KeyCode.A))
-        {
-            if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.D))
-            {
-                Anim.CrossFade(IdleState, 0.1f, 0, 0);
-            }
-        }
-        else if (Input.GetKeyUp(KeyCode.D))
-        {
-            if(!Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A))
-            {
-                Anim.CrossFade(IdleState, 0.1f, 0, 0);
-            }
-        }
     }
     //---------------------------------------------------------------------
     // damage
@@ -601,11 +579,8 @@ public class GhostScript : MonoBehaviour
             Ctrl.enabled = true;
             
             // reset Dissolve
-            Dissolve_value = 1;
-            for(int i = 0; i < MeshR.Length; i++)
-            {
-                MeshR[i].material.SetFloat("_Dissolve", Dissolve_value);
-            }
+            SetDissolve(1f);
+            _moving = false;
             // reset animation
             Anim.CrossFade(IdleState, 0.1f, 0, 0);
         }

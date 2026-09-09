@@ -1,0 +1,57 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using System.Linq;
+using System.IO;
+internal class CommandScript : IRunCommand
+{
+ public void Execute(ExecutionResult result)
+ {
+  var original=GameObject.Find("Ghost");
+  var hidden=original.GetComponentsInChildren<Renderer>(true);
+  var states=hidden.Select(r=>r.enabled).ToArray();
+  var p=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/LumenGhost/LumenGhost_Visual.prefab");
+  var ghost=(GameObject)PrefabUtility.InstantiatePrefab(p);result.RegisterObjectCreation(ghost);
+  var cg=new GameObject("Lumen temporary review camera");result.RegisterObjectCreation(cg);
+  var vg=new GameObject("Lumen temporary review bloom");result.RegisterObjectCreation(vg);
+  RenderTexture rt=null;Texture2D image=null;VolumeProfile profile=null;
+  var previous=RenderTexture.active;
+  try{
+   for(int i=0;i<hidden.Length;i++){result.RegisterObjectModification(hidden[i]);hidden[i].enabled=false;}
+   ghost.transform.position=original.transform.position;
+   ghost.transform.rotation=Quaternion.identity;
+   var clip=AssetDatabase.LoadAllAssetsAtPath("Assets/Characters/LumenGhost/LumenGhost.fbx").OfType<AnimationClip>().First(c=>!c.name.StartsWith("__preview__"));
+   clip.SampleAnimation(ghost,0);
+   var camera=cg.AddComponent<Camera>();camera.orthographic=true;camera.orthographicSize=3.7f;
+   camera.transform.position=ghost.transform.position+new Vector3(0,10,0);
+   camera.transform.rotation=Quaternion.Euler(90,180,0);
+   camera.nearClipPlane=.05f;camera.farClipPlane=60;camera.allowHDR=true;
+   camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.025f,.04f,.065f);
+   var data=cg.AddComponent<UniversalAdditionalCameraData>();data.renderPostProcessing=true;data.antialiasing=AntialiasingMode.FastApproximateAntialiasing;
+   var volume=vg.AddComponent<Volume>();volume.isGlobal=true;volume.priority=100;
+   profile=ScriptableObject.CreateInstance<VolumeProfile>();volume.sharedProfile=profile;
+   var bloom=profile.Add<Bloom>(true);bloom.intensity.Override(.45f);bloom.threshold.Override(1);bloom.scatter.Override(.55f);
+   rt=new RenderTexture(1100,1100,24,RenderTextureFormat.ARGBHalf);camera.targetTexture=rt;
+   camera.Render();RenderTexture.active=rt;
+   image=new Texture2D(1100,1100,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,1100,1100),0,0);image.Apply();
+   File.WriteAllBytes("Art/LumenGhost/unity_board.png",image.EncodeToPNG());
+   result.Log("Saved actual Unity board render at Art/LumenGhost/unity_board.png");
+   // Isolated portrait with the same Unity materials.
+   ghost.transform.position=new Vector3(0,100,0);ghost.transform.rotation=Quaternion.identity;
+   camera.orthographicSize=.67f;
+   camera.transform.position=ghost.transform.position+new Vector3(1.2f,1.8f,2.8f);
+   camera.transform.LookAt(ghost.transform.position+new Vector3(0,.45f,0));
+   camera.Render();RenderTexture.active=rt;image.ReadPixels(new Rect(0,0,1100,1100),0,0);image.Apply();
+   File.WriteAllBytes("Art/LumenGhost/unity_portrait.png",image.EncodeToPNG());
+  }finally{
+   for(int i=0;i<hidden.Length;i++)if(hidden[i])hidden[i].enabled=states[i];
+   RenderTexture.active=previous;
+   if(cg)cg.GetComponent<Camera>().targetTexture=null;
+   if(rt){rt.Release();Object.DestroyImmediate(rt);}
+   if(image)Object.DestroyImmediate(image);
+   result.DestroyObject(ghost);result.DestroyObject(cg);result.DestroyObject(vg);
+   if(profile)Object.DestroyImmediate(profile);
+  }
+ }
+}
