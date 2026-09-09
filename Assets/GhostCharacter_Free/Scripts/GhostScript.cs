@@ -140,6 +140,12 @@ public class GhostScript : MonoBehaviour
     // spent on top of it, which is why the manager can ask.
     public bool ShieldActive => _shielded;
 
+    // True from the moment of death until the respawn tile is picked. Shield
+    // and teleport already no-op internally during this window - this lets
+    // their managers ask first, so a button pressed right as the player dies
+    // doesn't spend the charge on an ability that was never going to fire.
+    public bool IsDead => isDead;
+
     public void ActivateShield(float duration)
     {
         if (isDead) return;

@@ -50,6 +50,7 @@ public class ShieldManager : MonoBehaviour
     public void UseShield()
     {
         if (ShieldsOwned <= 0 || player == null) return;
+        if (player.IsDead) return;
         if (player.ShieldActive) return;
         if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
         if (LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive) return;

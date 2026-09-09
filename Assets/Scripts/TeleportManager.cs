@@ -55,6 +55,7 @@ public class TeleportManager : MonoBehaviour
     public void UseTeleport()
     {
         if (TeleportsOwned <= 0 || player == null) return;
+        if (player.IsDead) return;
         if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return;
         if (LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive) return;
 
