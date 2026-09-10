@@ -217,6 +217,7 @@ public class FriendlyGhostFlee : MonoBehaviour
         // Paid the moment it is caught rather than at the end of the vanish, so
         // the reward cannot be lost to a level change landing mid-animation.
         if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(catchReward);
+        PlaytestLog.FriendlyGhostCaught(catchReward);
 
         StartCoroutine(VanishRoutine());
     }

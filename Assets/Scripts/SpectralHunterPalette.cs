@@ -56,6 +56,11 @@ public class SpectralHunterPalette : MonoBehaviour
     // dropping it on a hunter never repaints it by surprise.
     [SerializeField, HideInInspector] private bool captured;
 
+    // Where the hunter starts, for a copy that stands with no chaser above it -
+    // the guide book's showcase. Left empty, a copy like that would count as a
+    // loose model and paint only the piece this component sits on.
+    [SerializeField, HideInInspector] private Transform paintRoot;
+
     private static readonly int BaseColour = Shader.PropertyToID("_BaseColor");
     private static readonly int LegacyColour = Shader.PropertyToID("_Color");
     private static readonly int Emission = Shader.PropertyToID("_EmissionColor");
@@ -118,6 +123,7 @@ public class SpectralHunterPalette : MonoBehaviour
     // above it - a loose model being dressed in isolation - it paints itself.
     private Transform HunterRoot()
     {
+        if (paintRoot != null) return paintRoot;
         Transform hunter = transform;
         for (Transform step = transform; step != null; step = step.parent)
             if (step.GetComponent<EnemyChaser>() != null) hunter = step;

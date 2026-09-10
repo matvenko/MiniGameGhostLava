@@ -55,6 +55,7 @@ public class ShieldManager : MonoBehaviour
 
         player.ActivateShield(shieldDuration);
         AudioManager.Play(GameSound.Shield);
+        PlaytestLog.AbilityUsed(AbilityBarUI.Ability.Shield);
 
         ShieldsOwned--;
         Save();

@@ -104,7 +104,53 @@ public static class RunProgress
         PlayerPrefs.Save();
     }
 
-    private static string Key(Difficulty mode, string field) => Prefix + mode + "." + field;
+    private static string Key(Difficulty mode, string field) => (Sandboxed ? SandboxPrefix : Prefix) + mode + "." + field;
+
+    // ---- the test bot's copy ------------------------------------------------
+    //
+    // A test run plays on a copy of the save, never on the save itself: the bot
+    // spends lives, coins and abilities the player earned, and none of that may
+    // be waiting for them when they come back to the game. While Sandboxed is
+    // on, every read and write above lands on the copy instead, so the managers
+    // that hand their counts here need to know nothing about it.
+
+    private const string SandboxPrefix = "playtest.progress.";
+    private static readonly string[] Fields = { "level", "coins", "shields", "freezes", "teleports", "traps", "lives", "started" };
+
+    public static bool Sandboxed { get; private set; }
+
+    // Copies the current mode's save over the copy and switches to it. Taken
+    // from the save rather than from the live managers, which is the same thing:
+    // every count is written down the moment it changes. A fresh copy is a new
+    // game instead - what a batch of test runs starts every run from.
+    public static void EnterSandbox(bool fresh = false)
+    {
+        Migrate();
+        Difficulty mode = DifficultySettings.Current;
+        Sandboxed = false;
+        var values = new int?[Fields.Length];
+        for (int i = 0; !fresh && i < Fields.Length; i++)
+        {
+            string real = Key(mode, Fields[i]);
+            values[i] = PlayerPrefs.HasKey(real) ? PlayerPrefs.GetInt(real) : (int?)null;
+        }
+
+        Sandboxed = true;
+        for (int i = 0; i < Fields.Length; i++)
+        {
+            string copy = Key(mode, Fields[i]);
+            if (values[i].HasValue) PlayerPrefs.SetInt(copy, values[i].Value);
+            else PlayerPrefs.DeleteKey(copy);
+        }
+        PlayerPrefs.Save();
+    }
+
+    // Back to the real save. The copy is left where it is - it is overwritten
+    // whole by the next EnterSandbox, and nothing reads it in between.
+    public static void LeaveSandbox() => Sandboxed = false;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetForNewSession() => Sandboxed = false;
 
     // A player who already has coins and abilities from before the save was
     // split in two keeps them, in the mode they were last playing - which is the

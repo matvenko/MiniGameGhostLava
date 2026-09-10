@@ -52,6 +52,7 @@ public class TrapManager : MonoBehaviour
         _placed.Add(go.GetComponent<Trap>());
 
         AudioManager.Play(GameSound.TrapPlace);
+        PlaytestLog.AbilityUsed(AbilityBarUI.Ability.Trap);
         TrapsOwned--;
         Save();
         Refresh();

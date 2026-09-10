@@ -48,6 +48,14 @@ public class PauseMenuController : MonoBehaviour
     // and the shop is opened over the top of this and closes back into it.
     public void Toggle()
     {
+        // With the guide book open, Escape - which is also Android's back button -
+        // goes back a page to this card rather than straight out to the board.
+        if (GuideBookUI.Instance != null && GuideBookUI.Instance.IsOpen)
+        {
+            GuideBookUI.Instance.Close();
+            return;
+        }
+
         bool gameOverActive = GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive;
         bool levelCompleteActive = LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive;
         bool shopOpen = ShopUIController.Instance != null && ShopUIController.Instance.IsOpen;
@@ -71,7 +79,7 @@ public class PauseMenuController : MonoBehaviour
         AudioManager.Play(GameSound.Click);
         _isOpen = false;
         if (pausePanel != null) pausePanel.SetActive(false);
-        Time.timeScale = 1f;
+        GameSpeed.Resume();
         Cover(false);
     }
 
@@ -89,6 +97,7 @@ public class PauseMenuController : MonoBehaviour
     private void OnMainMenu()
     {
         Time.timeScale = 1f;
+        TestModeSession.LeaveBoard();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 

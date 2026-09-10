@@ -71,6 +71,14 @@ public static class DifficultySettings
 
     public static bool IsNormal => Current == Difficulty.Normal;
 
+    // For the playtest batch runner: plays a mode without making it the
+    // player's remembered choice.
+    public static void OverrideForSession(Difficulty mode)
+    {
+        _current = mode;
+        _loaded = true;
+    }
+
     // Each rule takes the authored value and hands back what this mode should
     // use, so hard stays a pure pass-through and per-instance tuning in the
     // scene - every hunter has its own speed - keeps working.
