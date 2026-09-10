@@ -19,7 +19,6 @@ public class GameOverManager : MonoBehaviour
     [SerializeField] private float cameraZoomDuration = 1f;
     [SerializeField] private Vector3 closeUpOffset = new Vector3(0f, 2.5f, 0f);
     [SerializeField] private float invincibilityDuration = 1.5f;
-    [SerializeField] private float watchAdMockDuration = 2f;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     private GhostScript _ghost;
@@ -77,16 +76,11 @@ public class GameOverManager : MonoBehaviour
 
         yield return _ghost.PlayDeathAnimation();
 
-        // The wallet is only halved if the player actually gives up (see
-        // OnMainMenuClicked) - continuing via the ad keeps it whole, so the
-        // screen warns what quitting would cost rather than charging now.
-        if (subText != null)
-        {
-            int atStake = EconomyManager.Instance != null ? EconomyManager.Instance.CoinsLostOnDefeat : 0;
-            subText.text = atStake > 0
-                ? "Quit now and lose " + atStake + " coins"
-                : "Continue to keep playing";
-        }
+        // Nothing is taken away for quitting here - the run keeps its level, its
+        // coins and its abilities either way. The difference is only when the ad
+        // is watched: now, to carry straight on, or from the menu later to come
+        // back to the same board.
+        if (subText != null) subText.text = "Watch now to carry on, or later to come back";
 
         ShowRunSummary();
 
@@ -144,21 +138,18 @@ public class GameOverManager : MonoBehaviour
         _runSummary.text = standing.Length > 0 ? tally + "\n" + standing : tally;
     }
 
-    // Placeholder for a real rewarded-ad SDK: mocks the "watched to
-    // completion" callback after a short delay, then grants one life and
-    // resumes exactly like a normal respawn. Swap WatchAdMockSequence's
-    // body for the SDK's reward callback later - nothing else changes.
+    // The ad hands back exactly one life and play resumes like any other
+    // respawn. Whether there is really a video behind it belongs to RewardedAds,
+    // not here.
     private void OnWatchAdClicked()
     {
-        StartCoroutine(WatchAdMockSequence());
+        watchAdButton.interactable = false;
+        RewardedAds.Show(this, CarryOn, () => watchAdButton.interactable = true);
     }
 
-    private IEnumerator WatchAdMockSequence()
+    private void CarryOn()
     {
-        watchAdButton.interactable = false;
-        yield return new WaitForSeconds(watchAdMockDuration);
         watchAdButton.interactable = true;
-
         IsGameOverActive = false;
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (LivesManager.Instance != null) LivesManager.Instance.GrantExtraLife();
@@ -166,11 +157,14 @@ public class GameOverManager : MonoBehaviour
         RespawnPlayerAndEnemies();
     }
 
-    // Giving up is what actually costs the coins - the run is over here, so
-    // the wallet is halved on the way out.
+    // Giving up keeps everything the run earned - the level, the wallet and the
+    // abilities all stay in the save, waiting for a continue. What it costs is a
+    // life, the same as walking out through the pause menu, and by the time this
+    // screen is up the last one is already spent: coming back will cost an ad
+    // (see RunProgress.LeaveRun).
     private void OnMainMenuClicked()
     {
-        if (EconomyManager.Instance != null) EconomyManager.Instance.HalveOnDefeat();
+        RunProgress.LeaveRun();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainMenuSceneName);
     }

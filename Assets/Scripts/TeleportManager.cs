@@ -22,8 +22,6 @@ public class TeleportManager : MonoBehaviour
 {
     public static TeleportManager Instance { get; private set; }
 
-    private const string TeleportsOwnedKey = "teleports_owned";
-
     [SerializeField] private Button useButton;
     [SerializeField] private GhostScript player;
     [Tooltip("How many cells clear of every enemy a tile has to be to count as safe.")]
@@ -36,7 +34,7 @@ public class TeleportManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        TeleportsOwned = PlayerPrefs.GetInt(TeleportsOwnedKey, 0);
+        TeleportsOwned = RunProgress.Teleports;
         if (useButton != null) useButton.onClick.AddListener(UseTeleport);
     }
 
@@ -147,8 +145,7 @@ public class TeleportManager : MonoBehaviour
 
     private void Save()
     {
-        PlayerPrefs.SetInt(TeleportsOwnedKey, TeleportsOwned);
-        PlayerPrefs.Save();
+        RunProgress.Teleports = TeleportsOwned;
     }
 
     public void Refresh()

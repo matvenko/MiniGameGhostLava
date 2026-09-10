@@ -34,10 +34,14 @@ public static class RunStats
     // Called as the board is laid out for a new run - LevelManager.Awake, which
     // is the one moment that means "this is a fresh attempt" no matter whether
     // the player came from the menu, from quitting, or from a restart.
-    public static void Begin()
+    //
+    // The level the board is being laid out at comes with it, so a run resumed
+    // from a save (see RunProgress) is counted from the depth it actually starts
+    // at rather than being asked to climb back up to it.
+    public static void Begin(int startLevel = 1)
     {
         Active = true;
-        Level = 1;
+        Level = Mathf.Max(1, startLevel);
         Coins = 0;
         RunId = Guid.NewGuid().ToString("N");
         Mode = DifficultySettings.Current;

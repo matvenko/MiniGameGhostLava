@@ -39,6 +39,11 @@ public static class DifficultySettings
     // Lives a run starts with in normal mode, in place of the authored three.
     public const int NormalStartingLives = 4;
 
+    // Lives a fresh run starts with before the mode has its say. Here rather
+    // than on LivesManager because the menu has to work the same number out for
+    // a save that has never written one down (see RunProgress.Lives).
+    public const int AuthoredStartingLives = 3;
+
     private static bool _loaded;
     private static Difficulty _current;
 

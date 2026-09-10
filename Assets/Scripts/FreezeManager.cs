@@ -18,8 +18,6 @@ public class FreezeManager : MonoBehaviour
 {
     public static FreezeManager Instance { get; private set; }
 
-    private const string FreezesOwnedKey = "freezes_owned";
-
     [SerializeField] private Button useButton;
     [Tooltip("How long every enemy stays stopped, in seconds.")]
     [SerializeField] private float freezeDuration = 5f;
@@ -29,7 +27,7 @@ public class FreezeManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        FreezesOwned = PlayerPrefs.GetInt(FreezesOwnedKey, 0);
+        FreezesOwned = RunProgress.Freezes;
         if (useButton != null) useButton.onClick.AddListener(UseFreeze);
     }
 
@@ -60,8 +58,7 @@ public class FreezeManager : MonoBehaviour
 
     private void Save()
     {
-        PlayerPrefs.SetInt(FreezesOwnedKey, FreezesOwned);
-        PlayerPrefs.Save();
+        RunProgress.Freezes = FreezesOwned;
     }
 
     public void Refresh()

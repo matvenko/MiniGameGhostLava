@@ -3,13 +3,12 @@ using TMPro;
 
 // Persistent coin wallet, separate from RewardSystem's per-level "X / Y
 // collected" objective counter. Survives level transitions and individual
-// deaths via PlayerPrefs; only running out of lives touches it, and even
-// then it just halves (see HalveOnDefeat) rather than wiping.
+// deaths via RunProgress, which keeps one wallet per difficulty. Nothing takes
+// coins back off the player any more: running out of lives costs a life and an
+// ad to come back, not the wallet (see RunProgress.LeaveRun).
 public class EconomyManager : MonoBehaviour
 {
     public static EconomyManager Instance { get; private set; }
-
-    private const string WalletKey = "wallet_coins";
 
     [SerializeField] private TextMeshProUGUI walletText;
 
@@ -18,15 +17,14 @@ public class EconomyManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        TotalCoins = PlayerPrefs.GetInt(WalletKey, 0);
+        TotalCoins = RunProgress.Coins;
         UpdateText();
     }
 
     public void AddCoins(int amount)
     {
         TotalCoins += amount;
-        PlayerPrefs.SetInt(WalletKey, TotalCoins);
-        PlayerPrefs.Save();
+        RunProgress.Coins = TotalCoins;
         UpdateText();
     }
 
@@ -35,27 +33,9 @@ public class EconomyManager : MonoBehaviour
     {
         if (amount > TotalCoins) return false;
         TotalCoins -= amount;
-        PlayerPrefs.SetInt(WalletKey, TotalCoins);
-        PlayerPrefs.Save();
+        RunProgress.Coins = TotalCoins;
         UpdateText();
         return true;
-    }
-
-    // What abandoning the run would cost, so the Game Over screen can warn
-    // before the player commits to it.
-    public int CoinsLostOnDefeat => TotalCoins - Mathf.CeilToInt(TotalCoins / 2f);
-
-    // Abandoning the run costs half the wallet, rounded in the player's
-    // favour. Returns how many coins were taken.
-    public int HalveOnDefeat()
-    {
-        int kept = Mathf.CeilToInt(TotalCoins / 2f);
-        int lost = TotalCoins - kept;
-        TotalCoins = kept;
-        PlayerPrefs.SetInt(WalletKey, TotalCoins);
-        PlayerPrefs.Save();
-        UpdateText();
-        return lost;
     }
 
     private void UpdateText()

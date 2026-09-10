@@ -1,16 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Tracks the player's remaining ghost-icon lives for the current run and
-// drives the HUD row. Starts at 3 each run, or 4 in normal mode (see
-// DifficultySettings); the shop can top lives back up to HardCap (6) as a
-// consumable purchase (see AddLife) - never touches EconomyManager's
-// persistent coin wallet.
+// Tracks the lives the run has left and drives the HUD row. A fresh run starts
+// at 3, or 4 in normal mode (see DifficultySettings); the shop can top lives
+// back up to HardCap (6) as a consumable purchase (see AddLife) - never touches
+// the coin wallet.
+//
+// Lives are saved rather than reset per board (see RunProgress): leaving for the
+// main menu costs one and keeps the rest, so coming back finds the run exactly
+// as deep, as rich and as nearly out of lives as it was left. Running out is
+// what makes a continue cost a rewarded ad.
 public class LivesManager : MonoBehaviour
 {
     public static LivesManager Instance { get; private set; }
-    private const int AuthoredStartingLives = 3;
-    private static int StartingLives => DifficultySettings.StartingLives(AuthoredStartingLives);
     public const int HardCap = 6;
 
     [SerializeField] private Image[] ghostIcons; // HardCap slots; only the living ones are shown
@@ -29,9 +31,13 @@ public class LivesManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        CurrentLives = StartingLives;
+        CurrentLives = Mathf.Min(HardCap, RunProgress.Lives);
         UpdateIcons(-1);
     }
+
+    // Every change is written down as it happens rather than at the end of the
+    // run: nothing is riding on the game being told that the run is over.
+    private void Save() => RunProgress.Lives = CurrentLives;
 
     // Removes one life and refreshes the icons. Returns true when this was
     // the last life - the caller should trigger the full Game Over screen
@@ -39,8 +45,9 @@ public class LivesManager : MonoBehaviour
     public bool LoseLife()
     {
         CurrentLives = Mathf.Max(0, CurrentLives - 1);
-        // punch the icon that's now last in the row - the one that vanished
-        // is already gone, so the feedback lands on what's still there
+        Save();
+        // punch the icon that is now last in the row - the one that vanished
+        // is already gone, so the feedback lands on what is still there
         UpdateIcons(CurrentLives - 1);
         return CurrentLives <= 0;
     }
@@ -50,6 +57,7 @@ public class LivesManager : MonoBehaviour
     public void GrantExtraLife()
     {
         CurrentLives = 1;
+        Save();
         UpdateIcons(-1);
     }
 
@@ -60,13 +68,15 @@ public class LivesManager : MonoBehaviour
     {
         if (CurrentLives >= HardCap) return false;
         CurrentLives++;
+        Save();
         UpdateIcons(-1);
         return true;
     }
 
     public void ResetLives()
     {
-        CurrentLives = StartingLives;
+        CurrentLives = DifficultySettings.StartingLives(DifficultySettings.AuthoredStartingLives);
+        Save();
         UpdateIcons(-1);
     }
 

@@ -22,11 +22,11 @@ public class LoadingScreenController : MonoBehaviour
     private readonly Color orange = new Color(1f, .36f, .16f);
     private readonly Color mint = new Color(.63f, 1f, .86f);
     private AsyncOperation load;
-    private RectTransform safeRoot, hero, orbit, fill, playRect;
+    private RectTransform safeRoot, hero, orbit, fill, playRect, progressWell;
     private CanvasGroup entrance;
     private Image curtain;
-    private TextMeshProUGUI percent, caption, soundLabel, playLabel, modeHint;
-    private Button play, normalPill, hardPill;
+    private TextMeshProUGUI soundLabel, playLabel, playNote;
+    private Button play, fresh;
     private AudioSource music;
     private AudioClip readySound, startSound;
     private RectTransform[] embers;
@@ -44,6 +44,28 @@ public class LoadingScreenController : MonoBehaviour
     private Renderer[] portraitRenderers;
     private bool portraitFramed;
     private bool portraitLooksUp;
+
+    // Everything one of the two difficulty cards is made of. Held together so
+    // the pair is dressed by a single call and cannot drift apart (see Dress).
+    private class ModeChoice
+    {
+        public Button button;
+        public Image edge;
+        public IntroShape ghost;
+        public RectTransform badge;
+        public TextMeshProUGUI title, blurb;
+        public Color accent;
+    }
+
+    private ModeChoice normalChoice, hardChoice;
+    private RectTransform modeCard, startOverOverlay;
+    private TextMeshProUGUI startOverBody;
+    // Whether the gold button goes back to a saved run or starts a new one.
+    // Read off RunProgress every time the mode changes, because the two modes
+    // keep their saves apart and pressing HARD can change the answer.
+    private bool resuming;
+    // A rewarded video is playing, so nothing else may start the game under it.
+    private bool watching;
 
     void Start()
     {
@@ -99,12 +121,14 @@ public class LoadingScreenController : MonoBehaviour
         entrance = design.gameObject.AddComponent<CanvasGroup>();
         entrance.alpha = 0;
 
-        titleBlock = Rect(design, "Logo", new Vector2(0,330), new Vector2(1000,220));
-        var tag = Rounded(titleBlock, "Adventure badge", new Vector2(0,100), new Vector2(310,38), new Color(.25f,.18f,.49f));
-        Label(tag.transform,"A LITTLE BOO. A BIG ADVENTURE!",Vector2.zero,new Vector2(300,36),17,new Color(.88f,.81f,1));
-        LogoWord(titleBlock,"PAC",new Vector2(-195,9),new Vector2(350,160),new Color(1,.83f,.24f), -5);
-        LogoWord(titleBlock,"GHOST",new Vector2(143,-3),new Vector2(540,160),new Color(.98f,.92f,1), 3);
-        Label(titleBlock,"Ready, set... BOO!",new Vector2(0,-99),new Vector2(700,50),29,new Color(.86f,.81f,1));
+        titleBlock = Rect(design, "Logo", new Vector2(0,346), new Vector2(1100,250));
+        var tag = Rounded(titleBlock, "Adventure badge", new Vector2(0,112), new Vector2(350,40), new Color(.25f,.18f,.49f));
+        Label(tag.transform,"A LITTLE BOO. A BIG ADVENTURE!",Vector2.zero,new Vector2(340,38),18,new Color(.88f,.81f,1));
+        LogoWord(titleBlock,"MAZE",new Vector2(-152,6),new Vector2(440,164),new Color(1,.83f,.24f), -4);
+        LogoWord(titleBlock,"BOO",new Vector2(162,-2),new Vector2(330,164),new Color(.98f,.92f,1), 3);
+        Flicks(titleBlock,-470,1);
+        Flicks(titleBlock,470,-1);
+        Label(titleBlock,"Ready, set... BOO!",new Vector2(0,-80),new Vector2(700,50),29,new Color(.86f,.81f,1));
 
         heroBlock = Rect(design,"Your ghost's little world",new Vector2(0,5),new Vector2(1000,510));
         Rounded(heroBlock,"Halo",new Vector2(0,18),new Vector2(460,440),new Color(.58f,.40f,.88f,.18f));
@@ -130,7 +154,7 @@ public class LoadingScreenController : MonoBehaviour
         Coin(heroBlock,new Vector2(247,57),76);
         Coin(heroBlock,new Vector2(325,-92),49);
         Coin(heroBlock,new Vector2(-334,88),44);
-        var bubble=Rounded(heroBlock,"Hello bubble",new Vector2(215,163),new Vector2(135,70),new Color(1,.96f,.85f));
+        var bubble=Rounded(heroBlock,"Hello bubble",new Vector2(262,104),new Vector2(135,70),new Color(1,.96f,.85f));
         Label(bubble.transform,"Boo!",Vector2.zero,new Vector2(125,65),32,new Color(.40f,.20f,.6f));
         bubble.rectTransform.localRotation=Quaternion.Euler(0,0,9);
         hero = Rect(heroBlock, "Main character portrait", new Vector2(0,12), new Vector2(350,350));
@@ -140,34 +164,19 @@ public class LoadingScreenController : MonoBehaviour
         var rightGhost=Shape(heroBlock,"Little peach friend",new Vector2(423,-51),new Vector2(70,90),new Color(1,.63f,.68f),2);
         rightGhost.rectTransform.localRotation=Quaternion.Euler(0,0,16);
 
-        controls=Rect(design,"Play area",new Vector2(0,-320),new Vector2(620,260));
-        caption=Label(controls,"Getting the fun ready...",new Vector2(-52,112),new Vector2(385,36),20,new Color(.89f,.85f,1));
-        caption.alignment=TextAlignmentOptions.Left;
-        percent=Label(controls,"0%",new Vector2(214,112),new Vector2(80,36),20,new Color(1,.86f,.38f));
-        percent.alignment=TextAlignmentOptions.Right;
-        var track=Rounded(controls,"Progress border",new Vector2(0,74),new Vector2(520,22),new Color(.22f,.13f,.40f));
-        var inner=Rounded(track.transform,"Progress well",Vector2.zero,new Vector2(510,12),new Color(.31f,.20f,.49f));
-        fill=Rounded(inner.transform,"Progress",Vector2.zero,Vector2.zero,new Color(.55f,.96f,.72f)).rectTransform;
-        fill.anchorMin=Vector2.zero; fill.anchorMax=new Vector2(0,1); fill.offsetMin=fill.offsetMax=Vector2.zero;
-        // The mode is picked before the run starts and nowhere else, so it sits
-        // on the way to the play button rather than behind a settings screen.
-        normalPill=ModePill(controls,"NORMAL",-108,Difficulty.Normal);
-        hardPill=ModePill(controls,"HARD",108,Difficulty.Hard);
-        Rounded(controls,"Button shadow",new Vector2(0,-71),new Vector2(420,92),new Color(.55f,.24f,.09f));
-        play=MakeButton(controls,"Play",new Vector2(0,-60),new Vector2(420,94),new Color(1,.76f,.21f),BeginGame);
-        var buttonImage=play.GetComponent<Image>(); buttonImage.sprite=roundSprite; buttonImage.type=Image.Type.Sliced;
-        Rounded(play.transform,"Button shine",new Vector2(0,29),new Vector2(362,9),new Color(1,.91f,.48f));
-        playRect=play.GetComponent<RectTransform>();
-        playLabel=Label(play.transform,"LOADING...",new Vector2(0,-2),new Vector2(400,75),40,new Color(.35f,.20f,.15f));
-        play.interactable=false;
-        modeHint=Label(controls,"",new Vector2(0,-136),new Vector2(760,35),20,new Color(.83f,.77f,.95f));
-        RefreshModePills();
-        var sound=MakeButton(design,"Sound",Vector2.zero,new Vector2(160,46),new Color(.25f,.17f,.45f),ToggleSound);
+        controls=Rect(design,"Play area",new Vector2(0,-300),new Vector2(840,420));
+        BuildModeCard();
+        BuildStartButtons();
+        var sound=MakeButton(design,"Sound",Vector2.zero,new Vector2(212,52),new Color(.25f,.17f,.45f),ToggleSound);
         sound.GetComponent<Image>().sprite=roundSprite; sound.GetComponent<Image>().type=Image.Type.Sliced;
         sound.name="Sound control";
-        soundLabel=Label(sound.transform,"",Vector2.zero,new Vector2(150,40),17,new Color(.92f,.86f,1));
+        Shape(sound.transform,"Speaker",new Vector2(-70,1),new Vector2(36,32),new Color(.92f,.86f,1),11);
+        soundLabel=Label(sound.transform,"",new Vector2(18,0),new Vector2(150,40),18,new Color(.92f,.86f,1));
         RefreshSoundLabel();
         BuildRecords();
+        // Both cards are built after the record pill so they cover it: a card
+        // that can be pressed through is not really a question.
+        BuildStartOver();
         curtain=Box(root.transform,"Transition",Vector2.zero,Vector2.zero,new Color(ink.r,ink.g,ink.b,0));
         Stretch(curtain.rectTransform); curtain.raycastTarget=false;
         LayoutIntro();
@@ -179,28 +188,53 @@ public class LoadingScreenController : MonoBehaviour
         Vector2 size=portrait?new Vector2(900,1440):new Vector2(1600,1000);
         design.sizeDelta=size;
         design.localScale=Vector3.one*Mathf.Min(safeRoot.rect.width/size.x,safeRoot.rect.height/size.y);
-        titleBlock.anchoredPosition=new Vector2(0,portrait?490:330);
+        titleBlock.anchoredPosition=new Vector2(0,portrait?500:346);
         titleBlock.localScale=Vector3.one*(portrait?.95f:1);
-        heroBlock.anchoredPosition=new Vector2(0,portrait?40:5);
-        heroBlock.localScale=Vector3.one*(portrait?.90f:1.1f);
-        controls.anchoredPosition=new Vector2(0,portrait?-410:-320);
-        design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(0,-690):new Vector2(665,418);
-        // The record sits opposite the sound switch in landscape and stacks
-        // above it in portrait, so neither ever reaches into the artwork.
-        bestPill.anchoredPosition=portrait?new Vector2(0,-620):new Vector2(-640,418);
+        // The island is sized to stop just above the difficulty card rather than
+        // to fill whatever is left, so the two never grow into each other.
+        heroBlock.anchoredPosition=new Vector2(0,portrait?46:122);
+        heroBlock.localScale=Vector3.one*(portrait?.92f:.86f);
+        controls.anchoredPosition=new Vector2(0,portrait?-424:-300);
+        // The record and the sound switch are the two things that are not part
+        // of starting a run, so they sit out of the way in the top corners.
+        design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(232,664):new Vector2(636,432);
+        bestPill.anchoredPosition=portrait?new Vector2(-206,664):new Vector2(-626,432);
     }
 
-    // One of the two mode pills. Both are built from the same call so they can
-    // never drift apart in size or wording, and the pair is redrawn from what
-    // DifficultySettings says rather than from which one was last pressed.
-    private Button ModePill(Transform parent,string word,float x,Difficulty mode)
+    // The mode is picked before the run starts and nowhere else, so it sits on
+    // the way to the play button rather than behind a settings screen.
+    //
+    // It is also the switch between two separate saved games: each mode keeps
+    // its own level, wallet and abilities (see RunProgress), so pressing one of
+    // these changes what the gold button underneath is offering to do.
+    private void BuildModeCard()
     {
-        var pill=MakeButton(parent,word,new Vector2(x,22),new Vector2(200,54),Color.white,()=>ChooseMode(mode));
-        var image=pill.GetComponent<Image>();
-        image.sprite=roundSprite; image.type=Image.Type.Sliced;
-        var label=Label(pill.transform,word,new Vector2(0,-1),new Vector2(190,50),24,Color.white);
-        label.name="Mode word";
-        return pill;
+        modeCard=Rounded(controls,"Difficulty card",new Vector2(0,112),new Vector2(800,200),new Color(.19f,.13f,.38f,.92f)).rectTransform;
+        Box(modeCard,"Header rule left",new Vector2(-152,70),new Vector2(86,3),new Color(.47f,.39f,.72f));
+        Box(modeCard,"Header rule right",new Vector2(152,70),new Vector2(86,3),new Color(.47f,.39f,.72f));
+        Label(modeCard,"CHOOSE DIFFICULTY",new Vector2(0,70),new Vector2(280,34),19,new Color(.76f,.70f,.95f));
+        normalChoice=ModeCard("NORMAL","Easygoing adventure",-192,Difficulty.Normal,new Color(.42f,.87f,.56f));
+        hardChoice=ModeCard("HARD","Bigger challenge",192,Difficulty.Hard,new Color(.95f,.35f,.40f));
+    }
+
+    // One of the two cards. Both are built from the same call so they can never
+    // drift apart in size or wording, and which one looks chosen is redrawn from
+    // what DifficultySettings says rather than from which was last pressed.
+    private ModeChoice ModeCard(string word,string blurb,float x,Difficulty mode,Color accent)
+    {
+        var choice=new ModeChoice{accent=accent};
+        choice.edge=Rounded(modeCard,word+" edge",new Vector2(x,-28),new Vector2(374,122),accent);
+        choice.button=MakeButton(modeCard,word,new Vector2(x,-28),new Vector2(364,112),Color.white,()=>ChooseMode(mode));
+        var image=choice.button.GetComponent<Image>(); image.sprite=roundSprite; image.type=Image.Type.Sliced;
+        choice.ghost=Shape(choice.button.transform,"Mode ghost",new Vector2(-128,2),new Vector2(64,78),Color.white,mode==Difficulty.Normal?2:6);
+        choice.title=Label(choice.button.transform,word,new Vector2(22,18),new Vector2(210,46),30,Color.white);
+        choice.title.alignment=TextAlignmentOptions.Left;
+        choice.blurb=Label(choice.button.transform,blurb,new Vector2(22,-20),new Vector2(230,34),18,Color.white);
+        choice.blurb.alignment=TextAlignmentOptions.Left;
+        choice.badge=Rect(choice.button.transform,"Chosen badge",new Vector2(142,6),new Vector2(50,50));
+        Shape(choice.badge,"Badge disc",Vector2.zero,new Vector2(50,50),Color.white,0);
+        Shape(choice.badge,"Badge tick",new Vector2(0,1),new Vector2(30,30),accent,7);
+        return choice;
     }
 
     private void ChooseMode(Difficulty mode)
@@ -212,27 +246,80 @@ public class LoadingScreenController : MonoBehaviour
 
     private void RefreshModePills()
     {
-        if (normalPill==null||hardPill==null) return;
+        if (normalChoice==null||hardChoice==null) return;
         bool normal=DifficultySettings.IsNormal;
-        Dress(normalPill,normal);
-        Dress(hardPill,!normal);
-        modeHint.text=normal
-            ? "Normal: slower ghosts, kinder coins and a spare life - just right for little players."
-            : "Hard: full-speed ghosts and the coins as they fall. The grown-up chase!";
+        Dress(normalChoice,normal);
+        Dress(hardChoice,!normal);
+        RefreshStartButtons();
         RefreshRecords();
     }
 
-    private void Dress(Button pill,bool picked)
+    private void Dress(ModeChoice choice,bool picked)
     {
-        var image=pill.GetComponent<Image>();
-        image.color=picked?new Color(.55f,.96f,.72f):new Color(.25f,.17f,.45f);
-        var colors=pill.colors;
-        colors.highlightedColor=picked?new Color(.70f,1f,.82f):new Color(.34f,.24f,.58f);
-        colors.pressedColor=new Color(.80f,.80f,.80f);
-        pill.colors=colors;
-        var label=pill.transform.Find("Mode word").GetComponent<TextMeshProUGUI>();
-        label.color=picked?new Color(.10f,.24f,.18f):new Color(.86f,.81f,1f);
-        label.fontStyle=picked?FontStyles.Bold:FontStyles.Normal;
+        var image=choice.button.GetComponent<Image>();
+        image.color=picked?choice.accent:new Color(.25f,.17f,.45f);
+        // Unchosen, the card goes dark with the colour of that mode drawn round
+        // the outside: still there, but plainly not the one about to be played.
+        choice.edge.color=picked?Color.Lerp(choice.accent,Color.white,.4f):new Color(choice.accent.r,choice.accent.g,choice.accent.b,.6f);
+        choice.title.color=picked?new Color(.09f,.19f,.15f):new Color(.90f,.86f,1f);
+        choice.title.fontStyle=FontStyles.Bold;
+        choice.blurb.color=picked?new Color(.13f,.25f,.19f):new Color(.74f,.68f,.93f);
+        choice.ghost.color=picked?Color.white:choice.accent;
+        choice.badge.gameObject.SetActive(picked);
+    }
+
+    // The two ways into the board.
+    //
+    // Which is which depends on what the chosen mode has saved: a run to go back
+    // to puts CONTINUE on the gold button and NEW GAME underneath it, and
+    // nothing saved leaves only one thing worth pressing, so the gold button
+    // starts the new run and the second button is not offered at all.
+    private void BuildStartButtons()
+    {
+        Rounded(controls,"Button shadow",new Vector2(0,-46),new Vector2(480,110),new Color(.55f,.24f,.09f));
+        play=MakeButton(controls,"Play",new Vector2(0,-35),new Vector2(480,110),new Color(1,.76f,.21f),OnPlayPressed);
+        var buttonImage=play.GetComponent<Image>(); buttonImage.sprite=roundSprite; buttonImage.type=Image.Type.Sliced;
+        Rounded(play.transform,"Button shine",new Vector2(0,36),new Vector2(408,10),new Color(1,.91f,.48f));
+        playRect=play.GetComponent<RectTransform>();
+        Shape(play.transform,"Play arrow",new Vector2(-140,4),new Vector2(42,46),new Color(.35f,.20f,.15f),8);
+        playLabel=Label(play.transform,"LOADING...",new Vector2(28,13),new Vector2(320,56),38,new Color(.35f,.20f,.15f));
+        playNote=Label(play.transform,"",new Vector2(28,-24),new Vector2(340,34),20,new Color(.47f,.29f,.12f));
+        // The board is still loading for a second or two after the menu is up,
+        // so the gold button carries its own progress along the base rather than
+        // the layout keeping room for a bar that is gone almost immediately.
+        var well=Rounded(play.transform,"Progress well",new Vector2(0,-44),new Vector2(400,12),new Color(.70f,.47f,.09f,.6f));
+        progressWell=well.rectTransform;
+        fill=Rounded(well.transform,"Progress",Vector2.zero,Vector2.zero,new Color(1,.97f,.72f)).rectTransform;
+        fill.anchorMin=Vector2.zero; fill.anchorMax=new Vector2(0,1); fill.offsetMin=fill.offsetMax=Vector2.zero;
+        play.interactable=false;
+
+        fresh=MakeButton(controls,"New game",new Vector2(0,-152),new Vector2(444,74),new Color(.47f,.35f,.85f),OnNewGamePressed);
+        var freshImage=fresh.GetComponent<Image>(); freshImage.sprite=roundSprite; freshImage.type=Image.Type.Sliced;
+        Shape(fresh.transform,"Restart arrow",new Vector2(-112,2),new Vector2(38,38),new Color(.96f,.93f,1),9);
+        Label(fresh.transform,"NEW GAME",new Vector2(24,0),new Vector2(300,50),28,new Color(.98f,.96f,1));
+        RefreshModePills();
+    }
+
+    // Redrawn rather than remembered: switching mode, wiping a save, spending
+    // the last life and the end of loading all change what these two buttons
+    // should say, and all of them come through here.
+    private void RefreshStartButtons()
+    {
+        if (play==null) return;
+        Difficulty mode=DifficultySettings.Current;
+        resuming=RunProgress.Exists(mode);
+        if (ready)
+        {
+            playLabel.text=resuming?"CONTINUE":"NEW GAME";
+            string where="Level "+RunProgress.LevelOf(mode)+"  ·  "+(mode==Difficulty.Normal?"Normal":"Hard");
+            // Out of lives, the button still continues the same run - it just
+            // says out loud what it is about to cost.
+            playNote.text=resuming && RunProgress.LivesOf(mode)<=0
+                ? where+"  ·  ad for 1 life"
+                : where;
+        }
+        else playLabel.text="GETTING READY";
+        fresh.gameObject.SetActive(resuming && ready);
     }
 
     // The two ways a record reaches the menu: a pill that always says how far the
@@ -245,9 +332,10 @@ public class LoadingScreenController : MonoBehaviour
     // achievement (see Leaderboard).
     private void BuildRecords()
     {
-        bestPill=MakeButton(design,"Best runs",Vector2.zero,new Vector2(340,52),new Color(.25f,.17f,.45f),OpenRecords).GetComponent<RectTransform>();
+        bestPill=MakeButton(design,"Best runs",Vector2.zero,new Vector2(352,52),new Color(.25f,.17f,.45f),OpenRecords).GetComponent<RectTransform>();
         var pillImage=bestPill.GetComponent<Image>(); pillImage.sprite=roundSprite; pillImage.type=Image.Type.Sliced;
-        bestLabel=Label(bestPill,"",Vector2.zero,new Vector2(330,46),19,new Color(.92f,.86f,1));
+        Shape(bestPill,"Trophy",new Vector2(-136,1),new Vector2(30,32),new Color(1,.83f,.24f),10);
+        bestLabel=Label(bestPill,"",new Vector2(14,0),new Vector2(300,46),19,new Color(.92f,.86f,1));
 
         recordsOverlay=Rect(design,"Records",Vector2.zero,Vector2.zero);
         // Far wider than the design block so it still covers the screen on any
@@ -289,7 +377,7 @@ public class LoadingScreenController : MonoBehaviour
         if(bestLabel==null) return;
         string mode=DifficultySettings.IsNormal?"NORMAL":"HARD";
         var runs=Leaderboard.Top(DifficultySettings.Current);
-        bestLabel.text=runs.Count>0?mode+" BEST  ·  LEVEL "+runs[0].level:mode+" BEST  ·  NONE YET";
+        bestLabel.text=runs.Count>0?"BEST RUN  ·  LEVEL "+runs[0].level:"BEST RUN  ·  NONE YET";
         recordsTitle.text=mode+" RECORDS";
         recordsEmpty.text=runs.Count>0?"":"Nothing on this board yet.\nThe first run to pick up a coin lands here.";
         for(int i=0;i<recordPlace.Length;i++)
@@ -528,8 +616,8 @@ public class LoadingScreenController : MonoBehaviour
     {
         if (!Application.CanStreamedLevelBeLoaded(gameplaySceneName))
         {
-            caption.text = "SCENE UNAVAILABLE";
-            playLabel.text = "ADD LAVASCENE TO BUILD SETTINGS";
+            playLabel.text = "SCENE UNAVAILABLE";
+            playNote.text = "Add LavaScene to Build Settings";
             Debug.LogError("Intro cannot load scene: " + gameplaySceneName, this);
             yield break;
         }
@@ -542,16 +630,16 @@ public class LoadingScreenController : MonoBehaviour
             float target = Mathf.Min(load.progress / .9f, age / Mathf.Max(1, minimumDisplayTime));
             shownProgress = Mathf.MoveTowards(shownProgress, target, Time.unscaledDeltaTime * .65f);
             fill.anchorMax = new Vector2(shownProgress, 1);
-            percent.text = Mathf.RoundToInt(shownProgress * 100).ToString("00") + "%";
-            caption.text = shownProgress < .35f ? "Packing the adventure..." : shownProgress < .75f ? "Counting shiny coins..." : "Waking your little ghost...";
+            playNote.text = shownProgress < .35f ? "Packing the adventure..." : shownProgress < .75f ? "Counting shiny coins..." : "Waking your little ghost...";
             yield return null;
         }
         fill.anchorMax = Vector2.one;
-        percent.text = "100%";
-        caption.text = "Your adventure is ready!";
-        playLabel.text = "LET'S PLAY!";
         ready = true;
         play.interactable = true;
+        // The bar has nothing left to say, and what it was drawn across is the
+        // menu in the artwork - so it goes rather than sitting there full.
+        progressWell.gameObject.SetActive(false);
+        RefreshStartButtons();
         PlayEffect(readySound);
     }
 
@@ -585,9 +673,10 @@ public class LoadingScreenController : MonoBehaviour
 #elif ENABLE_LEGACY_INPUT_MANAGER
         pressed = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space);
 #endif
-        // Enter starts the run, but not from behind the record card - the key
-        // press belongs to whatever is actually in front of the player.
-        if (pressed && ready && !leaving && !recordsOverlay.gameObject.activeSelf) BeginGame();
+        // Enter starts the run, but not from behind a card - the key press
+        // belongs to whatever is actually in front of the player.
+        bool covered = recordsOverlay.gameObject.activeSelf || startOverOverlay.gameObject.activeSelf;
+        if (pressed && ready && !leaving && !watching && !covered) OnPlayPressed();
     }
 
     private void UpdateSafeArea()
@@ -602,12 +691,104 @@ public class LoadingScreenController : MonoBehaviour
         safeRoot.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
     }
 
+    // The gold button.
+    //
+    // A saved run with lives left is simply picked up where it was left: nothing
+    // is charged for coming back, because leaving already cost a life. A saved
+    // run with none left needs a life before it can be played at all, and a
+    // rewarded video is what buys it - one life, exactly, with the level, the
+    // wallet and the abilities untouched underneath.
+    private void OnPlayPressed()
+    {
+        if (!ready || leaving || watching) return;
+        if (!resuming || RunProgress.LivesOf(DifficultySettings.Current) > 0) { BeginGame(); return; }
+        watching = true;
+        play.interactable = false;
+        fresh.interactable = false;
+        playLabel.text = "LOADING AD";
+        playNote.text = "";
+        RewardedAds.Show(this, PaidContinue, AdUnavailable);
+    }
+
+    private void PaidContinue()
+    {
+        watching = false;
+        RunProgress.Lives = 1;
+        PlayEffect(readySound);
+        BeginGame();
+    }
+
+    // No ad to show, or one that was closed early. Nothing is granted and the
+    // menu goes back to how it was, saying why.
+    private void AdUnavailable()
+    {
+        watching = false;
+        play.interactable = true;
+        fresh.interactable = true;
+        RefreshStartButtons();
+        playNote.text = "No ad right now - try again in a moment";
+    }
+
+    // Starting over throws away a save that can be dozens of levels deep, so it
+    // is worth a question - and the question says what is about to be lost
+    // rather than asking whether the player is sure.
+    private void OnNewGamePressed()
+    {
+        if (!ready || leaving || watching) return;
+        Difficulty mode = DifficultySettings.Current;
+        startOverBody.text = "Your " + (mode == Difficulty.Normal ? "NORMAL" : "HARD") + " game is saved on level "
+            + RunProgress.LevelOf(mode) + ", with " + RunProgress.LivesOf(mode) + " lives, "
+            + RunProgress.CoinsOf(mode) + " coins and " + RunProgress.AbilitiesOwned(mode) + " abilities."
+            + "\n\nStarting a new game puts every bit of that back to the beginning.";
+        startOverOverlay.gameObject.SetActive(true);
+        PlayEffect(readySound);
+    }
+
+    private void ConfirmStartOver()
+    {
+        RunProgress.Reset(DifficultySettings.Current);
+        CloseStartOver();
+        RefreshModePills();
+        BeginGame();
+    }
+
+    private void CloseStartOver() => startOverOverlay.gameObject.SetActive(false);
+
+    private void BuildStartOver()
+    {
+        startOverOverlay = Rect(design, "Start over", Vector2.zero, Vector2.zero);
+        var dim = MakeButton(startOverOverlay, "Dim", Vector2.zero, new Vector2(3200, 2400), new Color(.02f, .02f, .06f, .74f), CloseStartOver);
+        dim.transition = Selectable.Transition.None;
+        var card = Rounded(startOverOverlay, "Start over card", Vector2.zero, new Vector2(700, 440), new Color(.16f, .11f, .33f));
+        card.raycastTarget = true;
+        Label(card.transform, "START A NEW GAME?", new Vector2(0, 152), new Vector2(640, 56), 34, new Color(1, .86f, .38f));
+        startOverBody = Label(card.transform, "", new Vector2(0, 30), new Vector2(600, 200), 22, new Color(.88f, .83f, 1));
+        var wipe = MakeButton(card.transform, "Wipe", new Vector2(-166, -152), new Vector2(300, 74), new Color(.90f, .31f, .36f), ConfirmStartOver);
+        var wipeImage = wipe.GetComponent<Image>(); wipeImage.sprite = roundSprite; wipeImage.type = Image.Type.Sliced;
+        Label(wipe.transform, "ERASE AND PLAY", new Vector2(0, -1), new Vector2(288, 66), 22, Color.white);
+        var keep = MakeButton(card.transform, "Keep", new Vector2(166, -152), new Vector2(300, 74), new Color(.30f, .22f, .52f), CloseStartOver);
+        var keepImage = keep.GetComponent<Image>(); keepImage.sprite = roundSprite; keepImage.type = Image.Type.Sliced;
+        Label(keep.transform, "KEEP MY RUN", new Vector2(0, -1), new Vector2(288, 66), 22, new Color(.92f, .87f, 1));
+        startOverOverlay.gameObject.SetActive(false);
+    }
+
+    // The three gold flicks either side of the name.
+    private void Flicks(Transform parent, float x, float direction)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            var flick = Rounded(parent, "Flick", new Vector2(x - direction * (i == 1 ? 22 : 0), 32 - i * 32), new Vector2(52, 12), new Color(1, .83f, .24f));
+            flick.rectTransform.localRotation = Quaternion.Euler(0, 0, direction * (22 - i * 22));
+        }
+    }
+
     private void BeginGame()
     {
         if (!ready || leaving || load == null) return;
         leaving = true;
         ready = false;
         play.interactable = false;
+        if (fresh != null) fresh.interactable = false;
         StartCoroutine(EnterGame());
     }
 
@@ -711,10 +892,14 @@ public class LoadingScreenController : MonoBehaviour
         img.raycastTarget = true;
         var button = img.gameObject.AddComponent<Button>();
         button.targetGraphic = img;
+        // These tints multiply the colour the button already carries rather than
+        // replacing it, so they stay neutral: a coloured highlight over a
+        // coloured button comes out muddy, and over a dark one comes out black.
         var colors = button.colors;
-        colors.highlightedColor = new Color(1, .88f, .73f);
-        colors.pressedColor = new Color(.75f, .75f, .75f);
-        colors.disabledColor = new Color(.45f, .45f, .45f, .7f);
+        colors.highlightedColor = Color.white;
+        colors.selectedColor = Color.white;
+        colors.pressedColor = new Color(.78f, .78f, .78f);
+        colors.disabledColor = new Color(.55f, .55f, .55f, .8f);
         button.colors = colors;
         button.onClick.AddListener(action);
         return button;
@@ -773,21 +958,126 @@ internal class IntroShape : MaskableGraphic
             {
                 if (i % 24 > 18) continue;
                 float a = i * Mathf.PI * 2 / 96, b = (i + 1) * Mathf.PI * 2 / 96;
-                Quad(vh, Point(a, .5f, r), Point(b, .5f, r), Point(b, .49f, r), Point(a, .49f, r), color);
+                Quad(vh, Point(a, .5f, r), Point(b, .5f, r), Point(b, .38f, r), Point(a, .38f, r), color);
             }
         }
-        else if (kind == 2)
+        else if (kind == 2 || kind == 6)
         {
-            // Rounded crown, scalloped hem and dark oval eyes.
-            Disk(vh, new Vector2(0, r.height * .10f), new Vector2(r.width * .45f, r.height * .38f), color);
-            Quad(vh, new Vector2(-r.width * .45f, -r.height * .28f), new Vector2(r.width * .45f, -r.height * .28f), new Vector2(r.width * .45f, r.height * .1f), new Vector2(-r.width * .45f, r.height * .1f), color);
-            for (int i = 0; i < 3; i++) Disk(vh, new Vector2((i - 1) * r.width * .3f, -r.height * .27f), new Vector2(r.width * .15f, r.height * .14f), color);
+            // The little ghost, either wide-eyed or - on the hard card - scowling.
+            GhostBody(vh, r, color);
             Color eye = new Color(.055f, .09f, .13f);
-            Disk(vh, new Vector2(-r.width * .16f, r.height * .1f), new Vector2(r.width * .055f, r.height * .08f), eye);
-            Disk(vh, new Vector2(r.width * .16f, r.height * .1f), new Vector2(r.width * .055f, r.height * .08f), eye);
+            float lift = kind == 6 ? .06f : .10f;
+            Disk(vh, new Vector2(-r.width * .16f, r.height * lift), new Vector2(r.width * .055f, r.height * .08f), eye);
+            Disk(vh, new Vector2(r.width * .16f, r.height * lift), new Vector2(r.width * .055f, r.height * .08f), eye);
+            if (kind == 6)
+            {
+                Stroke(vh, new Vector2(-r.width * .30f, r.height * .30f), new Vector2(-r.width * .06f, r.height * .17f), r.height * .07f, eye);
+                Stroke(vh, new Vector2(r.width * .30f, r.height * .30f), new Vector2(r.width * .06f, r.height * .17f), r.height * .07f, eye);
+            }
+        }
+        else if (kind == 7)
+        {
+            // Tick, for the difficulty card being played.
+            Stroke(vh, new Vector2(-r.width * .28f, r.height * .02f), new Vector2(-r.width * .07f, -r.height * .23f), r.height * .16f, color);
+            Stroke(vh, new Vector2(-r.width * .11f, -r.height * .21f), new Vector2(r.width * .30f, r.height * .25f), r.height * .16f, color);
+        }
+        else if (kind == 8)
+        {
+            int n = vh.currentVertCount;
+            vh.AddVert(new Vector2(-r.width * .32f, r.height * .45f), color, Vector2.zero);
+            vh.AddVert(new Vector2(r.width * .40f, 0), color, Vector2.zero);
+            vh.AddVert(new Vector2(-r.width * .32f, -r.height * .45f), color, Vector2.zero);
+            vh.AddTriangle(n, n + 1, n + 2);
+        }
+        else if (kind == 9)
+        {
+            // Circling arrow, for starting the whole thing again.
+            const float from = Mathf.PI * .38f, to = Mathf.PI * 1.98f;
+            Arc(vh, from, to, .355f, .11f, r, color);
+            int n = vh.currentVertCount;
+            vh.AddVert(Point(from - .80f, .355f, r), color, Vector2.zero);
+            vh.AddVert(Point(from + .04f, .58f, r), color, Vector2.zero);
+            vh.AddVert(Point(from + .04f, .13f, r), color, Vector2.zero);
+            vh.AddTriangle(n, n + 1, n + 2);
+        }
+        else if (kind == 10)
+        {
+            // A little cup, for the record the menu keeps in its top corner.
+            Quad(vh, new Vector2(-r.width * .25f, r.height * .42f), new Vector2(r.width * .25f, r.height * .42f), new Vector2(r.width * .15f, -r.height * .04f), new Vector2(-r.width * .15f, -r.height * .04f), color);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector2 pivot = new Vector2(side * r.width * .27f, r.height * .26f);
+                for (int i = 0; i < 12; i++)
+                {
+                    float a = -Mathf.PI * .5f + i * Mathf.PI / 12, b = -Mathf.PI * .5f + (i + 1) * Mathf.PI / 12;
+                    Vector2 outerA = new Vector2(pivot.x + side * Mathf.Cos(a) * r.width * .17f, pivot.y + Mathf.Sin(a) * r.height * .17f);
+                    Vector2 outerB = new Vector2(pivot.x + side * Mathf.Cos(b) * r.width * .17f, pivot.y + Mathf.Sin(b) * r.height * .17f);
+                    Vector2 innerA = new Vector2(pivot.x + side * Mathf.Cos(a) * r.width * .09f, pivot.y + Mathf.Sin(a) * r.height * .09f);
+                    Vector2 innerB = new Vector2(pivot.x + side * Mathf.Cos(b) * r.width * .09f, pivot.y + Mathf.Sin(b) * r.height * .09f);
+                    Quad(vh, outerA, outerB, innerB, innerA, color);
+                }
+            }
+            Quad(vh, new Vector2(-r.width * .07f, -r.height * .02f), new Vector2(r.width * .07f, -r.height * .02f), new Vector2(r.width * .07f, -r.height * .28f), new Vector2(-r.width * .07f, -r.height * .28f), color);
+            Quad(vh, new Vector2(-r.width * .26f, -r.height * .28f), new Vector2(r.width * .26f, -r.height * .28f), new Vector2(r.width * .26f, -r.height * .44f), new Vector2(-r.width * .26f, -r.height * .44f), color);
+        }
+        else if (kind == 11)
+        {
+            // Speaker box, cone and two waves, for the sound switch.
+            Quad(vh, new Vector2(-r.width * .44f, r.height * .17f), new Vector2(-r.width * .22f, r.height * .17f), new Vector2(-r.width * .22f, -r.height * .17f), new Vector2(-r.width * .44f, -r.height * .17f), color);
+            int n = vh.currentVertCount;
+            vh.AddVert(new Vector2(-r.width * .24f, r.height * .12f), color, Vector2.zero);
+            vh.AddVert(new Vector2(-r.width * .02f, r.height * .45f), color, Vector2.zero);
+            vh.AddVert(new Vector2(-r.width * .02f, -r.height * .45f), color, Vector2.zero);
+            vh.AddTriangle(n, n + 1, n + 2);
+            n = vh.currentVertCount;
+            vh.AddVert(new Vector2(-r.width * .24f, r.height * .12f), color, Vector2.zero);
+            vh.AddVert(new Vector2(-r.width * .02f, -r.height * .45f), color, Vector2.zero);
+            vh.AddVert(new Vector2(-r.width * .24f, -r.height * .12f), color, Vector2.zero);
+            vh.AddTriangle(n, n + 1, n + 2);
+            for (int wave = 0; wave < 2; wave++)
+            {
+                float radius = .18f + wave * .14f;
+                Vector2 origin = new Vector2(r.width * .04f, 0);
+                for (int i = 0; i < 16; i++)
+                {
+                    float a = -Mathf.PI * .32f + i * Mathf.PI * .64f / 16, b = -Mathf.PI * .32f + (i + 1) * Mathf.PI * .64f / 16;
+                    Quad(vh, origin + Point(a, radius, r), origin + Point(b, radius, r), origin + Point(b, radius - .045f, r), origin + Point(a, radius - .045f, r), color);
+                }
+            }
         }
         else Disk(vh, Vector2.zero, r.size * .5f, color);
     }
+
+    // The body every ghost on this screen is drawn from: rounded crown,
+    // straight sides and a scalloped hem. What goes on its face is the caller.
+    private static void GhostBody(VertexHelper vh, Rect r, Color color)
+    {
+        Disk(vh, new Vector2(0, r.height * .10f), new Vector2(r.width * .45f, r.height * .38f), color);
+        Quad(vh, new Vector2(-r.width * .45f, -r.height * .28f), new Vector2(r.width * .45f, -r.height * .28f), new Vector2(r.width * .45f, r.height * .1f), new Vector2(-r.width * .45f, r.height * .1f), color);
+        for (int i = 0; i < 3; i++) Disk(vh, new Vector2((i - 1) * r.width * .3f, -r.height * .27f), new Vector2(r.width * .15f, r.height * .14f), color);
+    }
+
+    // A band of the ellipse that fits the rect, from one angle to another.
+    private static void Arc(VertexHelper vh, float from, float to, float radius, float thickness, Rect r, Color color)
+    {
+        const int steps = 44;
+        for (int i = 0; i < steps; i++)
+        {
+            float a = from + (to - from) * i / steps, b = from + (to - from) * (i + 1) / steps;
+            Quad(vh, Point(a, radius + thickness * .5f, r), Point(b, radius + thickness * .5f, r),
+                     Point(b, radius - thickness * .5f, r), Point(a, radius - thickness * .5f, r), color);
+        }
+    }
+
+    // A straight bar from a to b, which is all a tick or a scowling brow
+    // needs to be at this size.
+    private static void Stroke(VertexHelper vh, Vector2 a, Vector2 b, float thickness, Color color)
+    {
+        Vector2 along = (b - a).normalized;
+        Vector2 across = new Vector2(-along.y, along.x) * (thickness * .5f);
+        Quad(vh, a + across, b + across, b - across, a - across, color);
+    }
+
     private static Vector2 Point(float a, float radius, Rect r) => new Vector2(Mathf.Cos(a) * r.width * radius, Mathf.Sin(a) * r.height * radius);
     private static void Disk(VertexHelper vh, Vector2 center, Vector2 radius, Color color)
     {

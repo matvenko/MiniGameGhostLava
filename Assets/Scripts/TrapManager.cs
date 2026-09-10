@@ -10,8 +10,6 @@ public class TrapManager : MonoBehaviour
 {
     public static TrapManager Instance { get; private set; }
 
-    private const string TrapsOwnedKey = "traps_owned";
-
     [SerializeField] private GameObject trapPrefab;
     [SerializeField] private Transform player;
     [SerializeField] private Button placeButton;
@@ -25,7 +23,7 @@ public class TrapManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        TrapsOwned = PlayerPrefs.GetInt(TrapsOwnedKey, 0);
+        TrapsOwned = RunProgress.Traps;
         if (placeButton != null) placeButton.onClick.AddListener(PlaceTrap);
     }
 
@@ -91,8 +89,7 @@ public class TrapManager : MonoBehaviour
 
     private void Save()
     {
-        PlayerPrefs.SetInt(TrapsOwnedKey, TrapsOwned);
-        PlayerPrefs.Save();
+        RunProgress.Traps = TrapsOwned;
     }
 
     public void Refresh()

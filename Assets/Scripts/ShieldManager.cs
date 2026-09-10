@@ -19,8 +19,6 @@ public class ShieldManager : MonoBehaviour
 {
     public static ShieldManager Instance { get; private set; }
 
-    private const string ShieldsOwnedKey = "shields_owned";
-
     [SerializeField] private Button useButton;
     [SerializeField] private GhostScript player;
     [Tooltip("How long the character stays untouchable, in seconds.")]
@@ -31,7 +29,7 @@ public class ShieldManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        ShieldsOwned = PlayerPrefs.GetInt(ShieldsOwnedKey, 0);
+        ShieldsOwned = RunProgress.Shields;
         if (useButton != null) useButton.onClick.AddListener(UseShield);
     }
 
@@ -65,8 +63,7 @@ public class ShieldManager : MonoBehaviour
 
     private void Save()
     {
-        PlayerPrefs.SetInt(ShieldsOwnedKey, ShieldsOwned);
-        PlayerPrefs.Save();
+        RunProgress.Shields = ShieldsOwned;
     }
 
     public void Refresh()

@@ -67,6 +67,11 @@ public class LevelManager : MonoBehaviour
         Instance = this;
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.onClick.AddListener(OnNextLevelClicked);
+        // Where the last run got to on this difficulty. NEW GAME on the menu is
+        // what puts it back to one (see RunProgress); anything else - a continue,
+        // a restart, giving up on a board - carries on from the level reached.
+        _level = RunProgress.Level;
+        RunProgress.Started = true;
         UpdateLevelText();
 
         // The board is built here rather than in Start because the rest of the
@@ -78,7 +83,7 @@ public class LevelManager : MonoBehaviour
         // A board being laid out from Awake is a run starting: whatever brought
         // the player here - the menu, a restart, giving up on the last one -
         // this is attempt number one of a new one.
-        RunStats.Begin();
+        RunStats.Begin(_level);
 
         CaptureBoardMetrics();
         ApplyLevelLayout();
@@ -125,6 +130,7 @@ public class LevelManager : MonoBehaviour
         Time.timeScale = 1f;
 
         _level++;
+        RunProgress.Level = _level;
         UpdateLevelText();
         RunStats.ReachedLevel(_level);
 

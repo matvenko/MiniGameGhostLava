@@ -83,8 +83,11 @@ public class PauseMenuController : MonoBehaviour
         if (SpawnCountdownController.Instance != null) SpawnCountdownController.Instance.SetCovered(covered);
     }
 
+    // Walking away keeps the level, the wallet and the abilities, and costs a
+    // life for the privilege (see RunProgress.LeaveRun).
     private void OnMainMenu()
     {
+        RunProgress.LeaveRun();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainMenuSceneName);
     }
