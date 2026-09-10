@@ -23,6 +23,10 @@ public class EnemyPathGrid
 
     public IReadOnlyList<Vector3> AllNodes => _nodes;
 
+    // Goes up every time the grid is rebuilt, so anything that keeps its own
+    // indexed copy of it - the test bot's planner - can tell its copy is stale.
+    public int Version { get; private set; }
+
     // This is a plain static singleton, so it outlives scene loads - after a
     // restart the old level's grid would otherwise still be here, marked
     // built, describing tiles that are now lava. Tracking which scene
@@ -72,6 +76,7 @@ public class EnemyPathGrid
         }
 
         _built = true;
+        Version++;
     }
 
     private void TryLink(Vector3 from, Vector2Int neighborCell)

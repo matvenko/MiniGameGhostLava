@@ -51,7 +51,9 @@ public class ShopManager : MonoBehaviour
     public bool BuyExtraLife()
     {
         if (!CanBuyExtraLife()) return false;
-        if (!EconomyManager.Instance.SpendCoins(GetExtraLifeCost())) return false;
+        int cost = GetExtraLifeCost();
+        if (!EconomyManager.Instance.SpendCoins(cost)) return false;
+        PlaytestLog.Purchased("life", cost);
 
         return LivesManager.Instance != null && LivesManager.Instance.AddLife();
     }
@@ -73,6 +75,7 @@ public class ShopManager : MonoBehaviour
         if (!CanBuyTrap()) return false;
         if (TrapManager.Instance == null) return false;
         if (!EconomyManager.Instance.SpendCoins(TrapCost)) return false;
+        PlaytestLog.Purchased("trap", TrapCost);
 
         TrapManager.Instance.AddTraps(TrapsPerPurchase);
         return true;
@@ -96,6 +99,7 @@ public class ShopManager : MonoBehaviour
         if (!CanBuyFreeze()) return false;
         if (FreezeManager.Instance == null) return false;
         if (!EconomyManager.Instance.SpendCoins(FreezeCost)) return false;
+        PlaytestLog.Purchased("freeze", FreezeCost);
 
         FreezeManager.Instance.AddFreezes(FreezesPerPurchase);
         return true;
@@ -119,6 +123,7 @@ public class ShopManager : MonoBehaviour
         if (!CanBuyTeleport()) return false;
         if (TeleportManager.Instance == null) return false;
         if (!EconomyManager.Instance.SpendCoins(TeleportCost)) return false;
+        PlaytestLog.Purchased("teleport", TeleportCost);
 
         TeleportManager.Instance.AddTeleports(TeleportsPerPurchase);
         return true;
@@ -142,6 +147,7 @@ public class ShopManager : MonoBehaviour
         if (!CanBuyShield()) return false;
         if (ShieldManager.Instance == null) return false;
         if (!EconomyManager.Instance.SpendCoins(ShieldCost)) return false;
+        PlaytestLog.Purchased("shield", ShieldCost);
 
         ShieldManager.Instance.AddShields(ShieldsPerPurchase);
         return true;

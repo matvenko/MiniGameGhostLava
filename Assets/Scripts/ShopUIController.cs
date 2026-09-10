@@ -90,7 +90,7 @@ public class ShopUIController : MonoBehaviour
         }
         else
         {
-            Time.timeScale = 1f;
+            GameSpeed.Resume();
         }
         SetHudVisible(true);
         // Closing back into the pause menu is not being back on the board: the

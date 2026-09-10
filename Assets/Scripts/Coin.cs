@@ -89,7 +89,9 @@ public class Coin : MonoBehaviour
         }
         RewardSystem.CollectCoin();
         RunStats.CoinCollected();
-        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(RollWalletValue());
+        int value = RollWalletValue();
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddCoins(value);
+        PlaytestLog.CoinCollected(value);
         StartCoroutine(PickupAnimation());
     }
 

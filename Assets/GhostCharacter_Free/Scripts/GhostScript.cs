@@ -85,7 +85,7 @@ public class GhostScript : MonoBehaviour
             StepBackOntoSolidGround();
             return;
         }
-        Die();
+        Die("lava");
     }
 
     // The nearest tile the enemies are allowed to walk on, which is the same
@@ -110,16 +110,18 @@ public class GhostScript : MonoBehaviour
         Ctrl.enabled = true;
     }
 
-    // called by an enemy's catch trigger - same fatal sequence as lava
-    public void CaughtByEnemy()
+    // called by an enemy's catch trigger - same fatal sequence as lava. Which
+    // kind of hunter it was only matters to the playtest report.
+    public void CaughtByEnemy(string by = "enemy")
     {
-        Die();
+        Die(by);
     }
 
-    private void Die()
+    private void Die(string cause)
     {
         if (isDead || Invulnerable) return;
         isDead = true;
+        PlaytestLog.Died(cause);
         _caughtAt = Time.time;
         if (_hasCaughtAnimation) Anim.CrossFadeInFixedTime(CaughtState, .06f, 0, 0);
         if (_wardenMotion != null) _wardenMotion.SetIncapacitated(true);
@@ -525,6 +527,13 @@ public class GhostScript : MonoBehaviour
         // "Horizontal"/"Vertical") so this never double-counts keyboard input
         x -= Input.GetAxis("GamepadHorizontal");
         z -= Input.GetAxis("GamepadVertical");
+
+        // The test bot, while it has the board, is the only hand on the stick.
+        if (PlaytestBot.TrySteer(out Vector3 steer))
+        {
+            x = steer.x;
+            z = steer.z;
+        }
 
         // Held input resumes after the countdown, including joystick/gamepad.
         bool moving = x != 0f || z != 0f;

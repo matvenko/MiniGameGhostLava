@@ -522,7 +522,24 @@ public class EnemyChaser : MonoBehaviour
         if (IsStunned) return;
         if (!other.CompareTag("Ghost")) return;
         var ghost = other.GetComponentInParent<GhostScript>();
-        if (ghost != null) ghost.CaughtByEnemy();
+        if (ghost != null) ghost.CaughtByEnemy(Kind);
+    }
+
+    // Which kind of hunter this is, for the playtest report: the pool names its
+    // copies after the template with a number on the end, and all of them are
+    // the same kind.
+    private string _kind;
+
+    public string Kind
+    {
+        get
+        {
+            if (_kind != null) return _kind;
+            string n = gameObject.name;
+            int space = n.LastIndexOf(' ');
+            if (space > 0 && int.TryParse(n.Substring(space + 1), out _)) n = n.Substring(0, space);
+            return _kind = n;
+        }
     }
 
     private void RecalculatePath(Vector3 start, Vector3 goal)

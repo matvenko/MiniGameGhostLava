@@ -76,6 +76,10 @@ public class GameOverManager : MonoBehaviour
 
         yield return _ghost.PlayDeathAnimation();
 
+        // A test run ends here: no ad, no carrying on - the report card takes the
+        // screen instead of this panel.
+        if (TestModeSession.OnOutOfLives()) yield break;
+
         // Nothing is taken away for quitting here - the run keeps its level, its
         // coins and its abilities either way. The difference is only when the ad
         // is watched: now, to carry straight on, or from the menu later to come
@@ -164,6 +168,7 @@ public class GameOverManager : MonoBehaviour
     private void OnMainMenuClicked()
     {
         Time.timeScale = 1f;
+        TestModeSession.LeaveBoard();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 

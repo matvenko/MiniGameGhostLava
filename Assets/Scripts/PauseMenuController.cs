@@ -79,7 +79,7 @@ public class PauseMenuController : MonoBehaviour
         AudioManager.Play(GameSound.Click);
         _isOpen = false;
         if (pausePanel != null) pausePanel.SetActive(false);
-        Time.timeScale = 1f;
+        GameSpeed.Resume();
         Cover(false);
     }
 
@@ -97,6 +97,7 @@ public class PauseMenuController : MonoBehaviour
     private void OnMainMenu()
     {
         Time.timeScale = 1f;
+        TestModeSession.LeaveBoard();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 

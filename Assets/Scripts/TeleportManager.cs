@@ -61,6 +61,7 @@ public class TeleportManager : MonoBehaviour
 
         player.TeleportTo(destination);
         AudioManager.Play(GameSound.Teleport);
+        PlaytestLog.AbilityUsed(AbilityBarUI.Ability.Teleport);
 
         TeleportsOwned--;
         Save();

@@ -68,9 +68,13 @@ public static class RunStats
     // A run that has not left the first tile has nothing to say, and writing it
     // down would fill the table with rows for every time the game was opened and
     // put down again.
+    //
+    // Nor does a run the test bot is playing on a copy of the save: it is not the
+    // player's run, and the table is theirs.
     private static void Record()
     {
         if (Level <= 1 && Coins <= 0) return;
+        if (RunProgress.Sandboxed) return;
         Leaderboard.Submit(Mode, new RunRecord
         {
             runId = RunId,

@@ -66,7 +66,7 @@ public class LevelManager : MonoBehaviour
     {
         Instance = this;
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
-        if (nextLevelButton != null) nextLevelButton.onClick.AddListener(OnNextLevelClicked);
+        if (nextLevelButton != null) nextLevelButton.onClick.AddListener(NextLevel);
         // Where the last run got to on this difficulty. NEW GAME on the menu is
         // what puts it back to one (see RunProgress); anything else - a continue,
         // a restart, giving up on a board - carries on from the level reached.
@@ -119,15 +119,20 @@ public class LevelManager : MonoBehaviour
         if (IsLevelCompleteActive) return;
         AudioManager.Play(GameSound.Victory);
         IsLevelCompleteActive = true;
+        PlaytestLog.LevelCompleted(_level);
         if (levelCompletePanel != null) levelCompletePanel.SetActive(true);
         Time.timeScale = 0f;
     }
 
-    private void OnNextLevelClicked()
+    // The level complete card's Next button. Public so the test bot can press it
+    // the same way a player does, rather than setting the next board up by some
+    // other route that could drift away from this one.
+    public void NextLevel()
     {
+        if (!IsLevelCompleteActive) return;
         IsLevelCompleteActive = false;
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
-        Time.timeScale = 1f;
+        GameSpeed.Resume();
 
         _level++;
         RunProgress.Level = _level;
@@ -140,6 +145,7 @@ public class LevelManager : MonoBehaviour
 
         int spawned = SpawnCoins(CoinsForLevel(_level));
         if (RewardSystem.Instance != null) RewardSystem.Instance.ResetForNewLevel(spawned);
+        PlaytestLog.LevelStarted(_level, spawned);
 
         if (enemySpawnManager != null) enemySpawnManager.SetLevel(_level);
 
