@@ -56,6 +56,13 @@ Shader "Custom/StylizedWater_URP"
         _AmbientColor ("Ambient", Color) = (0.55, 0.58, 0.60, 1)
         _SunStrength ("Sun Strength", Range(0,2)) = 0.55
         _LightWrap ("Light Wrap", Range(0,1)) = 0.6
+        _ShadowStrength ("Shadow influence", Range(0,1)) = 1
+        _GlintStrength ("Moving reflections", Range(0,1)) = 0
+        _ShoreMap ("Land cells", 2D) = "black" {}
+        _MeadowShore ("Use meadow banks",Float) = 0
+        _BoardRect ("Board bounds", Vector) = (0,0,1,1)
+        _ShoreEnabled ("Shoreline enabled", Float) = 0
+        _ShoreColor ("Shallow shoreline", Color) = (.16,.65,.59,1)
     }
 
     SubShader
@@ -91,6 +98,8 @@ Shader "Custom/StylizedWater_URP"
             float4 _AmbientColor;
             float  _SunStrength;
             float  _LightWrap;
+            float _ShadowStrength,_GlintStrength,_ShoreEnabled,_MeadowShore;
+            float4 _BoardRect,_ShoreMap_ST,_ShoreColor;
         CBUFFER_END
         ENDHLSL
 
@@ -109,6 +118,25 @@ Shader "Custom/StylizedWater_URP"
             #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            TEXTURE2D(_ShoreMap); SAMPLER(sampler_ShoreMap);
+
+            float Land(float2 cell)
+            {
+                if(any(cell<0)||any(cell>=_BoardRect.zw)) return 1;
+                return SAMPLE_TEXTURE2D_LOD(_ShoreMap,sampler_ShoreMap,(cell+.5)/_BoardRect.zw,0).r;
+            }
+
+            float ShoreDistance(float2 xz)
+            {
+                if(_ShoreEnabled<.5)return 2;
+                float2 grid=xz-_BoardRect.xy,cell=floor(grid),local=frac(grid);
+                float d=2;
+                if(Land(cell+float2(-1,0))>.5)d=min(d,local.x);
+                if(Land(cell+float2(1,0))>.5)d=min(d,1-local.x);
+                if(Land(cell+float2(0,-1))>.5)d=min(d,local.y);
+                if(Land(cell+float2(0,1))>.5)d=min(d,1-local.y);
+                return d;
+            }
 
             struct Attributes
             {
@@ -248,6 +276,8 @@ Shader "Custom/StylizedWater_URP"
 
                 half3 col = lerp(_DeepColor.rgb, _LightColor.rgb, tone);
                 col = lerp(col, _CreaseColor.rgb, crease * _CreaseStrength);
+                float shore=ShoreDistance(xz);
+                col=lerp(col,_ShoreColor.rgb,(1-smoothstep(.02,.22,shore))*.4);
 
                 // Only some creases catch the light, otherwise every wall in the
                 // field glows and the surface turns into a net. The detail
@@ -269,7 +299,15 @@ Shader "Custom/StylizedWater_URP"
                 // directional term is the sun's height. Wrapped, so a low sun
                 // dims the pool instead of switching it off.
                 half sun = saturate((mainLight.direction.y + _LightWrap) / (1.0h + _LightWrap));
-                col *= mainLight.color * sun * _SunStrength * atten + _AmbientColor.rgb;
+                col *= mainLight.color * sun * _SunStrength * lerp(1,atten,_ShadowStrength) + _AmbientColor.rgb;
+                float2 slope=float2(cos(xz.x*2.8+xz.y*.9+t*.9),sin(xz.y*3.1-xz.x*.7-t*1.1))*.13;
+                half3 waveNormal=normalize(half3(slope.x,1,slope.y));
+                half3 view=GetWorldSpaceNormalizeViewDir(IN.positionWS);
+                float glint=pow(saturate(dot(waveNormal,normalize(mainLight.direction+view))),128);
+                col+=_SparkleColor.rgb*glint*_GlintStrength;
+                float foam=(1-smoothstep(.004,.028+sin(xz.x*4+xz.y*3+t*1.4)*.008,shore));
+                float foamBreakup=smoothstep(.22,.7,ValueNoise(xz*4+t*.15));
+                col=lerp(col,_SparkleColor.rgb,foam*.35*foamBreakup*_ShoreEnabled);
 
                 col = MixFog(col, IN.fogFactor);
                 return half4(col, 1);

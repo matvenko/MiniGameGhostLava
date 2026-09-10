@@ -31,6 +31,8 @@ public class LiquidSurface : MonoBehaviour
     [SerializeField] private Material liquidMaterial;
     [Tooltip("Optional opaque material for the pool bottom, seen through the liquid. Leave empty to skip the bed.")]
     [SerializeField] private Material bedMaterial;
+    [Tooltip("Low grass used only with shoreline-aware meadow water.")]
+    [SerializeField] private Material bankMaterial;
 
     [Header("Layout")]
     [Tooltip("Fine-tune the surface height relative to the top of the lava tiles.")]
@@ -48,6 +50,8 @@ public class LiquidSurface : MonoBehaviour
 
     private Transform _surface;
     private Transform _bed;
+    private Texture2D _shoreMask;
+    private Transform _banks;
 
     // Cached so teardown never has to call GameObject.Find: during scene unload
     // and domain reload the parents are already deactivated and Find asserts.
@@ -68,10 +72,13 @@ public class LiquidSurface : MonoBehaviour
 
     void OnDisable()
     {
+        ReleaseShoreMask();
         DestroyPlane(_surface);
         DestroyPlane(_bed);
+        DestroyPlane(_banks);
         _surface = null;
         _bed = null;
+        _banks = null;
         // Cached lookups only - resolving here would hit GameObject.Find, which
         // asserts once the scene starts unloading or a domain reload begins.
         RestoreCachedTiles();
@@ -149,6 +156,8 @@ public class LiquidSurface : MonoBehaviour
         // now, or a level change renders two transparent surfaces on top of
         // each other for a frame.
         plane.gameObject.SetActive(false);
+        var mesh = plane.GetComponent<MeshFilter>().sharedMesh;
+        if (mesh != null) { if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh); }
         if (Application.isPlaying) Destroy(plane.gameObject);
         else DestroyImmediate(plane.gameObject);
     }
@@ -183,6 +192,9 @@ public class LiquidSurface : MonoBehaviour
         // the editor is not playing - where Destroy() is an error.
         DestroyPlane(_surface);
         DestroyPlane(_bed);
+        ReleaseShoreMask();
+        DestroyPlane(_banks);
+        _banks = null;
 
         if (!TryGetFootprint(out Bounds footprint, out float lavaTopY)) return;
 
@@ -194,6 +206,8 @@ public class LiquidSurface : MonoBehaviour
         {
             _surface = CreatePlane("LiquidSurface", footprint.center, surfaceY, sizeX, sizeZ,
                 liquidMaterial, Mathf.Max(1, Mathf.RoundToInt(verticesPerUnit)));
+            if (liquidMaterial.HasProperty("_MeadowShore") && liquidMaterial.GetFloat("_MeadowShore") > .5f)
+                BuildShoreMask(footprint);
         }
 
         if (bedMaterial != null)
@@ -202,6 +216,43 @@ public class LiquidSurface : MonoBehaviour
             // is hidden behind the solid blocks anyway.
             _bed = CreatePlane("LiquidBed", footprint.center, surfaceY - bedDepth, sizeX, sizeZ,
                 bedMaterial, 1);
+        }
+    }
+
+    void ReleaseShoreMask()
+    {
+        if (_shoreMask == null) return;
+        if (Application.isPlaying) Destroy(_shoreMask); else DestroyImmediate(_shoreMask);
+        _shoreMask = null;
+    }
+
+    // One texel per gameplay cell. The water shader tests adjacent land cells
+    // to shade actual shorelines, never the artificial seams between water tiles.
+    void BuildShoreMask(Bounds footprint)
+    {
+        int width=Mathf.Max(1,Mathf.RoundToInt(footprint.size.x));
+        int height=Mathf.Max(1,Mathf.RoundToInt(footprint.size.z));
+        var pixels=new Color[width*height];
+        ResolveParents();
+        if(_blocksParent!=null)foreach(Transform tile in _blocksParent)
+        {
+            int x=Mathf.FloorToInt(tile.position.x-footprint.min.x),z=Mathf.FloorToInt(tile.position.z-footprint.min.z);
+            if(x>=0&&x<width&&z>=0&&z<height)pixels[z*width+x]=Color.white;
+        }
+        _shoreMask=new Texture2D(width,height,TextureFormat.RGBA32,false,true){name="Board shoreline",filterMode=FilterMode.Point,wrapMode=TextureWrapMode.Clamp,hideFlags=HideFlags.DontSave};
+        _shoreMask.SetPixels(pixels);_shoreMask.Apply(false,true);
+        var properties=new MaterialPropertyBlock();
+        properties.SetTexture("_ShoreMap",_shoreMask);
+        properties.SetVector("_BoardRect",new Vector4(footprint.min.x,footprint.min.z,width,height));
+        properties.SetFloat("_ShoreEnabled",1);
+        _surface.GetComponent<MeshRenderer>().SetPropertyBlock(properties);
+        if(bankMaterial!=null && _blocksParent!=null && _blocksParent.childCount>0)
+        {
+            var go=new GameObject("Meadow bank grass",typeof(MeshFilter),typeof(MeshRenderer));
+            go.hideFlags=HideFlags.DontSave;go.transform.SetParent(transform,false);go.transform.position=Vector3.zero;
+            go.GetComponent<MeshFilter>().sharedMesh=MeadowBankMesh.Build(pixels,width,height,new Vector2(footprint.min.x,footprint.min.z),TopOf(_blocksParent.GetChild(0))+.003f);
+            var renderer=go.GetComponent<MeshRenderer>();renderer.sharedMaterial=bankMaterial;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+            _banks=go.transform;
         }
     }
 

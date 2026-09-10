@@ -1,0 +1,465 @@
+--------- beginning of main
+09-10 00:47:42.438 26644 26644 I libprocessgroup: Created cgroup /sys/fs/cgroup/apps/uid_10411/pid_26644
+09-10 00:47:42.443 26644 26644 I Zygote  : Process 26644 created for com.defaultcompany.minigame01
+09-10 00:47:42.443 26644 26644 I pany.minigame01: Late-enabling -Xcheck:jni
+09-10 00:47:42.460 26644 26644 I pany.minigame01: Using generational CollectorTypeCMC GC.
+09-10 00:47:42.468 26644 26644 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-10 00:47:42.559 26644 26644 D nativeloader: Configuring clns-9 for other apk /data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/lib/arm64:/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.defaultcompany.minigame01
+09-10 00:47:42.566 26644 26644 V GraphicsEnvironment: Currently set values for:
+09-10 00:47:42.566 26644 26644 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[com.android.angle]
+09-10 00:47:42.566 26644 26644 V GraphicsEnvironment:   angle_gl_driver_selection_values=[angle]
+09-10 00:47:42.566 26644 26644 V GraphicsEnvironment: com.defaultcompany.minigame01 is not listed in per-application setting
+09-10 00:47:42.567 26644 26644 V GraphicsEnvironment: No special selections for ANGLE, returning default driver choice
+09-10 00:47:42.567 26644 26644 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+09-10 00:47:42.590 26644 26644 D nativeloader: Load /data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/lib/arm64/libgame.so using class loader ns clns-9 (caller=/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk!classes2.dex): ok
+09-10 00:47:42.590 26644 26644 D GameActivity: GameActivity_register
+09-10 00:47:42.593 26644 26644 D DesktopExperienceFlags: Toggle override initialized to: false
+09-10 00:47:42.597 26644 26644 D AppCompatDelegate: Checking for metadata for AppLocalesMetadataHolderService : Service not found
+09-10 00:47:42.604 26644 26644 D gti.InputConnection: InputConnection created
+09-10 00:47:42.605 26644 26644 D gti.InputConnection: setEditorInfo
+09-10 00:47:42.607 26644 26644 D CompatChangeReporter: Compat change id reported: 377864165; UID 10411; state: ENABLED
+09-10 00:47:42.611 26644 26644 I pany.minigame01: hiddenapi: Accessing hidden method Landroid/view/View;->computeFitSystemWindows(Landroid/graphics/Rect;Landroid/graphics/Rect;)Z (runtime_flags=0, domain=platform, api=unsupported) from Landroidx/appcompat/widget/ViewUtils; (domain=app, TargetSdkVersion=36) using reflection: allowed
+09-10 00:47:42.611 26644 26644 I pany.minigame01: hiddenapi: Accessing hidden method Landroid/view/ViewGroup;->makeOptionalFitsSystemWindows()V (runtime_flags=0, domain=platform, api=unsupported) from Landroidx/appcompat/widget/ViewUtils; (domain=app, TargetSdkVersion=36) using reflection: allowed
+09-10 00:47:42.615 26644 26644 D nativeloader: Load /data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/lib/arm64/libmain.so using class loader ns clns-9 (caller=/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk): ok
+09-10 00:47:42.631 26644 26644 I IL2CPP  : JNI_OnLoad
+09-10 00:47:42.631 26644 26644 V Unity   : Context Type: GameActivity
+09-10 00:47:42.632 26644 26644 D Unity   : CommandLine:  
+09-10 00:47:42.637 26644 26644 D AudioSystem: onNewService: media.audio_policy service obtained 0xb400007ae84ca130
+09-10 00:47:42.637 26644 26644 D AudioSystem: getService: IAudioPolicyService retrieved: 0xb400007ae84ca130  cached: 0xb400007ae84ca130
+09-10 00:47:42.641 26644 26644 I GameActivity: Looking for library libgame.so
+09-10 00:47:42.642 26644 26644 I GameActivity: Found library libgame.so. Loading...
+09-10 00:47:42.644 26644 26644 D GameActivity: SDK version: 37
+09-10 00:47:42.644 26644 26706 I Unity   : UnityApplication::CreateInstance
+09-10 00:47:42.644 26644 26706 I Unity   : GameActivity Package Version '4.4.0'
+09-10 00:47:42.644 26644 26706 I Unity   : Starting Game Loop
+09-10 00:47:42.652 26644 26706 I Unity   : Handle cmd APP_CMD_START(11)
+09-10 00:47:42.652 26644 26644 I ContentCaptureHelper: Setting logging level to OFF
+09-10 00:47:42.654 26644 26644 I Unity   : onResume
+09-10 00:47:42.659 26644 26706 I Unity   : Handle cmd APP_CMD_RESUME(12)
+--------- beginning of system
+09-10 00:47:42.664 26644 26644 D InsetsController: Setting requestedVisibleTypes to 496 (was 503)
+09-10 00:47:42.697 26644 26644 I Unity   : onPause
+09-10 00:47:42.699 26644 26644 I Unity   : pauseUnity
+09-10 00:47:42.700 26644 26706 I Unity   : Handle cmd APP_CMD_PAUSE(14)
+09-10 00:47:42.706 26644 26644 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@a1e03b8
+09-10 00:47:42.708 26644 26644 D VRI[UnityPlayerGameActivity]: WindowInsets changed: 960x2142 statusBars:[0,153,0,0] mandatorySystemGestures:[0,180,0,72] 
+09-10 00:47:42.709 26644 26644 V GameActivity: onImeInsetsChanged from Text Listener
+09-10 00:47:42.710 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:47:42.715 26644 26644 I Surface : Creating surface for consumer unnamed-26644-0 with slotExpansion=1 for 64 slots
+09-10 00:47:42.716 26644 26644 I Surface : Creating surface for consumer VRI[UnityPlayerGameActivity]#0(BLAST Consumer)0 with slotExpansion=1 for 64 slots
+09-10 00:47:42.717 26644 26644 D VRI[UnityPlayerGameActivity]: WindowInsets changed: navigationBars:[0,0,0,54] 
+09-10 00:47:42.717 26644 26644 V GameActivity: onImeInsetsChanged from Text Listener
+09-10 00:47:42.718 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:47:42.719 26644 26706 I Unity   : Handle cmd APP_CMD_CONTENT_RECT_CHANGED(5)
+09-10 00:47:42.719 26644 26644 I Surface : Creating surface for consumer unnamed-26644-1 with slotExpansion=1 for 64 slots
+09-10 00:47:42.719 26644 26644 I Surface : Creating surface for consumer 2d84cf6 SurfaceView[com.defaultcompany.minigame01/com.unity3d.player.UnityPlayerGameActivity]#1(BLAST Consumer)1 with slotExpansion=1 for 64 slots
+09-10 00:47:42.720 26644 26706 I Unity   : Handle cmd APP_CMD_INIT_WINDOW(1)
+09-10 00:47:42.726 26644 26706 I Unity   : MemoryManager: Using 'Dynamic Heap' Allocator.
+09-10 00:47:42.727 26644 26706 D Unity   : [UnityMemory] Configuration Parameters - Can be set up in boot.config
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-cloud-worker=32768"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-audio-worker=65536"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-allocator-temp-initial-block-size-main=262144"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-preload-manager=262144"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-gfx=262144"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-background-worker=32768"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-job-worker=262144"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-bucket-allocator-granularity=16"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-bucket-allocator-bucket-count=8"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-bucket-allocator-block-size=4194304"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-bucket-allocator-block-count=1"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-main-allocator-block-size=16777216"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-thread-allocator-block-size=16777216"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-main-allocator-mimalloc-enabled=0"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-gfx-main-allocator-block-size=16777216"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-gfx-thread-allocator-block-size=16777216"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-cache-allocator-block-size=4194304"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-typetree-allocator-block-size=2097152"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-profiler-bucket-allocator-granularity=16"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-profiler-bucket-allocator-block-count=1"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-profiler-allocator-block-size=16777216"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-profiler-editor-allocator-block-size=1048576"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-temp-allocator-size-main=4194304"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-job-temp-allocator-block-size=2097152"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-job-temp-allocator-block-size-background=1048576"
+09-10 00:47:42.727 26644 26706 D Unity   :     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+09-10 00:47:42.728 26644 26644 I Unity   : onResume
+09-10 00:47:42.730 26644 26644 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): com.unity3d.player.a.e@6804ce
+09-10 00:47:42.744 26644 26706 D Unity   : Enabling Unity systrace
+09-10 00:47:42.744 26644 26706 D Unity   : Starting Unity systrace
+09-10 00:47:42.757 26644 26706 I Unity   : SetGameState: isLoading: true, mode: UNKNOWN, label: -2, quality: -1
+09-10 00:47:42.761 26644 26706 D Unity   : [VFS] Mount /data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk
+09-10 00:47:42.764 26644 26706 E Unity   : java.lang.ClassNotFoundException: Didn't find class "com.google.android.play.core.assetpacks.AssetPackManager" on path: DexPathList[[zip file "/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk"],nativeLibraryDirectories=[/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/lib/arm64, /data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+09-10 00:47:42.775 26644 26706 I Unity   : SystemInfo CPU = ARM64 FP ASIMD AES, Cores = 8, Memory = 15583mb
+09-10 00:47:42.775 26644 26706 I Unity   : SystemInfo ARM big.LITTLE configuration: 4 big (mask: 0xf0), 4 little (mask: 0xf)
+09-10 00:47:42.775 26644 26706 I Unity   : ApplicationInfo 'com.defaultcompany.minigame01', Version '0.1.0', Min API Level '26', Target API Level '36'
+09-10 00:47:42.775 26644 26706 I Unity   : Built from '6000.5/staging' branch, Version '6000.5.0f1 (88b47c5e7076)', Build type 'Development', Scripting Backend 'il2cpp', CPU 'arm64-v8a', Stripping 'Enabled'
+09-10 00:47:42.775 26644 26706 I Unity   : Device Model 'Google Pixel 9 Pro', OS 'Android OS 17 (API 37)'
+09-10 00:47:42.776 26644 26706 D Unity   : Determine if il2cpp resources need to be extracted:
+09-10 00:47:42.777 26644 26706 D Unity   :     Guid in '/storage/emulated/0/Android/data/com.defaultcompany.minigame01/files/il2cpp/unity.ver' is invalid, expected 'd3275a27-4607-462d-8af1-f4a59dbb04cd' was 'b768e68b-aacc-4045-bdd0-5931ff594b71'
+09-10 00:47:42.777 26644 26706 D Unity   :     Extracting il2cpp resources
+09-10 00:47:42.811 26644 26706 D Unity   : Unable to find library path for 'il2cpp.usym'.
+09-10 00:47:42.825 26644 26706 D Unity   : CodeReloadManager initialized
+09-10 00:47:42.826 26644 26706 D Unity   : InitializeScriptEngine OK (0x7cc0fedf40)
+09-10 00:47:42.826 26644 26706 D Unity   : [EGL] Attaching window :0xb400007aa8438b90
+09-10 00:47:42.826 26644 26706 D Unity   : Found 4 interfaces on host :
+09-10 00:47:42.826 26644 26706 D Unity   :  0) 10.133.223.156
+09-10 00:47:42.826 26644 26706 D Unity   :  1) 10.24.131.206
+09-10 00:47:42.826 26644 26706 D Unity   :  2) 192.168.0.102
+09-10 00:47:42.826 26644 26706 D Unity   :  3) 10.72.176.54
+09-10 00:47:42.826 26644 26706 D Unity   : 
+09-10 00:47:42.827 26644 26706 D Unity   : Player connection [523070496640]  Target information:
+09-10 00:47:42.827 26644 26706 D Unity   : 
+09-10 00:47:42.827 26644 26706 D Unity   : Player connection [523070496640]  * "[IP] 10.133.223.156 [Port] 55000 [Flags] 2 [Guid] 4184689902 [EditorId] 2466931871 [Version] 1048832 [Id] AndroidPlayer(11,Google_Pixel_9_Pro@192.168.0.102) [Debug] 0 [PackageName] AndroidPlayer [ProjectName] Pac Ghost" 
+09-10 00:47:42.827 26644 26706 D Unity   : 
+09-10 00:47:42.827 26644 26706 D Unity   : Player connection [523070496640]  * "[IP] 10.24.131.206 [Port] 55000 [Flags] 2 [Guid] 4184689902 [EditorId] 2466931871 [Version] 1048832 [Id] AndroidPlayer(11,Google_Pixel_9_Pro@192.168.0.102) [Debug] 0 [PackageName] AndroidPlayer [ProjectName] Pac Ghost" 
+09-10 00:47:42.827 26644 26706 D Unity   : 
+09-10 00:47:42.827 26644 26706 D Unity   : Player connection [523070496640]  * "[IP] 192.168.0.102 [Port] 55000 [Flags] 2 [Guid] 4184689902 [EditorId] 2466931871 [Version] 1048832 [Id] AndroidPlayer(11,Google_Pixel_9_Pro@192.168.0.102) [Debug] 0 [PackageName] AndroidPlayer [ProjectName] Pac Ghost" 
+09-10 00:47:42.827 26644 26706 D Unity   : 
+09-10 00:47:42.827 26644 26706 D Unity   : Player connection [523070496640]  * "[IP] 10.72.176.54 [Port] 55000 [Flags] 2 [Guid] 4184689902 [EditorId] 2466931871 [Version] 1048832 [Id] AndroidPlayer(11,Google_Pixel_9_Pro@192.168.0.102) [Debug] 0 [PackageName] AndroidPlayer [ProjectName] Pac Ghost" 
+09-10 00:47:42.827 26644 26706 D Unity   : 
+09-10 00:47:42.827 26644 26706 D Unity   : Player connection [523070496640] Started UDP target info broadcast (1) on [225.0.0.222:54997].
+09-10 00:47:42.827 26644 26706 D Unity   : 
+09-10 00:47:42.849 26644 26706 D Unity   : Input System module state changed to: Initialized.
+09-10 00:47:42.851 26644 26706 I DisplayManager: Implicitly registering for refresh rate
+09-10 00:47:42.852 26644 26706 D Unity   : [Physics::Module] Initialized fallback backend.
+09-10 00:47:42.852 26644 26706 D Unity   : [Physics::Module] Id: 0xdecafbad
+09-10 00:47:42.854 26644 26706 D Unity   : PlayerInitEngineNoGraphics OK
+09-10 00:47:42.854 26644 26706 I Unity   : Company Name: DefaultCompany
+09-10 00:47:42.854 26644 26706 I Unity   : Product Name: Pac Ghost
+09-10 00:47:42.854 26644 26706 D Unity   : AndroidGraphics::Startup window =  0xb400007aa8438b90
+09-10 00:47:42.854 26644 26706 D Unity   : [EGL] Attaching window :0xb400007aa8438b90
+09-10 00:47:42.857 26644 26706 D Unity   : [Subsystems] Discovering subsystems at path /data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk/assets/bin/Data/UnitySubsystems
+09-10 00:47:42.858 26644 26706 D vulkan  : searching for layers in '/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/lib/arm64'
+09-10 00:47:42.858 26644 26706 D vulkan  : searching for layers in '/data/app/~~6kRRlovJCUU9b9dKoG8bIg==/com.defaultcompany.minigame01-QnGlj_ClQcPZkUfyFj9EkA==/base.apk!/lib/arm64-v8a'
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: count=15
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_debug_report [enabled=0, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_debug_utils [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_surface_maintenance1 [enabled=0, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_swapchain_colorspace [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_GOOGLE_surfaceless_query [enabled=0, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_android_surface [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_device_group_creation [enabled=0, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_fence_capabilities [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_memory_capabilities [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_semaphore_capabilities [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_get_physical_device_properties2 [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_get_surface_capabilities2 [enabled=0, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_surface [enabled=1, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_surface_maintenance1 [enabled=0, external=0]
+09-10 00:47:42.859 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_surface_protected_capabilities [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] SelectPhysicalDevice requestedDeviceIndex=-1 xrDevice=0x0
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] Physical Device 0xb400007ab8436cd0 [0]: "Mali-G715" deviceType=1 vendorID=13b5 deviceID=b8a20000
+09-10 00:47:42.861 26644 26706 D Unity   : [VULKAN] Android Device Info:
+09-10 00:47:42.861 26644 26706 D Unity   : {"Vendor": "ARM","Device Name": "Mali-G715","Brand": "google","Product Name": "caiman","Android OS Version": "17","Vulkan API Version": "Variant: 0 major.minor.patch:1.4.343","Driver Version": "226504704"}
+09-10 00:47:42.861 26644 26706 D Unity   : Vulkan detection: 2
+09-10 00:47:42.861 26644 26706 D Unity   : GfxDevice: creating device client; kGfxThreadingModeThreaded
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: count=15
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_debug_report [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_debug_utils [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_surface_maintenance1 [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_swapchain_colorspace [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_GOOGLE_surfaceless_query [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_android_surface [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_device_group_creation [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_fence_capabilities [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_memory_capabilities [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_semaphore_capabilities [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_get_physical_device_properties2 [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_get_surface_capabilities2 [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_surface [enabled=1, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_surface_maintenance1 [enabled=0, external=0]
+09-10 00:47:42.861 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_surface_protected_capabilities [enabled=0, external=0]
+09-10 00:47:42.862 26644 26706 D Unity   : [Vulkan init] SelectPhysicalDevice requestedDeviceIndex=-1 xrDevice=0x0
+09-10 00:47:42.862 26644 26706 D Unity   : [Vulkan init] Physical Device 0xb400007ab8446090 [0]: "Mali-G715" deviceType=1 vendorID=13b5 deviceID=b8a20000
+09-10 00:47:42.862 26644 26706 D Unity   : [Vulkan init] Selected physical device 0xb400007ab8446090
+09-10 00:47:42.862 26644 26706 D Unity   : [Vulkan init] Graphics queue count=1
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: count=171
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ANDROID_external_format_resolve [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ANDROID_external_memory_android_hardware_buffer [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ARM_rasterization_order_attachment_access [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ARM_render_pass_striped [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ARM_scheduling_controls [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ARM_shader_core_builtins [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_ARM_shader_core_properties [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_4444_formats [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_astc_decode_mode [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_border_color_swizzle [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_calibrated_timestamps [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_conditional_rendering [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_conservative_rasterization [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_custom_border_color [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_debug_marker [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_depth_clamp_zero_one [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_depth_clip_enable [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_descriptor_buffer [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_descriptor_indexing [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_device_address_binding_report [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_device_fault [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_device_memory_report [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_dynamic_rendering_unused_attachments [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_extended_dynamic_state [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_extended_dynamic_state2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_extended_dynamic_state3 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_external_memory_acquire_unmodified [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_external_memory_dma_buf [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_external_memory_host [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_fragment_density_map [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_fragment_density_map2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_frame_boundary [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_global_priority [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_global_priority_query [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_graphics_pipeline_library [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_hdr_metadata [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_host_image_copy [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_host_query_reset [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_2d_view_of_3d [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_compression_control [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_compression_control_swapchain [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_drm_format_modifier [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_robustness [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_sliced_view_of_3d [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_image_view_min_lod [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_index_type_uint8 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_inline_uniform_block [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_legacy_dithering [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_line_rasterization [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_load_store_op_none [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_multisampled_render_to_single_sampled [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_mutable_descriptor_type [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_non_seamless_cube_map [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_pipeline_creation_cache_control [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_pipeline_creation_feedback [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_pipeline_protected_access [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_pipeline_robustness [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_present_mode_fifo_latest_ready [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_present_timing [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_primitive_topology_list_restart [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_primitives_generated_query [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_private_data [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_provoking_vertex [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_queue_family_foreign [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_rasterization_order_attachment_access [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_rgba10x6_formats [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_robustness2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_sampler_filter_minmax [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_scalar_block_layout [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_separate_stencil_usage [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_shader_demote_to_helper_invocation [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_shader_image_atomic_int64 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_shader_replicated_composites [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_shader_subgroup_ballot [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_shader_subgroup_vote [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_shader_tile_image [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_subgroup_size_control [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_subpass_merge_feedback [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_swapchain_maintenance1 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_texel_buffer_alignment [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_texture_compression_astc_hdr [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_tooling_info [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_transform_feedback [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_EXT_vertex_input_dynamic_state [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_GOOGLE_decorate_string [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_GOOGLE_display_timing [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_GOOGLE_user_type [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_16bit_storage [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_8bit_storage [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_bind_memory2 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_buffer_device_address [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_calibrated_timestamps [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_compute_shader_derivatives [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_cooperative_matrix [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_copy_commands2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_create_renderpass2 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_dedicated_allocation [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_deferred_host_operations [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_depth_stencil_resolve [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_descriptor_update_template [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_device_group [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_draw_indirect_count [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_driver_properties [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_dynamic_rendering [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_dynamic_rendering_local_read [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_fence [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_fence_fd [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_memory [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_memory_fd [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_semaphore [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_external_semaphore_fd [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_format_feature_flags2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_fragment_shading_rate [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_get_memory_requirements2 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_global_priority [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_image_format_list [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_imageless_framebuffer [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_incremental_present [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_index_type_uint8 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_line_rasterization [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_load_store_op_none [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance1 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance2 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance3 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance4 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance5 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance6 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance7 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance8 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_maintenance9 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_map_memory2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_multiview [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_pipeline_binary [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_pipeline_executable_properties [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_pipeline_library [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_present_id [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_present_id2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_present_wait2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_push_descriptor [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_relaxed_block_layout [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_sampler_mirror_clamp_to_edge [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_sampler_ycbcr_conversion [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_separate_depth_stencil_layouts [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_atomic_int64 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_draw_parameters [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_expect_assume [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_float16_int8 [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_float_controls [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_float_controls2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_integer_dot_product [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_maximal_reconvergence [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_non_semantic_info [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_quad_control [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_subgroup_extended_types [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_subgroup_rotate [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_subgroup_uniform_control_flow [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shader_terminate_invocation [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_shared_presentable_image [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_spirv_1_4 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_storage_buffer_storage_class [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_swapchain [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_swapchain_maintenance1 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_swapchain_mutable_format [enabled=1, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_synchronization2 [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_timeline_semaphore [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_uniform_buffer_standard_layout [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_variable_pointers [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_vertex_attribute_divisor [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_vulkan_memory_model [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_workgroup_memory_explicit_layout [enabled=0, external=0]
+09-10 00:47:42.863 26644 26706 D Unity   : [Vulkan init] extensions: name=VK_KHR_zero_initialize_workgroup_memory [enabled=0, external=0]
+09-10 00:47:42.866 26644 26706 D Unity   : Vulkan API version 1.1.0 (1.4.343 supported by driver, 1.1.0 requested)
+09-10 00:47:42.866 26644 26706 D Unity   : Vulkan vendor=[ARM] id=[13b5]
+09-10 00:47:42.866 26644 26706 D Unity   : Vulkan renderer=[Mali-G715] id=[b8a20000]
+09-10 00:47:42.866 26644 26706 D Unity   : Vulkan device type 1
+09-10 00:47:42.866 26644 26706 D Unity   : Vulkan driverversion=[54.3.0 (0x0d803000)] uint=[226504704]
+09-10 00:47:42.866 26644 26706 D Unity   : Vulkan driverLibraryString=[Mali-G715 (9), v1.r54p3-00eac0.03d8d836cbf5c9f29d765e58a6bdfb98]
+09-10 00:47:42.866 26644 26706 D Unity   : VK use pretransform: 1
+09-10 00:47:42.873 26644 26706 D Unity   : Vulkan PSO: Cache data successfully loaded [size=299056,path=/storage/emulated/0/Android/data/com.defaultcompany.minigame01/cache/vulkan_pso_cache.bin]
+09-10 00:47:42.874 26644 26706 D Unity   : [EGL] Attaching window :0x0
+09-10 00:47:42.875 26644 26706 D Unity   : AndroidDisplayManagerVulkan::AttachWindow(0xb400007aa8438b90, 0)
+09-10 00:47:42.876 26644 26706 D Unity   : InitializeOrResetSwapChain 960x2142 hdr=0 samples=0
+09-10 00:47:42.921 26644 26706 V MediaRouter: Audio routes updated: AudioRoutesInfo{ type=SPEAKER, bluetoothName=INZONE H9 / INZONE H7 }, a2dp=true
+09-10 00:47:42.921 26644 26706 V MediaRouter: Selecting route: RouteInfo{ name=INZONE H9 / INZONE H7, description=Bluetooth audio, status=null, category=RouteCategory{ name=System types=ROUTE_TYPE_LIVE_AUDIO ROUTE_TYPE_LIVE_VIDEO  groupable=false }, supportedTypes=ROUTE_TYPE_LIVE_AUDIO , presentationDisplay=null }
+09-10 00:47:42.921 26644 26706 I MediaRouter: Skip setBluetoothA2dpOn(): types=1, isPlaybackActive()=false, BT route=RouteInfo{ name=INZONE H9 / INZONE H7, description=Bluetooth audio, status=null, category=RouteCategory{ name=System types=ROUTE_TYPE_LIVE_AUDIO ROUTE_TYPE_LIVE_VIDEO  groupable=false }, supportedTypes=ROUTE_TYPE_LIVE_AUDIO , presentationDisplay=null }
+09-10 00:47:42.922 26644 26706 D Unity   : AndroidDisplayManagerVulkan::AttachWindow(0xb400007aa8438b90, 0)
+09-10 00:47:42.922 26644 26706 D Unity   : Initialize engine version: 6000.5.0f1 (88b47c5e7076)
+09-10 00:47:42.927 26644 26706 D AudioSystem: onNewServiceWithAdapter: media.audio_flinger service obtained 0xb400007af845db70
+09-10 00:47:42.927 26644 26706 D AudioSystem: getService: IAudioFlingerService retrieved: 0xb400007ae845da30  IAudioFlinger cached: 0xb400007af845db70
+09-10 00:47:42.929 26644 26706 I AAudio  : AAudioStreamBuilder_openStream() called ----------------------------------------
+09-10 00:47:42.929 26644 26706 I AudioStreamBuilder: rate   =  24000, channels  = 2, channelMask = 0x80000003, format   = 0x5, sharing = SH, dir = OUTPUT
+09-10 00:47:42.929 26644 26706 I AudioStreamBuilder: devices = AUDIO_PORT_HANDLE_NONE, sessionId = 0, perfMode = 12, callback: ON with frames = 512
+09-10 00:47:42.929 26644 26706 I AudioStreamBuilder: usage  =      0, contentType = 0, inputPreset = 0, allowedCapturePolicy = 0
+09-10 00:47:42.929 26644 26706 I AudioStreamBuilder: privacy sensitive = false, opPackageName = (null), attributionTag = (null)
+09-10 00:47:42.929 26644 26706 D AudioStreamBuilder: build, global mmap policy is 0
+09-10 00:47:42.930 26644 26706 D AudioStreamBuilder: build, system mmap policy is 2
+09-10 00:47:42.930 26644 26706 D AudioStreamBuilder: build, final mmap policy is 2
+09-10 00:47:42.930 26644 26706 D AudioStreamBuilder: build, system mmap exclusive policy is 2
+09-10 00:47:42.930 26644 26706 D AudioStreamBuilder: build, final mmap exclusive policy is 2
+09-10 00:47:42.930 26644 26706 D AudioStreamBuilder: build() MMAP not used because sessionId specified.
+09-10 00:47:42.930 26644 26706 D pany.minigame01: PlayerBase::PlayerBase()
+09-10 00:47:42.930 26644 26706 D AudioStreamTrack: open(), request notificationFrames = 0, frameCount = 8192
+09-10 00:47:42.937 26644 26706 D AudioStreamTrack: open() flags changed from 0x00000004 to 0x00000000
+09-10 00:47:42.937 26644 26706 D AudioStreamTrack: open() perfMode changed from 12 to 10
+09-10 00:47:42.937 26644 26706 D AAudioStream: setState(s#1) from 0 to 2
+09-10 00:47:42.938 26644 26706 I AAudio  : AAudioStreamBuilder_openStream() got Legacy, devIds = [6112], perf = NO, burst = 480
+09-10 00:47:42.938 26644 26706 I AAudio  : AAudioStreamBuilder_openStream() returns 0 = AAUDIO_OK for s#1 ----------------
+09-10 00:47:42.938 26644 26706 D AAudio  : AAudioStream_requestStart(s#1) called --------------
+09-10 00:47:42.938 26644 26706 D AAudioStream: setState(s#1) from 2 to 3
+09-10 00:47:42.995 26644 26706 D AAudio  : AAudioStream_requestStart(s#1) returned 0 ---------
+09-10 00:47:42.995 26644 26663 D AudioStreamLegacy: onAudioDeviceUpdate() devices 6112 => 6112
+09-10 00:47:42.995 26644 26663 D AudioStreamLegacy: onAudioDeviceUpdate, ignore device update as it is the same as the old one
+09-10 00:47:43.123 26644 26706 D Unity   : [Physics::Module] Selected backend.
+09-10 00:47:43.123 26644 26706 D Unity   : [Physics::Module] Name: PhysX
+09-10 00:47:43.123 26644 26706 D Unity   : [Physics::Module] Id: 0xf2b8ea05
+09-10 00:47:43.123 26644 26706 D Unity   : [Physics::Module] SDK Version: 4.1.2
+09-10 00:47:43.123 26644 26706 D Unity   : [Physics::Module] Integration Version: 1.0.0
+09-10 00:47:43.123 26644 26706 D Unity   : [Physics::Module] Threading Mode: Multi-Threaded
+09-10 00:47:43.211 26644 26653 I pany.minigame01: Compiler allocated 5303KB to compile void android.view.ViewRootImpl.performTraversals(long)
+09-10 00:47:43.220 26644 26706 I IL2CPP  : Locale en-US
+09-10 00:47:43.245 26644 26706 D Unity   : PlayerInitEngineGraphics OK
+09-10 00:47:43.251 26644 26706 D Unity   : Found 41 native sensors
+09-10 00:47:43.254 26644 26706 D Unity   : Sensor :        Accelerometer ( 1) ; 0.000599 / 0.00s ; ICM45631 Accelerometer / Invensense 
+09-10 00:47:43.260 26644 26706 D Unity   : Sensor :        Accelerometer ( 1) ; 0.000599 / 0.00s ; ICM45631 Accelerometer / Invensense 
+09-10 00:47:43.260 26644 26706 D Unity   : enabled Accelerometer sensor
+09-10 00:47:43.261 26644 26706 I Unity   : SetGameState: isLoading: false, mode: UNKNOWN, label: -1, quality: 0
+09-10 00:47:43.261 26644 26706 I Unity   :     HasWindow = 1, HasFocus = 0
+09-10 00:47:43.261 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_RESIZED(3)
+09-10 00:47:43.261 26644 26706 D Unity   : NativeWindow resized 960x2142
+09-10 00:47:43.261 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_REDRAW_NEEDED(4)
+09-10 00:47:43.261 26644 26706 I Unity   : Handle cmd APP_CMD_RESUME(12)
+09-10 00:47:43.261 26644 26644 W Activity: Slow operation Fragment dispatchResume since onResume, duration=534
+09-10 00:47:43.262 26644 26644 W Activity: Slow operation onPostResume since onResume, duration=535
+09-10 00:47:43.262 26644 26644 W Activity: Slow operation dispatchActivityPostResumed since onResume, duration=535
+09-10 00:47:43.262 26644 26644 I Choreographer: Skipped 65 frames!  The application may be doing too much work on its main thread.
+09-10 00:47:43.267 26644 26644 D MediaRouter: onRestoreRoute() : route=RouteInfo{ name=INZONE H9 / INZONE H7, description=Bluetooth audio, status=null, category=RouteCategory{ name=System types=ROUTE_TYPE_LIVE_AUDIO ROUTE_TYPE_LIVE_VIDEO  groupable=false }, supportedTypes=ROUTE_TYPE_LIVE_AUDIO , presentationDisplay=null }
+09-10 00:47:43.267 26644 26644 V MediaRouter: Selecting route: RouteInfo{ name=INZONE H9 / INZONE H7, description=Bluetooth audio, status=null, category=RouteCategory{ name=System types=ROUTE_TYPE_LIVE_AUDIO ROUTE_TYPE_LIVE_VIDEO  groupable=false }, supportedTypes=ROUTE_TYPE_LIVE_AUDIO , presentationDisplay=null }
+09-10 00:47:43.274 26644 26644 D VRI[UnityPlayerGameActivity]: WindowInsets changed: statusBars:null navigationBars:null 
+09-10 00:47:43.275 26644 26644 V GameActivity: onImeInsetsChanged from Text Listener
+09-10 00:47:43.275 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:47:43.281 26644 26817 I HWUI    : Using FreeType backend (prop=Auto)
+09-10 00:47:43.343 26644 26806 D AAudioStream: setState(s#1) from 3 to 4
+09-10 00:47:43.446 26644 26644 I Unity   : onConfigurationChanged
+09-10 00:47:43.448 26644 26706 I Unity   : Handle cmd APP_CMD_CONFIG_CHANGED(9)
+09-10 00:47:43.458 26644 26644 D VRI[UnityPlayerGameActivity]: WindowInsets changed: 2142x960 mandatorySystemGestures:[0,54,0,72] 
+09-10 00:47:43.458 26644 26644 V GameActivity: onImeInsetsChanged from Text Listener
+09-10 00:47:43.458 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:47:43.464 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_RESIZED(3)
+09-10 00:47:43.464 26644 26706 D Unity   : NativeWindow resized 2142x960
+09-10 00:47:43.464 26644 26706 I Unity   : Handle cmd APP_CMD_WINDOW_REDRAW_NEEDED(4)
+09-10 00:47:43.464 26644 26706 I Unity   : Handle cmd APP_CMD_CONTENT_RECT_CHANGED(5)
+09-10 00:47:43.496 26644 26644 I Unity   : windowFocusChanged: true
+09-10 00:47:43.496 26644 26644 I Unity   : resumeUnity
+09-10 00:47:43.496 26644 26706 I Unity   : Handle cmd APP_CMD_GAINED_FOCUS(7)
+09-10 00:47:43.496 26644 26706 D Unity   : InitializeOrResetSwapChain 2142x960 hdr=0 samples=0
+09-10 00:47:43.505 26644 26644 D InsetsController: hide(ime())
+09-10 00:47:43.505 26644 26644 I ImeTracker: com.defaultcompany.minigame01:6a617bc0: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+09-10 00:47:43.565 26644 26706 I Unity   : SetGameState: isLoading: true, mode: UNKNOWN, label: 0, quality: 0
+09-10 00:47:43.828 26644 26821 W InteractionJankMonitor: Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.defaultcompany.minigame01
+09-10 00:47:45.596 26644 26644 D GameActivity: ************** mainWorkCallback *********
+09-10 00:47:45.596 26644 26644 D gti.InputConnection: setSoftKeyboardActive, active: false
+09-10 00:47:45.597 26644 26644 I ImeTracker: com.defaultcompany.minigame01:606785c9: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false userId 0 displayId 0
+09-10 00:47:45.598 26644 26644 D InsetsController: hide(ime())
+09-10 00:47:45.598 26644 26644 I ImeTracker: com.defaultcompany.minigame01:606785c9: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+09-10 00:47:45.598 26644 26644 D CompatChangeReporter: Compat change id reported: 395521150; UID 10411; state: ENABLED
+09-10 00:47:45.600 26644 26706 D Unity   : UnloadTime: 1.260742 ms
+09-10 00:47:45.606 26644 26706 D Unity   : UUID: a9f063dd15561b7f => 79a888b2f4832a26c425a7b3934dff9c
+09-10 00:47:45.663 26644 26706 I Unity   : SetGameState: isLoading: false, mode: UNKNOWN, label: 0, quality: 0
+09-10 00:47:45.676 26644 26706 D Unity   : Sensor :        Accelerometer ( 1) ; 0.000599 / 0.00s ; ICM45631 Accelerometer / Invensense 
+09-10 00:47:45.676 26644 26706 D Unity   : Using NDK Choreographer.
+09-10 00:47:45.708 26644 26706 D Unity   : Stopping Unity systrace
+09-10 00:47:46.009 26644 26706 I Unity   : SetGameState: isLoading: true, mode: UNKNOWN, label: 1, quality: 0
+09-10 00:47:46.324 26644 26828 W Unity   : Couldn't create a Convex Mesh from source mesh, within the maximum polygons limit (256). The partial hull will be used. Consider simplifying your mesh. Source mesh name: Little_Ghost
+09-10 00:47:46.371 26644 26828 D Unity   : Unloading 8 Unused Serialized files (Serialized files now loaded: 0)
+09-10 00:48:28.924 26644 26644 D GameActivity: ************** mainWorkCallback *********
+09-10 00:48:28.924 26644 26644 D gti.InputConnection: setSoftKeyboardActive, active: false
+09-10 00:48:28.925 26644 26644 I ImeTracker: com.defaultcompany.minigame01:9dad6c38: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false userId 0 displayId 0
+09-10 00:48:28.925 26644 26644 D InsetsController: hide(ime())
+09-10 00:48:28.927 26644 26644 I ImeTracker: com.defaultcompany.minigame01:9dad6c38: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+09-10 00:48:28.937 26644 26706 D Unity   : UnloadTime: 9.474569 ms
+09-10 00:48:29.062 26644 26706 I Unity   : SetGameState: isLoading: false, mode: UNKNOWN, label: 1, quality: 0
+09-10 00:48:29.165 26644 26706 D Unity   : Unloading 95 unused Assets / (238.3 KB). Loaded Objects now: 9490.
+09-10 00:48:29.165 26644 26706 D Unity   : Memory consumption went from 95.6 MB to 95.3 MB.
+09-10 00:48:29.165 26644 26706 D Unity   : Total: 11.381266 ms (FindLiveObjects: 1.854167 ms CreateObjectMapping: 0.894897 ms MarkObjects: 7.767050 ms  DeleteObjects: 0.863322 ms)
+09-10 00:48:29.165 26644 26706 D Unity   : 

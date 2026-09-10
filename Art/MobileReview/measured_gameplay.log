@@ -1,0 +1,42 @@
+--------- beginning of main
+09-10 00:59:34.490 28002 28025 I Unity   : UnityApplication::CreateInstance
+09-10 00:59:34.490 28002 28025 I Unity   : GameActivity Package Version '4.4.0'
+09-10 00:59:34.490 28002 28025 I Unity   : Starting Game Loop
+09-10 00:59:34.500 28002 28025 I Unity   : Handle cmd APP_CMD_START(11)
+09-10 00:59:34.502 28002 28002 I Unity   : onResume
+09-10 00:59:34.510 28002 28025 I Unity   : Handle cmd APP_CMD_RESUME(12)
+09-10 00:59:34.527 28002 28025 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:59:34.534 28002 28025 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:59:34.534 28002 28025 I Unity   : Handle cmd APP_CMD_CONTENT_RECT_CHANGED(5)
+09-10 00:59:34.535 28002 28025 I Unity   : Handle cmd APP_CMD_INIT_WINDOW(1)
+09-10 00:59:34.543 28002 28025 I Unity   : MemoryManager: Using 'Dynamic Heap' Allocator.
+09-10 00:59:34.576 28002 28025 I Unity   : SetGameState: isLoading: true, mode: UNKNOWN, label: -2, quality: -1
+09-10 00:59:34.576 28002 28002 I Unity   : windowFocusChanged: true
+09-10 00:59:34.576 28002 28002 I Unity   : resumeUnity
+09-10 00:59:34.585 28002 28025 E Unity   : java.lang.ClassNotFoundException: Didn't find class "com.google.android.play.core.assetpacks.AssetPackManager" on path: DexPathList[[zip file "/data/app/~~Fpjy8oH0NSotvIAesmtNTw==/com.defaultcompany.minigame01-34L5X0fPX6TcGQAYd98peg==/base.apk"],nativeLibraryDirectories=[/data/app/~~Fpjy8oH0NSotvIAesmtNTw==/com.defaultcompany.minigame01-34L5X0fPX6TcGQAYd98peg==/lib/arm64, /data/app/~~Fpjy8oH0NSotvIAesmtNTw==/com.defaultcompany.minigame01-34L5X0fPX6TcGQAYd98peg==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+09-10 00:59:34.597 28002 28025 I Unity   : SystemInfo CPU = ARM64 FP ASIMD AES, Cores = 8, Memory = 15583mb
+09-10 00:59:34.597 28002 28025 I Unity   : SystemInfo ARM big.LITTLE configuration: 4 big (mask: 0xf0), 4 little (mask: 0xf)
+09-10 00:59:34.600 28002 28025 I Unity   : ApplicationInfo 'com.defaultcompany.minigame01', Version '0.1.0', Min API Level '26', Target API Level '36'
+09-10 00:59:34.600 28002 28025 I Unity   : Built from '6000.5/staging' branch, Version '6000.5.0f1 (88b47c5e7076)', Build type 'Development', Scripting Backend 'il2cpp', CPU 'arm64-v8a', Stripping 'Enabled'
+09-10 00:59:34.600 28002 28025 I Unity   : Device Model 'Google Pixel 9 Pro', OS 'Android OS 17 (API 37)'
+09-10 00:59:34.652 28002 28025 I Unity   : Company Name: DefaultCompany
+09-10 00:59:34.652 28002 28025 I Unity   : Product Name: Pac Ghost
+09-10 00:59:35.116 28002 28025 I Unity   : SetGameState: isLoading: false, mode: UNKNOWN, label: -1, quality: 0
+09-10 00:59:35.116 28002 28025 I Unity   :     HasWindow = 1, HasFocus = 0
+09-10 00:59:35.116 28002 28025 I Unity   : Handle cmd APP_CMD_WINDOW_RESIZED(3)
+09-10 00:59:35.116 28002 28025 I Unity   : Handle cmd APP_CMD_WINDOW_REDRAW_NEEDED(4)
+09-10 00:59:35.116 28002 28025 I Unity   : Handle cmd APP_CMD_GAINED_FOCUS(7)
+09-10 00:59:35.116 28002 28025 I Unity   : Handle cmd APP_CMD_WINDOW_INSETS_CHANGED(17)
+09-10 00:59:35.163 28002 28025 I Unity   : SetGameState: isLoading: true, mode: UNKNOWN, label: 0, quality: 0
+09-10 00:59:37.260 28002 28025 I Unity   : SetGameState: isLoading: false, mode: UNKNOWN, label: 0, quality: 0
+09-10 00:59:37.602 28002 28025 I Unity   : SetGameState: isLoading: true, mode: UNKNOWN, label: 1, quality: 0
+09-10 00:59:37.942 28002 28114 W Unity   : Couldn't create a Convex Mesh from source mesh, within the maximum polygons limit (256). The partial hull will be used. Consider simplifying your mesh. Source mesh name: Little_Ghost
+09-10 01:00:04.127 28002 28025 I Unity   : SetGameState: isLoading: false, mode: UNKNOWN, label: 1, quality: 0
+09-10 01:00:22.157 28002 28025 I Unity   : WARDEN_DEVICE_FRAMES {"frames":301,"targetFps":-1,"width":2142,"height":960,"seconds":10.029987335205079,"averageFps":30.010007858276368,"p95Ms":33.4232063293457,"worstMs":34.117977142333987}
+09-10 01:00:22.157 28002 28025 I Unity   : UnityEngine.DebugLogHandler:Internal_Log(LogType, LogOption, String, Object)
+09-10 01:00:22.157 28002 28025 I Unity   : MobileFrameProbe:Update()
+09-10 01:00:22.157 28002 28025 I Unity   : 
+09-10 01:00:47.616 28002 28025 I Unity   : WARDEN_DEVICE_FRAMES {"frames":301,"targetFps":-1,"width":2142,"height":960,"seconds":10.029607772827149,"averageFps":30.011144638061525,"p95Ms":33.47499465942383,"worstMs":34.260780334472659}
+09-10 01:00:47.616 28002 28025 I Unity   : UnityEngine.DebugLogHandler:Internal_Log(LogType, LogOption, String, Object)
+09-10 01:00:47.616 28002 28025 I Unity   : MobileFrameProbe:Update()
+09-10 01:00:47.616 28002 28025 I Unity   : 

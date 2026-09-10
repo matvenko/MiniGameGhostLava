@@ -93,7 +93,8 @@ public class WallSurface : MonoBehaviour
         if (!BuildFootprint(out var cells, out Vector3 origin, out Vector2 cell, out float topY)) return;
         if (cells.Count == 0) return;
 
-        var mesh = BuildMesh(cells, origin, cell, topY);
+        bool masonry = wallMaterial != null && wallMaterial.HasProperty("_Masonry") && wallMaterial.GetFloat("_Masonry") > .5f;
+        var mesh = masonry ? ForestMasonryMesh.Build(cells, origin, cell, topY, moduleHeight, .72f) : BuildMesh(cells, origin, cell, topY);
 
         var go = new GameObject("WallSurface");
         go.hideFlags = HideFlags.DontSave;
@@ -158,6 +159,9 @@ public class WallSurface : MonoBehaviour
     private void DestroySurface()
     {
         if (_surface == null) return;
+        var mesh = _surface.GetComponent<MeshFilter>().sharedMesh;
+        if (mesh != null) { if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh); }
+        _surface.gameObject.SetActive(false);
         if (Application.isPlaying) Destroy(_surface.gameObject);
         else DestroyImmediate(_surface.gameObject);
         _surface = null;

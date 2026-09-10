@@ -1,0 +1,6 @@
+PASS level 1: shore mask matches every grass/water cell; one grass bank mesh; bevelled masonry; meshes valid.
+PASS level 2: shore mask matches every grass/water cell; one grass bank mesh; bevelled masonry; meshes valid.
+PASS level 5: shore mask matches every grass/water cell; one grass bank mesh; bevelled masonry; meshes valid.
+PASS level 6: cave restored; no meadow mask or grass banks; meshes valid.
+PASS level 8: cave restored; no meadow mask or grass banks; meshes valid.
+PASS level 1: shore mask matches every grass/water cell; one grass bank mesh; bevelled masonry; meshes valid.

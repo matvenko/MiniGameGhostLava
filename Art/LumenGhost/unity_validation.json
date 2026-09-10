@@ -1,0 +1,12 @@
+{
+  "shader_compiled": true,
+  "animation_seconds": 3,
+  "world_bone_motion_m": 0.02222556,
+  "world_loop_error_m": 0,
+  "visible_pixels": 2646,
+  "dissolved_pixels": 0,
+  "scene_installed": true,
+  "gameplay_checks": "integration_validation.json",
+  "menu_render": "installed_menu.png",
+  "live_game_render": "installed_game.png"
+}

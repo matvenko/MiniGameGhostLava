@@ -16,6 +16,12 @@ Shader "Custom/BlockGround_URP"
     Properties
     {
         _TopMap ("Top (grass)", 2D) = "white" {}
+        _TopMap2 ("Secondary grass", 2D) = "white" {}
+        _TopBlend ("Secondary grass blend", Range(0,1)) = 0
+        _MacroVariation ("Broad grass variation", Range(0,0.5)) = 0
+        _TextureVariation ("Rotated grass detail blend",Range(0,1)) = 0
+        _DetailStrength ("Grass detail strength",Range(0,1)) = 1
+        _GrassBaseColor ("Grass base",Color) = (.44,.60,.23,1)
         _SideMap ("Side (earth)", 2D) = "white" {}
         [HDR] _BaseColor ("Tint", Color) = (1,1,1,1)
 
@@ -51,6 +57,12 @@ Shader "Custom/BlockGround_URP"
 
         CBUFFER_START(UnityPerMaterial)
             float4 _TopMap_ST;
+            float4 _TopMap2_ST;
+            float _TopBlend;
+            float _MacroVariation;
+            float _TextureVariation;
+            float _DetailStrength;
+            float4 _GrassBaseColor;
             float4 _SideMap_ST;
             float4 _BaseColor;
             float  _TopScale;
@@ -89,6 +101,7 @@ Shader "Custom/BlockGround_URP"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             TEXTURE2D(_TopMap);   SAMPLER(sampler_TopMap);
+            TEXTURE2D(_TopMap2);  SAMPLER(sampler_TopMap2);
             TEXTURE2D(_SideMap);  SAMPLER(sampler_SideMap);
 
             struct Attributes
@@ -154,6 +167,14 @@ Shader "Custom/BlockGround_URP"
                 float2 uvSideZ = float2(IN.positionWS.x / max(_SideScale, 1e-4), vSide);
 
                 half3 top   = SAMPLE_TEXTURE2D(_TopMap,  sampler_TopMap,  uvTop).rgb;
+                if(_TextureVariation>0)
+                    top=lerp(top,SAMPLE_TEXTURE2D(_TopMap,sampler_TopMap,float2(-uvTop.y,uvTop.x)+float2(.37,.61)).rgb,_TextureVariation);
+                top=lerp(_GrassBaseColor.rgb,top,_DetailStrength);
+                half broad = sin(IN.positionWS.x*.37 + sin(IN.positionWS.z*.29))*sin(IN.positionWS.z*.41);
+                if (_TopBlend > 0)
+                    top = lerp(top, SAMPLE_TEXTURE2D(_TopMap2,sampler_TopMap2,uvTop*.83).rgb,
+                               saturate(_TopBlend + broad*_MacroVariation));
+                top *= 1 + broad*_MacroVariation;
                 // The earth art is painted much darker than the grass, so no
                 // amount of fill light alone brings the banks up to it. The lift
                 // belongs on the side albedo, where it cannot wash out the lawn.

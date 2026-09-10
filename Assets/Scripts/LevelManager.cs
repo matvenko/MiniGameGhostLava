@@ -198,6 +198,9 @@ public class LevelManager : MonoBehaviour
         if (GroundSurface.Instance != null) GroundSurface.Instance.Refresh();
         if (WallSurface.Instance != null) WallSurface.Instance.Refresh();
 
+        var forest = FindFirstObjectByType<ForestEnvironment>();
+        if (forest != null) forest.Rebuild(_boardCentre, new Vector2(size.x, size.y), _level);
+
         if (cameraFollow != null)
         {
             // Out to the far face of the border, which is where the authored

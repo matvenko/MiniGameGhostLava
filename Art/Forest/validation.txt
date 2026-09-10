@@ -1,0 +1,5 @@
+PASS level 1: wall footprint 24 x 18; forest renderers 564; no invalid meshes/materials, gameplay colliders or scenery origins inside walls.
+PASS level 5: wall footprint 30 x 24; forest renderers 573; no invalid meshes/materials, gameplay colliders or scenery origins inside walls.
+PASS level 6: wall footprint 30 x 24; forest renderers 0; no invalid meshes/materials, gameplay colliders or scenery origins inside walls.
+PASS level 8: wall footprint 32 x 26; forest renderers 0; no invalid meshes/materials, gameplay colliders or scenery origins inside walls.
+PASS level 1: wall footprint 24 x 18; forest renderers 564; no invalid meshes/materials, gameplay colliders or scenery origins inside walls.

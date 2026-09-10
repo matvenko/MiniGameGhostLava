@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Meadow Water v2
+  m_Shader: {fileID: 4800000, guid: 8ffe5e53618f08a2a496dea605612620, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _ShoreMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BroadScale: 0.3
+    - _BroadWeight: 0.26
+    - _CellContrast: 0.65
+    - _CellRound: 1.7
+    - _CellScale: 3.8
+    - _CreaseStrength: 0.49
+    - _CreaseWidth: 0.075
+    - _DetailScale: 2.3
+    - _DetailWeight: 0.24
+    - _GlintStrength: 0.09
+    - _LightWrap: 0.6
+    - _MeadowShore: 1
+    - _ShadowStrength: 0.25
+    - _ShoreEnabled: 0
+    - _SparkleCoverage: 0.35
+    - _SparklePower: 14
+    - _SparkleStrength: 0.1
+    - _Speed: 0.16
+    - _SunStrength: 1.91
+    - _Warp: 0
+    - _WarpSpeed: 0.85
+    m_Colors:
+    - _AmbientColor: {r: 0.72, g: 0.88, b: 0.92, a: 1}
+    - _BoardRect: {r: 0, g: 0, b: 1, a: 1}
+    - _CreaseColor: {r: 0.4, g: 0.83, b: 0.8, a: 1}
+    - _DeepColor: {r: 0, g: 0, b: 0, a: 1}
+    - _LightColor: {r: 0.13207547, g: 0.40156808, b: 0.5283019, a: 1}
+    - _ShoreColor: {r: 0.19, g: 0.7, b: 0.63, a: 1}
+    - _SparkleColor: {r: 0.84, g: 0.98, b: 0.94, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

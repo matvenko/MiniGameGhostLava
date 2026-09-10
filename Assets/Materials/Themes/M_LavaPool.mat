@@ -22,19 +22,27 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _ShoreMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BroadScale: 0.3
     - _BroadWeight: 0.28
     - _CellContrast: 0.95
-    - _CellRound: 2.1
+    - _CellRound: 2.07
     - _CellScale: 3.6
     - _CreaseStrength: 0.55
     - _CreaseWidth: 0.3
     - _DetailScale: 2.3
     - _DetailWeight: 0.38
+    - _GlintStrength: 0
     - _LightWrap: 1
+    - _MeadowShore: 0
+    - _ShadowStrength: 1
+    - _ShoreEnabled: 0
     - _SparkleCoverage: 0.35
     - _SparklePower: 14
     - _SparkleStrength: 0.35
@@ -43,10 +51,12 @@ Material:
     - _Warp: 0.09
     - _WarpSpeed: 0.22
     m_Colors:
-    - _AmbientColor: {r: 0.4, g: 0.43, b: 0.47, a: 1}
+    - _AmbientColor: {r: 1, g: 0.64840233, b: 0, a: 1}
+    - _BoardRect: {r: 0, g: 0, b: 1, a: 1}
     - _CreaseColor: {r: 1.7, g: 0.7, b: 0.13, a: 1}
     - _DeepColor: {r: 0.36, g: 0.05, b: 0.02, a: 1}
     - _LightColor: {r: 0.86, g: 0.24, b: 0.05, a: 1}
+    - _ShoreColor: {r: 0, g: 0, b: 0, a: 1}
     - _SparkleColor: {r: 2.2, g: 1.25, b: 0.3, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

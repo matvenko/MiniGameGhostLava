@@ -1,0 +1,29 @@
+{
+  "device": "Pixel 9 Pro",
+  "android": "17",
+  "graphics": "Vulkan / Mali-G715",
+  "build": "Development ARM64",
+  "samples": [
+    {
+      "frames": 301,
+      "targetFps": -1,
+      "width": 2142,
+      "height": 960,
+      "seconds": 10.029987335205078,
+      "averageFps": 30.010007858276367,
+      "p95Ms": 33.4232063293457,
+      "worstMs": 34.117977142333984
+    },
+    {
+      "frames": 301,
+      "targetFps": -1,
+      "width": 2142,
+      "height": 960,
+      "seconds": 10.029607772827148,
+      "averageFps": 30.011144638061523,
+      "p95Ms": 33.47499465942383,
+      "worstMs": 34.260780334472656
+    }
+  ],
+  "scope": "Short active LavaScene windows; excludes menus, paused popups and warm-up; not a sustained thermal or release-build test"
+}
