@@ -4,8 +4,8 @@ using TMPro;
 // Persistent coin wallet, separate from RewardSystem's per-level "X / Y
 // collected" objective counter. Survives level transitions and individual
 // deaths via RunProgress, which keeps one wallet per difficulty. Nothing takes
-// coins back off the player any more: running out of lives costs a life and an
-// ad to come back, not the wallet (see RunProgress.LeaveRun).
+// coins back off the player any more: running out of lives costs an ad to come
+// back, not the wallet.
 public class EconomyManager : MonoBehaviour
 {
     public static EconomyManager Instance { get; private set; }

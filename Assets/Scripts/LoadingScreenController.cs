@@ -693,11 +693,10 @@ public class LoadingScreenController : MonoBehaviour
 
     // The gold button.
     //
-    // A saved run with lives left is simply picked up where it was left: nothing
-    // is charged for coming back, because leaving already cost a life. A saved
-    // run with none left needs a life before it can be played at all, and a
-    // rewarded video is what buys it - one life, exactly, with the level, the
-    // wallet and the abilities untouched underneath.
+    // A saved run with lives left is simply picked up where it was put down, and
+    // costs nothing to come back to. A run with no lives left cannot be played
+    // at all until it has one, and a rewarded video is what buys it - one life,
+    // exactly, with the level, the wallet and the abilities untouched.
     private void OnPlayPressed()
     {
         if (!ready || leaving || watching) return;

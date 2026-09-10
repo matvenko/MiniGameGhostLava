@@ -157,14 +157,12 @@ public class GameOverManager : MonoBehaviour
         RespawnPlayerAndEnemies();
     }
 
-    // Giving up keeps everything the run earned - the level, the wallet and the
-    // abilities all stay in the save, waiting for a continue. What it costs is a
-    // life, the same as walking out through the pause menu, and by the time this
-    // screen is up the last one is already spent: coming back will cost an ad
-    // (see RunProgress.LeaveRun).
+    // Giving up keeps everything the run earned and charges nothing for it - the
+    // level, the wallet and the abilities all stay in the save. The lives are
+    // already spent, which is what this screen is about, so coming back to this
+    // board from the menu will cost an ad (see RunProgress and RewardedAds).
     private void OnMainMenuClicked()
     {
-        RunProgress.LeaveRun();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainMenuSceneName);
     }

@@ -39,9 +39,11 @@ public static class RunProgress
     public static int Teleports { get => Read("teleports", 0); set => Write("teleports", Mathf.Max(0, value)); }
     public static int Traps { get => Read("traps", 0); set => Write("traps", Mathf.Max(0, value)); }
 
-    // Lives left in the saved run. A save that has never written one down is a
-    // run that has not started losing yet, so it reads as a full set for the
-    // mode it belongs to (see DifficultySettings.StartingLives).
+    // Lives left in the saved run. Nothing is charged for walking away from a
+    // board - the run is put down exactly as deep and as nearly out of lives as
+    // it was - so this only ever moves when a life is actually lost, spent or
+    // bought. A save that has never written one down has not started losing
+    // yet, so it reads as a full set for the mode it belongs to.
     public static int Lives
     {
         get => LivesOf(DifficultySettings.Current);
@@ -54,16 +56,6 @@ public static class RunProgress
         return stored >= 0 ? stored : DifficultySettings.StartingLives(DifficultySettings.AuthoredStartingLives);
     }
 
-    // Walking away from a board costs a life, whichever door was used: the pause
-    // menu, or the game over screen once the last one is already spent. It is
-    // the price of keeping the level, the wallet and the abilities, and it is
-    // what eventually empties the run out and makes a continue cost an ad.
-    public static void LeaveRun()
-    {
-        Started = true;
-        Lives = Mathf.Max(0, Lives - 1);
-    }
-
     // Whether a board has ever been laid out on this save. Without it a run that
     // was quit on level one, before it had picked anything up, would look
     // exactly like a game that was never started - and its spent lives would
@@ -73,6 +65,7 @@ public static class RunProgress
         get => Read("started", 0) != 0;
         set => Write("started", value ? 1 : 0);
     }
+
     // Whether there is anything worth continuing. A game that was never started,
     // never left level one and never picked anything up is indistinguishable from
     // a new game, so the menu offers to start one instead of resuming it.

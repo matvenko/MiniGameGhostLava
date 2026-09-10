@@ -6,9 +6,9 @@ using UnityEngine.UI;
 // back up to HardCap (6) as a consumable purchase (see AddLife) - never touches
 // the coin wallet.
 //
-// Lives are saved rather than reset per board (see RunProgress): leaving for the
-// main menu costs one and keeps the rest, so coming back finds the run exactly
-// as deep, as rich and as nearly out of lives as it was left. Running out is
+// Lives are saved rather than reset per board (see RunProgress), and leaving for
+// the main menu costs nothing: coming back finds the run exactly as deep, as
+// rich and with exactly as many lives as it was put down with. Running out is
 // what makes a continue cost a rewarded ad.
 public class LivesManager : MonoBehaviour
 {
