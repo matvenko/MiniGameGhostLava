@@ -34,8 +34,10 @@ internal static class PanelArt
         public float sheenHeight;
     }
 
-    // A rounded panel filling the texture, inset by the style's pad.
-    public static Sprite Panel(string path, int w, int h, Style s)
+    // A rounded panel filling the texture, inset by the style's pad. A border
+    // makes it a nine-slice, for a panel that has to stretch - the guide book's
+    // cards grow with what is written on them.
+    public static Sprite Panel(string path, int w, int h, Style s, Vector4 border = default)
     {
         var px = new Color[w * h];
 
@@ -82,7 +84,7 @@ internal static class PanelArt
             px[y * w + x] = c;
         }
 
-        return HudArt.Write(path, px, w, h, 1);
+        return HudArt.Write(path, px, w, h, 1, border);
     }
 
     // One of the little lit beads a card uses to show where the ability buttons
