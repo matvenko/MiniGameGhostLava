@@ -12,6 +12,8 @@ using UnityEngine;
 // three different components and the lighting window, which is exactly why it is
 // gathered here: a theme is one row in the inspector, and adding a third setting
 // later is another row rather than another pass through the game.
+// Instance must exist before LevelManager.Awake applies the level's theme.
+[DefaultExecutionOrder(-100)]
 public class BoardThemes : MonoBehaviour
 {
     public static BoardThemes Instance { get; private set; }

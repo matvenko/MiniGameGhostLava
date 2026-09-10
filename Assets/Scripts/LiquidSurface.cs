@@ -20,6 +20,8 @@ using UnityEngine;
 // Renderer.forceRenderingOff (which is not serialized), so nothing this class
 // does can leak into the saved scene.
 [ExecuteAlways]
+// Instance must exist before LevelManager.Awake applies the level's theme.
+[DefaultExecutionOrder(-100)]
 public class LiquidSurface : MonoBehaviour
 {
     public static LiquidSurface Instance { get; private set; }

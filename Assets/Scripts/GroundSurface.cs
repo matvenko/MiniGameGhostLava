@@ -15,6 +15,8 @@ using UnityEngine;
 // through the non-serialized Renderer.forceRenderingOff, so nothing leaks into
 // the saved scene.
 [ExecuteAlways]
+// Instance must exist before LevelManager.Awake applies the level's theme.
+[DefaultExecutionOrder(-100)]
 public class GroundSurface : MonoBehaviour
 {
     public static GroundSurface Instance { get; private set; }
