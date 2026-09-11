@@ -283,7 +283,7 @@ public class TestModeOverlay : MonoBehaviour
             bool worst = l.level == r.mostDeathsLevel && l.deaths > 0;
             if (worst) rows.Append("<color=#FF8A8A>");
             rows.Append(Row(
-                l.level + (l.joinedMidLevel ? "*" : "") + (l.completed ? "" : " ✕"),
+                l.level + (l.joinedMidLevel ? "*" : "") + (l.completed ? "" : " ×"),
                 RunRecord.Clock(Mathf.RoundToInt(l.seconds)),
                 l.coinsCollected + "/" + l.coinsOnBoard,
                 "+" + l.walletEarned + (l.friendlyGhostsCaught > 0 ? " ♥" : ""),
@@ -294,7 +294,7 @@ public class TestModeOverlay : MonoBehaviour
             if (worst) rows.Append("</color>");
             rows.Append('\n');
         }
-        rows.Append("\n<size=17><color=#8088AA>* joined mid-level   ✕ not cleared   ♥ friendly ghost caught   L lava   H hunters</color></size>");
+        rows.Append("\n<size=17><color=#8088AA>* joined mid-level   × not cleared   ♥ friendly ghost caught   L lava   H hunters</color></size>");
         text.text = rows.ToString();
 
         var scroll = viewport.gameObject.AddComponent<ScrollRect>();
