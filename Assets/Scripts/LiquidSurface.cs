@@ -246,7 +246,8 @@ public class LiquidSurface : MonoBehaviour
         properties.SetVector("_BoardRect",new Vector4(footprint.min.x,footprint.min.z,width,height));
         properties.SetFloat("_ShoreEnabled",1);
         _surface.GetComponent<MeshRenderer>().SetPropertyBlock(properties);
-        if(bankMaterial!=null && _blocksParent!=null && _blocksParent.childCount>0)
+        if(bankMaterial!=null && _blocksParent!=null && _blocksParent.childCount>0
+            && !(liquidMaterial.HasProperty("_IceWater") && liquidMaterial.GetFloat("_IceWater") > .5f))
         {
             var go=new GameObject("Meadow bank grass",typeof(MeshFilter),typeof(MeshRenderer));
             go.hideFlags=HideFlags.DontSave;go.transform.SetParent(transform,false);go.transform.position=Vector3.zero;

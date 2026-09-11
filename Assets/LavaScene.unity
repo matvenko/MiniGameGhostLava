@@ -7598,6 +7598,8 @@ MonoBehaviour:
   previewCentre: {x: 2.0200005, y: 1}
   previewSize: {x: 30, y: 20}
   groundY: 0.32
+  snowMaterial: {fileID: 2100000, guid: 528b6e1434e521948b3d96f0e34721ec, type: 2}
+  crystalMaterial: {fileID: 2100000, guid: 4edcc251e13423e4ea239bcc0dc6fa3a, type: 2}
 --- !u!4 &113490518
 Transform:
   m_ObjectHideFlags: 0
@@ -14731,7 +14733,7 @@ MonoBehaviour:
     flatBackground: 1
     backgroundColour: {r: 0.045, g: 0.03, b: 0.045, a: 1}
   - name: Cave
-    fromLevel: 11
+    fromLevel: 17
     blockTile: {fileID: 2100000, guid: 1c0ca638da1625b48b3004ead0b49d18, type: 2}
     lavaTile: {fileID: 2100000, guid: 66b6f1e6eb3882a43802e39c59163cce, type: 2}
     ground: {fileID: 2100000, guid: 1047ed7403579b94a95479f52aebaadc, type: 2}
@@ -14748,6 +14750,24 @@ MonoBehaviour:
     fogDensity: 0.035
     flatBackground: 1
     backgroundColour: {r: 0.045, g: 0.03, b: 0.045, a: 1}
+  - name: Ice Cavern
+    fromLevel: 11
+    blockTile: {fileID: 2100000, guid: 1488f4654d076e44e8683f7d91e603d1, type: 2}
+    lavaTile: {fileID: 2100000, guid: 74047916d23957841a8a37979bfb9735, type: 2}
+    ground: {fileID: 2100000, guid: 1488f4654d076e44e8683f7d91e603d1, type: 2}
+    liquid: {fileID: 2100000, guid: 74047916d23957841a8a37979bfb9735, type: 2}
+    liquidBed: {fileID: 2100000, guid: 59ce5c7984d634948ac78aa1b5145b5c, type: 2}
+    wall: {fileID: 2100000, guid: 5903e3742adf4944fb1908368f698200, type: 2}
+    sunColour: {r: 0.73, g: 0.87, b: 1, a: 1}
+    sunIntensity: 1.05
+    flatAmbient: 1
+    ambient: {r: 0.36, g: 0.44, b: 0.57, a: 1}
+    skyAmbientIntensity: 1
+    fog: 1
+    fogColour: {r: 0.075, g: 0.13, b: 0.21, a: 1}
+    fogDensity: 0.014
+    flatBackground: 1
+    backgroundColour: {r: 0.045, g: 0.08, b: 0.14, a: 1}
   sun: {fileID: 0}
   boardCamera: {fileID: 0}
 --- !u!4 &188175354
@@ -94384,7 +94404,7 @@ Transform:
   m_GameObject: {fileID: 1121160427}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0.7071068, w: 0}
-  m_LocalPosition: {x: -0.98, y: 11, z: -0.6479335}
+  m_LocalPosition: {x: -0.98, y: 10, z: -0.6479335}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
