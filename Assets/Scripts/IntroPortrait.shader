@@ -1,4 +1,4 @@
-Shader "PacGhost/Portrait"
+Shader "MazeBoo/Portrait"
 {
     Properties { _MainTex ("Character texture", 2D) = "white" {} _Tint ("Tint", Color) = (1,0.64,1,1) }
     SubShader

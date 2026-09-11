@@ -92,7 +92,7 @@ public class LoadingScreenController : MonoBehaviour
     {
         if (introFont != null) font = introFont;
         BuildRoundSprite();
-        var root = new GameObject("Pac Ghost Intro", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        var root = new GameObject("Maze Boo Intro", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         root.transform.SetParent(transform, false);
         root.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
         root.GetComponent<Canvas>().sortingOrder = 100;
@@ -546,7 +546,7 @@ public class LoadingScreenController : MonoBehaviour
         portraitFraming = framing;
 
         characterTexture = new RenderTexture(768, 768, 24, RenderTextureFormat.ARGB32);
-        characterTexture.name = "Pac Ghost character portrait";
+        characterTexture.name = "Maze Boo character portrait";
         characterTexture.Create();
         var portrait = hero.gameObject.AddComponent<RawImage>();
         portrait.texture = characterTexture;

@@ -67,7 +67,7 @@ public static class GhoulEnemySetup
         };
     }
 
-    [MenuItem("Tools/Ghost Lava/Set Up Ghoul Enemy")]
+    [MenuItem("Tools/Maze Boo/Set Up Ghoul Enemy")]
     public static void Run()
     {
         if (AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath) == null)

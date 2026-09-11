@@ -73,7 +73,7 @@ public static class ShopPopupBuilder
     private static readonly Color Muted = new Color32(0xAF, 0xC0, 0xE6, 0xFF);
     private static readonly Color Gold = new Color32(0xFF, 0xC9, 0x3A, 0xFF);
 
-    [MenuItem("Tools/Pac Ghost/Build Shop Popup")]
+    [MenuItem("Tools/Maze Boo/Build Shop Popup")]
     public static void Build()
     {
         if (EditorApplication.isPlaying)

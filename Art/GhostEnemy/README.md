@@ -1,6 +1,6 @@
 # Spectral Hunter
 
-Original ghost enemy created in Blender 5.2 for miniGame01.
+Original ghost enemy created in Blender 5.2 for Maze Boo.
 
 - Source: `SpectralHunter.blend`; editable meshes, five-bone armature, studio and two cameras.
 - Unity export: `Assets/Characters/SpectralHunter/SpectralHunter.fbx`.

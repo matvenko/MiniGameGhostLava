@@ -6,4 +6,4 @@ Unity assets: Assets/Characters/ApexGhoul, including FBX, five URP/Lit materials
 
 3,208 triangles; five bones; one-second Apex_Hunt_Loop with stationary root. Blender loop matrix error < 1e-5. Unity import and rendering verified; animation sampling moved bones 0.034m, while speed=0 produced zero displacement. Unity portraits are isolated editor previews using scene lighting, not a full gameplay run. Chase/contact and freeze-effect playthrough remain untested.
 
-The legacy Tools/Ghost Lava/Set Up Ghoul Enemy command restores the original imported ghoul; do not run it to install this variant.
+The legacy Tools/Maze Boo/Set Up Ghoul Enemy command restores the original imported ghoul; do not run it to install this variant.

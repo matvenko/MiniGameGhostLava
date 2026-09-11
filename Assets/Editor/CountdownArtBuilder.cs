@@ -29,7 +29,7 @@ public static class CountdownArtBuilder
     private const float BackdropSize = 300f;
     private const float NumberSize = 210f;
 
-    [MenuItem("Tools/Pac Ghost/Build Countdown Art")]
+    [MenuItem("Tools/Maze Boo/Build Countdown Art")]
     public static void Build()
     {
         if (EditorApplication.isPlaying)

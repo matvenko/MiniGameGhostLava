@@ -24,7 +24,7 @@ public static class CaveTileBuilder
     private static readonly Color PlateLight = new Color(.315f, .30f, .355f);
     private static readonly Color Ember = new Color(1f, .42f, .10f);
 
-    [MenuItem("Tools/Pac Ghost/Build Cave Tiles")]
+    [MenuItem("Tools/Maze Boo/Build Cave Tiles")]
     public static void Build()
     {
         Directory.CreateDirectory(OutDir);

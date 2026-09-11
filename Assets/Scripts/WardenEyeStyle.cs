@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Ghost Lava/Warden Eye Style")]
+[CreateAssetMenu(menuName = "Maze Boo/Warden Eye Style")]
 public sealed class WardenEyeStyle : ScriptableObject
 {
     public string styleId;

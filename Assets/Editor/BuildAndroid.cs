@@ -17,7 +17,7 @@ using UnityEngine;
 public static class BuildAndroid
 {
     const string OutputFolder = "Builds/Android";
-    const string ApkName = "PacGhost.apk";
+    const string ApkName = "MazeBoo.apk";
     const string ReportFile = "Builds/android_build_report.txt";
 
     [MenuItem("Build/Android APK")]

@@ -13,7 +13,7 @@ using UnityEngine;
 public static class BuildWindows
 {
     const string OutputFolder = "Builds/Windows";
-    const string ExecutableName = "miniGame01.exe";
+    const string ExecutableName = "MazeBoo.exe";
     const string ReportFile = "Builds/windows_build_report.txt";
 
     [MenuItem("Build/Windows x64")]

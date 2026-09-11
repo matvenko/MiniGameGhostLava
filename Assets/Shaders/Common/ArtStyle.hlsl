@@ -1,5 +1,5 @@
-#ifndef GHOSTLAVA_ART_STYLE_INCLUDED
-#define GHOSTLAVA_ART_STYLE_INCLUDED
+#ifndef MAZEBOO_ART_STYLE_INCLUDED
+#define MAZEBOO_ART_STYLE_INCLUDED
 
 // The scene's shared visual language. Every surface shader includes this and
 // lights itself through ArtCelLight, so the ground, the wall and anything added

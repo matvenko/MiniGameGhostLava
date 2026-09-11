@@ -273,7 +273,7 @@ public static class GuideBookBuilder
         if (sprite == null)
         {
             Debug.LogError("[GuideBook] No sprite at " + path + ". Build the pause card and the shop first " +
-                           "(Tools/Build Settings Popup, Tools/Pac Ghost/Build Shop Popup).");
+                           "(Tools/Build Settings Popup, Tools/Maze Boo/Build Shop Popup).");
             return false;
         }
         Keep(name, sprite, pad);

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Ghost Lava/Warden Skin")]
+[CreateAssetMenu(menuName = "Maze Boo/Warden Skin")]
 public sealed class WardenSkin : ScriptableObject
 {
     [Tooltip("Stable ID for the future inventory/shop. Changing colors does not change ownership.")]

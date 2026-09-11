@@ -2,9 +2,9 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-public static class PacGhostIntroPreview
+public static class MazeBooIntroPreview
 {
-    [MenuItem("Tools/Pac Ghost/Preview Intro")]
+    [MenuItem("Tools/Maze Boo/Preview Intro")]
     public static void Preview()
     {
         if (EditorApplication.isPlaying) { EditorApplication.isPlaying = false; return; }

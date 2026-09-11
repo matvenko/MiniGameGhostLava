@@ -1,6 +1,6 @@
 # Veil Reaper
 
-Blender 5.2 ghost enemy for miniGame01. A dark violet, ragged hooded reaper with pale skeletal claws, a recessed screaming skull, icy eyes and swept mantle strips. Built using the project's Shroud Revenant geometry helpers, with a new mantle, hood edging, ten-bone rig, claw deformation and three animations. SpectralHunter and existing scenes are preserved.
+Blender 5.2 ghost enemy for Maze Boo. A dark violet, ragged hooded reaper with pale skeletal claws, a recessed screaming skull, icy eyes and swept mantle strips. Built using the project's Shroud Revenant geometry helpers, with a new mantle, hood edging, ten-bone rig, claw deformation and three animations. SpectralHunter and existing scenes are preserved.
 
 - `VeilReaper.blend`: editable source parts in a hidden SOURCE collection, detailed skinned mesh, hidden game mesh, rig, three actions, portrait and straight-down cameras.
 - `VeilReaper_EnvironmentPreview.blend`: game mesh on the exported LavaScene board; approximate Blender environment materials, not a Unity runtime capture.
