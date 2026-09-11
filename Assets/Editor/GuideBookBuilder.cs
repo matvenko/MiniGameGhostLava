@@ -61,13 +61,19 @@ public static class GuideBookBuilder
     private static readonly RectInt PlateWord = new RectInt(488, 244, 1184, 260);
     private const int PlateSample = 24;
     private static readonly Vector2 WordCentre = new Vector2(1080f, 395f);
-    private static readonly Vector2 GearLeft = new Vector2(209f, 446f), GearRight = new Vector2(1923f, 446f);
-    private const float GearSize = 274f;
+    // The gears' hubs, measured as the centroid of their grey, and how wide the
+    // badge over each is drawn: the teeth and the shading under them reach
+    // about 140px from the hub, and the badge's rim is soft, so it is drawn
+    // wide enough to hide all of that and still sit in the dark socket.
+    private static readonly Vector2 GearLeft = new Vector2(224f, 386f), GearRight = new Vector2(1904f, 387f);
+    private const float BadgeSize = 296f;
 
     // The yellow info badge on the sheet, in sheet pixels from the bottom, with
-    // as much margin as the gap to its neighbours allows.
-    private static readonly RectInt InfoBadge = new RectInt(233, 83, 79, 79);
-    private const int InfoPad = 5;
+    // the disc centred in it and as much margin as the gap to its neighbours
+    // allows. The pad is the margin round the disc itself, so a badge placed at
+    // a width is the disc at that width.
+    private static readonly RectInt InfoBadge = new RectInt(233, 81, 79, 79);
+    private const int InfoPad = 3;
 
     // ---- layout, in canvas units against the 1920x1080 the scaler matches ---
 
@@ -567,8 +573,8 @@ public static class GuideBookBuilder
 
         float k = PlateW / _plateBody.width;
         Vector2 centre = _plateBody.center;
-        MidSheet(popup, "BadgeLeft", "info", GearSize * k * 1.06f, top + (GearLeft - centre) * k);
-        MidSheet(popup, "BadgeRight", "info", GearSize * k * 1.06f, top + (GearRight - centre) * k);
+        MidSheet(popup, "BadgeLeft", "info", BadgeSize * k, top + (GearLeft - centre) * k);
+        MidSheet(popup, "BadgeRight", "info", BadgeSize * k, top + (GearRight - centre) * k);
 
         RectTransform box = MidNode(popup, "Title", 360f, 84f, top + (WordCentre - centre) * k);
         var title = box.gameObject.AddComponent<TextMeshProUGUI>();
