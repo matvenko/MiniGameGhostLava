@@ -1,7 +1,7 @@
 import bpy, math, json, os
 from mathutils import Vector
 from math import sin, cos, pi
-BASE='D:/Projects/miniGame01/Art/VeilReaper'
+BASE='D:/Projects/MazeBoo/Art/VeilReaper'
 exec(compile(open(BASE+'/create_veil_reaper.py',encoding='utf-8-sig').read(),BASE+'/create_veil_reaper.py','exec'))
 # Pale frayed hood seam: readable against both grass and blue water.
 pts=[face((.246*cos(t),.30*sin(t)+.034*max(0,sin(t))**8,.063)) for t in [2*pi*j/96 for j in range(97)]]

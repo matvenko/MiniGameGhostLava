@@ -1,6 +1,6 @@
 import bpy,json,math
 from mathutils import Vector
-P='D:/Projects/miniGame01/Art/VeilReaper';G='D:/Projects/miniGame01/Assets/Characters/VeilReaper'
+P='D:/Projects/MazeBoo/Art/VeilReaper';G='D:/Projects/MazeBoo/Assets/Characters/VeilReaper'
 bpy.ops.wm.open_mainfile(filepath=P+'/VeilReaper.blend');sc=bpy.context.scene;rig=bpy.data.objects['VeilReaper'];hi=bpy.data.objects['VeilReaper_Skinned'];sc.frame_set(1)
 lod=hi.copy();lod.data=hi.data.copy();lod.name='VeilReaper_GameMesh';hi.users_collection[0].objects.link(lod)
 bpy.ops.object.select_all(action='DESELECT');lod.select_set(True);bpy.context.view_layer.objects.active=lod
@@ -27,7 +27,7 @@ for area in bpy.context.screen.areas:
  if area.type=='VIEW_3D':area.spaces.active.shading.type='SOLID';area.spaces.active.shading.color_type='MATERIAL';area.spaces.active.shading.show_cavity=True
 bpy.ops.wm.save_as_mainfile(filepath=P+'/VeilReaper.blend')
 # Actual exported board geometry and textures, rendered in Blender.
-bpy.ops.wm.open_mainfile(filepath='D:/Projects/miniGame01/Art/BlenderExport/LavaScene_Environment.blend')
+bpy.ops.wm.open_mainfile(filepath='D:/Projects/MazeBoo/Art/BlenderExport/LavaScene_Environment.blend')
 sc=bpy.context.scene
 with bpy.data.libraries.load(P+'/VeilReaper.blend',link=False) as (src,dst):dst.collections=[n for n in src.collections if n.startswith('VEIL REAPER')]
 for col in dst.collections:sc.collection.children.link(col)

@@ -1,8 +1,8 @@
 import bpy, math, os, json
 from mathutils import Vector
 from math import sin,cos,pi
-P='D:/Projects/miniGame01/Art/FriendlyGhost'
-G='D:/Projects/miniGame01/Assets/Characters/FriendlyGhost'
+P='D:/Projects/MazeBoo/Art/FriendlyGhost'
+G='D:/Projects/MazeBoo/Assets/Characters/FriendlyGhost'
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 sc=bpy.context.scene
 def mat(name,color,rough=.4,em=0):

@@ -2,8 +2,8 @@
 import bpy, math, json, os
 from mathutils import Vector, Matrix
 from math import sin, cos, pi
-OUT='D:/Projects/miniGame01/Art/GhostEnemy/DuskProwler'
-GAME='D:/Projects/miniGame01/Assets/Characters/DuskProwler'
+OUT='D:/Projects/MazeBoo/Art/GhostEnemy/DuskProwler'
+GAME='D:/Projects/MazeBoo/Assets/Characters/DuskProwler'
 os.makedirs(OUT,exist_ok=True);os.makedirs(GAME,exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene=bpy.context.scene;scene.name='Dusk Prowler | Overhead studio'

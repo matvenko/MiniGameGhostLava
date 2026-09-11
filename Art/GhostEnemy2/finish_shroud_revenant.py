@@ -1,6 +1,6 @@
 import bpy,json
-OUT='D:/Projects/miniGame01/Art/GhostEnemy/ShroudRevenant'
-GAME='D:/Projects/miniGame01/Assets/Characters/ShroudRevenant'
+OUT='D:/Projects/MazeBoo/Art/GhostEnemy/ShroudRevenant'
+GAME='D:/Projects/MazeBoo/Assets/Characters/ShroudRevenant'
 bpy.ops.wm.open_mainfile(filepath=OUT+'/ShroudRevenant.blend')
 sc=bpy.context.scene;rig=bpy.data.objects['ShroudRevenant'];hi=bpy.data.objects['ShroudRevenant_DetailedMesh'];sc.frame_set(1)
 old=bpy.data.objects.get('ShroudRevenant_GameMesh')

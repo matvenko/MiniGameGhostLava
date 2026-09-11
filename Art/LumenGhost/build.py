@@ -3,7 +3,7 @@ import bpy, math, os, json, bmesh
 from mathutils import Vector, Matrix
 from math import sin, cos, pi
 
-ROOT = 'D:/Projects/miniGame01'
+ROOT = 'D:/Projects/MazeBoo'
 OUT = ROOT + '/Art/LumenGhost'
 GAME = ROOT + '/Assets/Characters/LumenGhost'
 os.makedirs(OUT, exist_ok=True)

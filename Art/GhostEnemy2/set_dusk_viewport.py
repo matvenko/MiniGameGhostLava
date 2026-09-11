@@ -1,5 +1,5 @@
 import bpy
-p='D:/Projects/miniGame01/Art/GhostEnemy/DuskProwler/DuskProwler.blend'
+p='D:/Projects/MazeBoo/Art/GhostEnemy/DuskProwler/DuskProwler.blend'
 bpy.ops.wm.open_mainfile(filepath=p)
 for screen in bpy.data.screens:
     for a in screen.areas:

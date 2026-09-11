@@ -2,8 +2,8 @@ import bpy, math, json, os
 from mathutils import Vector, Quaternion
 from math import sin, cos, pi
 
-OUT = 'D:/Projects/miniGame01/Art/GhostEnemy'
-GAME = 'D:/Projects/miniGame01/Assets/Characters/SpectralHunter'
+OUT = 'D:/Projects/MazeBoo/Art/GhostEnemy'
+GAME = 'D:/Projects/MazeBoo/Assets/Characters/SpectralHunter'
 os.makedirs(OUT, exist_ok=True)
 os.makedirs(GAME, exist_ok=True)
 # A new scene preserves any existing work in the open Blender session.

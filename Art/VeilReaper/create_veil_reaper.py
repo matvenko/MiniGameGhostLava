@@ -2,8 +2,8 @@
 import bpy, math, os, json
 from math import sin,cos,pi
 from mathutils import Vector,Matrix
-OUT='D:/Projects/miniGame01/Art/VeilReaper'
-GAME='D:/Projects/miniGame01/Assets/Characters/VeilReaper'
+OUT='D:/Projects/MazeBoo/Art/VeilReaper'
+GAME='D:/Projects/MazeBoo/Assets/Characters/VeilReaper'
 os.makedirs(OUT,exist_ok=True);os.makedirs(GAME,exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc=bpy.context.scene;sc.name='Veil Reaper';sc.unit_settings.system='METRIC';sc.unit_settings.scale_length=1;sc.render.fps=30;sc.frame_start=1;sc.frame_end=61

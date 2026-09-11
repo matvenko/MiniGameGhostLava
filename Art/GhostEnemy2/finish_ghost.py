@@ -1,6 +1,6 @@
 import bpy, json, math
 from mathutils import Vector
-OUT='D:/Projects/miniGame01/Art/GhostEnemy'
+OUT='D:/Projects/MazeBoo/Art/GhostEnemy'
 scene=bpy.context.scene
 rig=bpy.data.objects['SpectralHunter']
 def pose(frame):

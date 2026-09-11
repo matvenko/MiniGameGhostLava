@@ -1,5 +1,5 @@
 import bpy,json
-P='D:/Projects/miniGame01/Art/PinkGhost'
+P='D:/Projects/MazeBoo/Art/PinkGhost'
 d=json.load(open(P+'/source.json'));bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 vs=[(p['x'],p['y'],p['z']) for p in d['vertices']];tri=d['triangles'];fs=[tri[i:i+3] for i in range(0,len(tri),3)]
 me=bpy.data.meshes.new('Original pink ghost');me.from_pydata(vs,[],fs);me.update();o=bpy.data.objects.new('Pink ghost refined original',me);bpy.context.collection.objects.link(o);bpy.context.view_layer.objects.active=o;o.select_set(True)

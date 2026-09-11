@@ -1,8 +1,8 @@
 import bpy, math, json
 from mathutils import Vector,Matrix
 from math import sin,cos,pi
-P='D:/Projects/miniGame01/Art/ApexGhoul';G='D:/Projects/miniGame01/Assets/Characters/ApexGhoul'
-bpy.ops.wm.open_mainfile(filepath='D:/Projects/miniGame01/Art/GhostEnemy2/SpectralHunter.blend')
+P='D:/Projects/MazeBoo/Art/ApexGhoul';G='D:/Projects/MazeBoo/Assets/Characters/ApexGhoul'
+bpy.ops.wm.open_mainfile(filepath='D:/Projects/MazeBoo/Art/GhostEnemy2/SpectralHunter.blend')
 sc=bpy.context.scene;rig=bpy.data.objects['SpectralHunter'];rig.name='ApexGhoul';asset=rig.users_collection[0];sc.frame_set(1)
 palette=[('Porcelain','Obsidian Armor',(.15,.09,.26),.16),('Spectral edge','Pale Steel',(.56,.51,.72),.18),('Face','Void Mask',(.018,.012,.035),.08),('Hostile','Amber Gaze',(1,.39,.055),2),('Tail','Violet Mantle',(.29,.07,.40),.2)]
 for prefix,name,col,em in palette:

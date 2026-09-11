@@ -2,7 +2,7 @@
 import bpy, bmesh, math, os, json
 from mathutils import Vector, Matrix, Euler
 from math import sin, cos, pi
-ROOT='D:/Projects/miniGame01'
+ROOT='D:/Projects/MazeBoo'
 OUT=ROOT+'/Art/LanternWarden'; GAME=ROOT+'/Assets/Characters/LanternWarden'
 os.makedirs(OUT,exist_ok=True);os.makedirs(GAME,exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)

@@ -1,8 +1,8 @@
 import bpy,json
-OUT='D:/Projects/miniGame01/Art/GhostEnemy/DuskProwler'
+OUT='D:/Projects/MazeBoo/Art/GhostEnemy/DuskProwler'
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.context.scene.render.fps=30
-bpy.ops.import_scene.fbx(filepath='D:/Projects/miniGame01/Assets/Characters/DuskProwler/DuskProwler.fbx')
+bpy.ops.import_scene.fbx(filepath='D:/Projects/MazeBoo/Assets/Characters/DuskProwler/DuskProwler.fbx')
 objs=list(bpy.context.scene.objects)
 rig=next(o for o in objs if o.type=='ARMATURE');mesh=next(o for o in objs if o.type=='MESH')
 action=rig.animation_data.action

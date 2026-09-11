@@ -1,8 +1,8 @@
 import bpy, math, json
 from mathutils import Vector, Matrix
-P='D:/Projects/miniGame01/Art/FriendlySpectral'
-G='D:/Projects/miniGame01/Assets/Characters/FriendlySpectral'
-bpy.ops.wm.open_mainfile(filepath='D:/Projects/miniGame01/Art/GhostEnemy2/SpectralHunter.blend')
+P='D:/Projects/MazeBoo/Art/FriendlySpectral'
+G='D:/Projects/MazeBoo/Assets/Characters/FriendlySpectral'
+bpy.ops.wm.open_mainfile(filepath='D:/Projects/MazeBoo/Art/GhostEnemy2/SpectralHunter.blend')
 sc=bpy.context.scene;rig=bpy.data.objects['SpectralHunter'];rig.name='FriendlySpectral';sc.frame_set(1)
 asset=rig.users_collection[0]
 palette=[('Porcelain', 'Spirit Ivory',(.83,.94,.89),.10),('Spectral edge','Pearl Rim',(.94,1,.92),.18),('Face','Deep Teal',(.022,.065,.076),.04),('Hostile','Kind Eyes',(.58,1,.83),1.1),('Tail','Jade Wisp',(.20,.60,.51),.15)]

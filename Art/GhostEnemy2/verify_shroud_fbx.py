@@ -1,7 +1,7 @@
 import bpy,json
-OUT='D:/Projects/miniGame01/Art/GhostEnemy/ShroudRevenant'
+OUT='D:/Projects/MazeBoo/Art/GhostEnemy/ShroudRevenant'
 bpy.ops.wm.read_factory_settings(use_empty=True);s=bpy.context.scene;s.render.fps=30
-bpy.ops.import_scene.fbx(filepath='D:/Projects/miniGame01/Assets/Characters/ShroudRevenant/ShroudRevenant_Game.fbx')
+bpy.ops.import_scene.fbx(filepath='D:/Projects/MazeBoo/Assets/Characters/ShroudRevenant/ShroudRevenant_Game.fbx')
 objs=list(s.objects);rig=next(o for o in objs if o.type=='ARMATURE');mesh=next(o for o in objs if o.type=='MESH');act=rig.animation_data.action
 def pose(f):
  s.frame_set(f);bpy.context.view_layer.update();return {b.name:[x for row in b.matrix for x in row] for b in rig.pose.bones}

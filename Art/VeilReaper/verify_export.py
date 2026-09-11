@@ -1,7 +1,7 @@
 import bpy,json
-P='D:/Projects/miniGame01/Art/VeilReaper'
+P='D:/Projects/MazeBoo/Art/VeilReaper'
 bpy.ops.wm.read_factory_settings(use_empty=True)
-bpy.ops.import_scene.fbx(filepath='D:/Projects/miniGame01/Assets/Characters/VeilReaper/VeilReaper_Game.fbx')
+bpy.ops.import_scene.fbx(filepath='D:/Projects/MazeBoo/Assets/Characters/VeilReaper/VeilReaper_Game.fbx')
 rig=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE');mesh=next(o for o in bpy.context.scene.objects if o.type=='MESH')
 assert len(rig.data.bones)==10
 report={'bones':len(rig.data.bones),'triangles':sum(len(p.vertices)-2 for p in mesh.data.polygons),'actions':{}}
