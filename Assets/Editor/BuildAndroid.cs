@@ -52,6 +52,14 @@ public static class BuildAndroid
             return null;
         }
 
+        string signingProblem = PrepareSigning();
+        if (signingProblem != null)
+        {
+            File.WriteAllText(reportPath, "STATUS: FAILED\n" + signingProblem + "\n");
+            Debug.LogError("Android build: " + signingProblem);
+            return null;
+        }
+
         var options = new BuildPlayerOptions
         {
             scenes = scenes,
@@ -84,5 +92,25 @@ public static class BuildAndroid
         if (summary.result == BuildResult.Succeeded) Debug.Log("Android build succeeded: " + apkPath);
         else Debug.LogError("Android build " + summary.result + " - see " + ReportFile);
         return report;
+    }
+
+    // Unity forgets keystore passwords on restart, and a debug-signed APK cannot update a keystore-signed one.
+    static string PrepareSigning()
+    {
+        if (!PlayerSettings.Android.useCustomKeystore)
+            return "Custom Keystore is off (Player > Android > Publishing Settings); builds must be signed with the Maze Boo keystore.";
+
+        var keystore = PlayerSettings.Android.keystoreName;
+        if (string.IsNullOrEmpty(keystore) || !File.Exists(keystore))
+            return "Keystore not found at '" + keystore + "'. Copy mazeboo.keystore there or pick it in Publishing Settings.";
+
+        if (string.IsNullOrEmpty(PlayerSettings.Android.keystorePass))
+            PlayerSettings.Android.keystorePass = Environment.GetEnvironmentVariable("MAZEBOO_KEYSTORE_PASS") ?? "";
+        if (string.IsNullOrEmpty(PlayerSettings.Android.keyaliasPass))
+            PlayerSettings.Android.keyaliasPass = Environment.GetEnvironmentVariable("MAZEBOO_KEY_PASS") ?? "";
+        if (string.IsNullOrEmpty(PlayerSettings.Android.keystorePass) || string.IsNullOrEmpty(PlayerSettings.Android.keyaliasPass))
+            return "Keystore passwords are not set. Enter them in Publishing Settings (Unity forgets them on restart) or set MAZEBOO_KEYSTORE_PASS and MAZEBOO_KEY_PASS.";
+
+        return null;
     }
 }
