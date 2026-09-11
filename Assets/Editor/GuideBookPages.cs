@@ -373,8 +373,9 @@ internal static class GuideBookPages
             Name = "Lives", Role = "LIVES", RoleColour = Hex(0xFF8FC8), Glow = Hex(0xFF8FC8),
             Tagline = "How many chances you have left.",
             Body = "You start with " + startLives + " lives (" + normalLives + " on Normal) and can hold up to " +
-                   maxLives + ". Lava and enemies each take one. Run out and you can watch an ad to carry on " +
-                   "with one life, or go back to the menu: your level, coins and abilities are saved either way.",
+                   maxLives + ". Lava and enemies each take one. Run out and you can " +
+                   (RewardedAds.Live ? "watch an ad to carry on" : "carry on") +
+                   " with one life, or go back to the menu: your level, coins and abilities are saved either way.",
             Tip = "Top up with an Extra Life from the Shop before the harder levels.",
             IconPath = "Assets/UI/Icons/life_ghost.png", IconWidth = 170f
         };

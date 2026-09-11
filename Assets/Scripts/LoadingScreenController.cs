@@ -315,7 +315,7 @@ public class LoadingScreenController : MonoBehaviour
             // Out of lives, the button still continues the same run - it just
             // says out loud what it is about to cost.
             playNote.text=resuming && RunProgress.LivesOf(mode)<=0
-                ? where+"  ·  ad for 1 life"
+                ? where+(RewardedAds.Live?"  ·  ad for 1 life":"  ·  back with 1 life")
                 : where;
         }
         else playLabel.text="GETTING READY";
@@ -701,6 +701,7 @@ public class LoadingScreenController : MonoBehaviour
     {
         if (!ready || leaving || watching) return;
         if (!resuming || RunProgress.LivesOf(DifficultySettings.Current) > 0) { BeginGame(); return; }
+        if (!RewardedAds.Live) { PaidContinue(); return; }
         watching = true;
         play.interactable = false;
         fresh.interactable = false;

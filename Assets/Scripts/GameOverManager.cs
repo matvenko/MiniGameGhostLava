@@ -30,6 +30,14 @@ public class GameOverManager : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
         if (mainMenuButton != null) mainMenuButton.onClick.AddListener(OnMainMenuClicked);
+
+        // The label authored on the button promises a video; with no ad network
+        // behind it yet the same button just hands the life over.
+        if (!RewardedAds.Live && watchAdButton != null)
+        {
+            var label = watchAdButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null) label.text = "Continue with 1 Life";
+        }
     }
 
     // Called by GhostScript.Die() on every death. A life still remaining
@@ -84,7 +92,8 @@ public class GameOverManager : MonoBehaviour
         // coins and its abilities either way. The difference is only when the ad
         // is watched: now, to carry straight on, or from the menu later to come
         // back to the same board.
-        if (subText != null) subText.text = "Watch now to carry on, or later to come back";
+        if (subText != null)
+            subText.text = RewardedAds.Live ? "Watch now to carry on, or later to come back" : "Carry on now, or come back later";
 
         ShowRunSummary();
 

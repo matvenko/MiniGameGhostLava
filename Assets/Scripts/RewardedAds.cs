@@ -17,11 +17,24 @@ public static class RewardedAds
 {
     private const float StandInLength = 2f;
 
+    // Whether a real ad network is behind Show. Until one is, the store listing
+    // declares no ads, so nothing on screen may promise one either: the buttons
+    // that would offer a video offer the life straight out instead (see
+    // GameOverManager, LoadingScreenController and the Lives page of the guide
+    // book), and Show pays out at once rather than pretending to play something.
+    // Dropping the SDK in is also the moment to turn this on.
+    public static readonly bool Live = false;
+
     public static void Show(MonoBehaviour host, Action onRewarded, Action onUnavailable = null)
     {
         if (host == null || onRewarded == null)
         {
             if (onUnavailable != null) onUnavailable();
+            return;
+        }
+        if (!Live)
+        {
+            onRewarded();
             return;
         }
         host.StartCoroutine(StandInPlay(onRewarded));
