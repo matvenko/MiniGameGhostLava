@@ -57,6 +57,7 @@ public class GhostScript : MonoBehaviour
 
     void Start()
     {
+        CharacterGlow.Attach(gameObject);
         Anim = visualAnimator != null ? visualAnimator : GetComponent<Animator>();
         _visualProperties = new MaterialPropertyBlock();
         _lightIntensity = visualLight != null ? visualLight.intensity : 0f;

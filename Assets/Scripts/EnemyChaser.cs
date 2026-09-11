@@ -147,6 +147,7 @@ public class EnemyChaser : MonoBehaviour
 
     void Start()
     {
+        CharacterGlow.Attach(gameObject);
         _rb = GetComponent<Rigidbody>();
         _rb.isKinematic = true;
         _rb.useGravity = false;

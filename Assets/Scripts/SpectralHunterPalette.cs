@@ -51,6 +51,8 @@ public class SpectralHunterPalette : MonoBehaviour
     [Tooltip("The eyes. This is the colour that says which hunter is coming, so it carries most of the glow.")]
     [SerializeField] private Part eyes = new Part();
 
+    public Color GlowColour => body.colour;
+
     // Set once the five parts hold this hunter's own colours. Until then the
     // component has nothing to say and reads them off the materials instead, so
     // dropping it on a hunter never repaints it by surprise.

@@ -40,6 +40,7 @@ public class FriendlyGhostFlee : MonoBehaviour
 
     void Awake()
     {
+        CharacterGlow.Attach(gameObject);
         _rb = GetComponent<Rigidbody>();
         _rb.isKinematic = true;
         _rb.useGravity = false;
