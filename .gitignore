@@ -59,3 +59,10 @@ crashlytics-build.properties
 
 # Local addressables
 /[Aa]ddressables.log
+
+# Android native build intermediates (CMake)
+/.utmp/
+
+# Local scene backups
+/Assets/_Recovery/
+/Assets/_Recovery.meta
