@@ -50,8 +50,8 @@ public static class JoystickArtBuilder
 
     // Faint at rest. It sits over the middle of the board now, where the player
     // is looking and where the coins are, so it stays out of the way until a
-    // finger is on it - at which point the component takes it to full.
-    private const float IdleAlpha = 0.35f;
+    // finger is on it - at which point the component brings it up to its active alpha.
+    private const float IdleAlpha = 0.28f;
 
     [MenuItem("Tools/Build Joystick")]
     public static void Build()

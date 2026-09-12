@@ -14704,6 +14704,7 @@ MonoBehaviour:
     liquid: {fileID: 2100000, guid: 7cc165fbd34cbf746912ff120ff19a36, type: 2}
     liquidBed: {fileID: 0}
     wall: {fileID: 2100000, guid: b921091f57eff3d488cbe9191c4be206, type: 2}
+    mergeGround: 0
     sunColour: {r: 1, g: 0.91, b: 0.73, a: 1}
     sunIntensity: 1.35
     flatAmbient: 1
@@ -14722,6 +14723,7 @@ MonoBehaviour:
     liquid: {fileID: 2100000, guid: 8946f212ed789d24099759ee2386297c, type: 2}
     liquidBed: {fileID: 0}
     wall: {fileID: 2100000, guid: 5755d9a8244889541ab5906af4d55e14, type: 2}
+    mergeGround: 0
     sunColour: {r: 1, g: 0.58, b: 0.34, a: 1}
     sunIntensity: 0.6
     flatAmbient: 1
@@ -14740,6 +14742,7 @@ MonoBehaviour:
     liquid: {fileID: 2100000, guid: 8946f212ed789d24099759ee2386297c, type: 2}
     liquidBed: {fileID: 0}
     wall: {fileID: 2100000, guid: 5755d9a8244889541ab5906af4d55e14, type: 2}
+    mergeGround: 0
     sunColour: {r: 1, g: 0.58, b: 0.34, a: 1}
     sunIntensity: 0.6
     flatAmbient: 1
@@ -14758,6 +14761,7 @@ MonoBehaviour:
     liquid: {fileID: 2100000, guid: 74047916d23957841a8a37979bfb9735, type: 2}
     liquidBed: {fileID: 2100000, guid: 59ce5c7984d634948ac78aa1b5145b5c, type: 2}
     wall: {fileID: 2100000, guid: 5903e3742adf4944fb1908368f698200, type: 2}
+    mergeGround: 1
     sunColour: {r: 0.73, g: 0.87, b: 1, a: 1}
     sunIntensity: 1.05
     flatAmbient: 1
@@ -104084,7 +104088,8 @@ MonoBehaviour:
   handleRange: 72
   restMargin: 230
   restSideMargin: 260
-  idleAlpha: 0.35
+  idleAlpha: 0.28
+  activeAlpha: 0.8
   returnSpeed: 14
 --- !u!114 &1227035501
 MonoBehaviour:
@@ -172271,7 +172276,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2035675793}
   m_Enabled: 1
-  m_Alpha: 0.35
+  m_Alpha: 0.28
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -184681,7 +184686,6 @@ SceneRoots:
   - {fileID: 408811974}
   - {fileID: 800551045}
   - {fileID: 1600132193}
-  - {fileID: 2089225813}
   - {fileID: 1101818478}
   - {fileID: 2031664550}
   - {fileID: 1933568115}
@@ -184695,5 +184699,6 @@ SceneRoots:
   - {fileID: 700100181}
   - {fileID: 700100191}
   - {fileID: 188175354}
+  - {fileID: 2089225813}
   - {fileID: 113490518}
   - {fileID: 1650092581}

@@ -46,17 +46,18 @@ internal sealed class IceScenery
         }
         // Small hanging icicles along the outside face of the existing rampart.
         // Their tips remain above the ground and never add a collision surface.
-        var walls=GameObject.Find("Walls");
-        float crest=y+1.6f;
-        if(walls!=null)
-            foreach(var r in walls.GetComponentsInChildren<MeshRenderer>())crest=Mathf.Max(crest,r.bounds.max.y);
+        var wallSurface=Object.FindFirstObjectByType<WallSurface>();
+        float crest=y+1f, edgeX=x-.15f, edgeZ=z-.15f;
+        if(wallSurface!=null)
+            foreach(var r in wallSurface.GetComponentsInChildren<MeshRenderer>())
+            { crest=r.bounds.max.y; edgeX=r.bounds.extents.x-.04f; edgeZ=r.bounds.extents.z-.04f; }
         for(int side=0;side<4;side++)
         {
             float span=side<2?x:z;
             for(float t=-span+.7f;t<span-.7f;t+=1.1f)
             {
-                Vector3 p=side==0?P(t,-z-.12f):side==1?P(t,z+.12f):side==2?P(-x-.12f,t):P(x+.12f,t);
-                p.y=crest-y-.12f;
+                Vector3 p=side==0?P(t,-edgeZ):side==1?P(t,edgeZ):side==2?P(-edgeX,t):P(edgeX,t);
+                p.y=crest-y-.03f;
                 Spire(1,p,R(.075f,.14f),R(.3f,.75f),Quaternion.Euler(180,0,0));
             }
         }

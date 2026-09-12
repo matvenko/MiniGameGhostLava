@@ -36,7 +36,9 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     [Tooltip("And this far in from whichever side edge the ability bar is not on.")]
     [SerializeField] private float restSideMargin = 260f;
     [Tooltip("How visible the stick is while nobody is holding it.")]
-    [SerializeField, Range(0f, 1f)] private float idleAlpha = 0.35f;
+    [SerializeField, Range(0f, 1f)] private float idleAlpha = 0.28f;
+    [Tooltip("How visible the stick is while a finger is on it.")]
+    [SerializeField, Range(0f, 1f)] private float activeAlpha = 0.8f;
     [Tooltip("How quickly the stick drifts back to its resting place after release.")]
     [SerializeField] private float returnSpeed = 14f;
 
@@ -82,7 +84,7 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     {
         _drawn = !GameSettings.HideJoystick;
         _restSide = GameSettings.AbilitiesOnLeft ? 1 : -1;
-        SetStickAlpha(_pointer == NoPointer ? idleAlpha : 1f);
+        SetStickAlpha(_pointer == NoPointer ? idleAlpha : activeAlpha);
     }
 
     void Update()
@@ -103,7 +105,7 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
 
         _pointer = eventData.pointerId;
         PlaceUnder(eventData);
-        SetStickAlpha(1f);
+        SetStickAlpha(activeAlpha);
         OnDrag(eventData);
     }
 

@@ -157,6 +157,11 @@ public class GroundSurface : MonoBehaviour
     private void DestroySurface()
     {
         if (_surface == null) return;
+        // Retire the outgoing mesh immediately, including paused previews and
+        // multiple theme changes within the same frame.
+        _surface.gameObject.SetActive(false);
+        var mesh = _surface.GetComponent<MeshFilter>().sharedMesh;
+        if (mesh != null) { if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh); }
         if (Application.isPlaying) Destroy(_surface.gameObject);
         else DestroyImmediate(_surface.gameObject);
         _surface = null;

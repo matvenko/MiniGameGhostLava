@@ -34,6 +34,7 @@ public static class IceThemeBuilder
         var theme=list.GetArrayElementAtIndex(ice);
         theme.FindPropertyRelative("name").stringValue="Ice Cavern";
         theme.FindPropertyRelative("fromLevel").intValue=11;
+        theme.FindPropertyRelative("mergeGround").boolValue=true;
         Set(theme,"blockTile",ground);Set(theme,"ground",ground);Set(theme,"lavaTile",water);
         Set(theme,"liquid",water);Set(theme,"liquidBed",bed);Set(theme,"wall",wall);
         theme.FindPropertyRelative("sunColour").colorValue=new Color(.73f,.87f,1);

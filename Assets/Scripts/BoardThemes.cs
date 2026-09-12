@@ -37,6 +37,8 @@ public class BoardThemes : MonoBehaviour
         [Tooltip("Optional floor of the pool, seen through the liquid.")]
         public Material liquidBed;
         public Material wall;
+        [Tooltip("Use a continuous ground mesh for this theme; restore the previous setting when leaving it.")]
+        public bool mergeGround;
 
         [Header("Light")]
         [ColorUsage(false, true)] public Color sunColour = Color.white;
@@ -63,6 +65,7 @@ public class BoardThemes : MonoBehaviour
     [SerializeField] private Camera boardCamera;
 
     private Theme _applied;
+    private bool _groundOverrideActive, _previousGroundEnabled;
 
     void Awake()
     {
@@ -121,6 +124,21 @@ public class BoardThemes : MonoBehaviour
         if (GroundSurface.Instance != null) GroundSurface.Instance.SetMaterial(theme.ground);
         if (LiquidSurface.Instance != null) LiquidSurface.Instance.SetMaterials(theme.liquid, theme.liquidBed);
         if (WallSurface.Instance != null) WallSurface.Instance.SetMaterial(theme.wall);
+        if (GroundSurface.Instance != null)
+        {
+            var surface = GroundSurface.Instance;
+            if (theme.mergeGround)
+            {
+                if (!_groundOverrideActive) _previousGroundEnabled = surface.enabled;
+                _groundOverrideActive = true;
+                surface.enabled = true;
+            }
+            else if (_groundOverrideActive)
+            {
+                surface.enabled = _previousGroundEnabled;
+                _groundOverrideActive = false;
+            }
+        }
 
         // The sun does not move. A day/night cycle exists on the light and can
         // still be switched on by hand, but it writes the sun and the ambient

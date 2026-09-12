@@ -43,11 +43,11 @@ Shader "MazeBoo/Ice Cavern Surface"
      if(d<nearest){second=nearest;nearest=d;}else second=min(second,d);
     }
     float cracks=1-smoothstep(.012,.055,second-nearest);
-    float cloud=noise(p*.27)+noise(p*1.8)*.20;
-    float snow=smoothstep(1-_SnowCoverage,1.24-_SnowCoverage,cloud)*smoothstep(.35,.9,n.y);
+    float cloud=noise(p*.40)+noise(p*2.8)*.13+noise(p*18)*.045;
+    float snow=smoothstep(1.02-_SnowCoverage,1.10-_SnowCoverage,cloud)*smoothstep(.35,.9,n.y);
     float grain=noise(p*42);
     half3 base=_BaseColor.rgb*(.88+noise(p*.9)*.22);
-    base=lerp(base,base*.48,cracks*.44*(1-_Crystal));
+    base=lerp(base,base*.48,cracks*.32*(1-_Crystal)*smoothstep(.22,.55,noise(p*.45)));
     base=lerp(base,_SnowColor.rgb*(.93+grain*.07),snow);
     // Vertical glacial striations and frost caps on the bevelled border blocks.
     float veins=pow(saturate(sin(i.w.y*8+noise(i.w.xz*.8)*8)),14);
