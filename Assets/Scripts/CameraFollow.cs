@@ -39,8 +39,18 @@ public class CameraFollow : MonoBehaviour
     [Tooltip("Room left around the board in that shot. 1 is a tight fit against the frame.")]
     [SerializeField] private float overviewPadding = 1.06f;
 
+    [Header("Tour close-up")]
+    [Tooltip("Real seconds the camera takes to glide into a close-up and back out of it. The board is stopped while it does, so this runs on unscaled time.")]
+    [SerializeField] private float focusDuration = 0.8f;
+
     private Camera _cam;
     private bool _controlEnabled = true;
+
+    // A close-up the first-time tour has asked for, or the glide back out of one.
+    private bool _focusing, _releasing;
+    private float _focusTime;
+    private Vector3 _focusFrom, _focusPosition;
+    private Quaternion _focusFromRotation, _focusRotation;
 
     // Whatever angle the camera is authored at is the angle the game is played
     // at, and the one the intro lands on - so it is read off the scene rather
@@ -57,6 +67,11 @@ public class CameraFollow : MonoBehaviour
     // enemies are due the moment the camera settles.
     public float OverviewDuration => overviewDuration;
     public float IntroDuration => overviewDuration + approachDuration;
+    public bool IsPlayingIntro => _introTime >= 0f;
+
+    // In a close-up, or still on the way back out of one.
+    public bool IsFocusing => _focusing;
+    public bool FocusSettled => _focusing && !_releasing && _focusTime >= focusDuration;
 
     private void Awake()
     {
@@ -71,7 +86,70 @@ public class CameraFollow : MonoBehaviour
     public void SetControlEnabled(bool enabled)
     {
         _controlEnabled = enabled;
-        if (!enabled) _introTime = -1f;
+        if (!enabled)
+        {
+            _introTime = -1f;
+            _focusing = false;
+        }
+    }
+
+    // Glides in beside something on the board - tipped back to the given pitch,
+    // the way the board shot is, and standing that far off it - with the subject
+    // framed off to the left by the given share of half the screen, leaving the
+    // right-hand side for whatever is being said about it.
+    public void FocusOn(Vector3 point, float distance, float pitch, float shift)
+    {
+        if (_cam == null) return;
+        _introTime = -1f;
+
+        Vector3 play = _playRotation.eulerAngles;
+        _focusRotation = Quaternion.Euler(pitch, play.y, play.z);
+        float halfWidth = distance * Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * Mathf.Max(_cam.aspect, 0.01f);
+        Vector3 look = point + _focusRotation * Vector3.right * (shift * halfWidth);
+        _focusPosition = look - _focusRotation * Vector3.forward * distance;
+
+        StartGlide();
+        _focusing = true;
+        _releasing = false;
+    }
+
+    // Back to the shot the game is played at. Nothing to do if there is no
+    // close-up to leave.
+    public void ReleaseFocus()
+    {
+        if (!_focusing || _releasing) return;
+        StartGlide();
+        _releasing = true;
+    }
+
+    private void StartGlide()
+    {
+        _focusFrom = transform.position;
+        _focusFromRotation = transform.rotation;
+        _focusTime = 0f;
+    }
+
+    private void UpdateFocus()
+    {
+        _focusTime += Time.unscaledDeltaTime;
+        float p = focusDuration > 0f ? Mathf.Clamp01(_focusTime / focusDuration) : 1f;
+        float ease = p * p * (3f - 2f * p);
+
+        Vector3 goal = _focusPosition;
+        Quaternion goalRotation = _focusRotation;
+        if (_releasing)
+        {
+            goal = ClampToMap(_ghostTransform.position + offset - Vector3.up * _zoomInAmount);
+            goalRotation = _playRotation;
+        }
+
+        transform.SetPositionAndRotation(Vector3.Lerp(_focusFrom, goal, ease),
+                                         Quaternion.Slerp(_focusFromRotation, goalRotation, ease));
+        if (_releasing && p >= 1f)
+        {
+            _focusing = false;
+            _releasing = false;
+        }
     }
 
     // Called by the level generator after building a map so the zoom and
@@ -97,6 +175,7 @@ public class CameraFollow : MonoBehaviour
     {
         if (_cam == null || !_controlEnabled) return;
 
+        _focusing = false;
         _introTime = 0f;
         _introFromRotation = OverviewRotation();
         _introFrom = OverviewPosition(_introFromRotation);
@@ -106,6 +185,12 @@ public class CameraFollow : MonoBehaviour
     private void LateUpdate()
     {
         if (!_controlEnabled || _ghostTransform == null) return;
+
+        if (_focusing)
+        {
+            UpdateFocus();
+            return;
+        }
 
         if (_introTime >= 0f)
         {

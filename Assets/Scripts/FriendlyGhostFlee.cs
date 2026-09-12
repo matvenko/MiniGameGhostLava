@@ -23,6 +23,8 @@ public class FriendlyGhostFlee : MonoBehaviour
     [Tooltip("Coins paid into the wallet for catching it.")]
     [SerializeField] private int catchReward = 1000;
 
+    public int CatchReward => catchReward;
+
     private Rigidbody _rb;
     private Transform _target;
     private readonly List<Vector3> _path = new List<Vector3>();

@@ -57,6 +57,14 @@ public class EnemySpawnManager : MonoBehaviour
     private static float _freezeUntil;
     public static bool PlayerFrozen => Time.time < _freezeUntil;
 
+    // Raised once a spawn sequence has played out - the countdown run, the
+    // portals closed and every enemy of it standing on the board. The first-time
+    // tour waits on this, so it only ever talks about enemies that are there.
+    public static event System.Action Spawned;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => Spawned = null;
+
     // Sets the roster for the next spawn sequence. Kept separate from the
     // spawn itself so the counts are already in place by the time
     // RespawnEnemies runs on a level change.
@@ -179,6 +187,36 @@ public class EnemySpawnManager : MonoBehaviour
         // can't be handed the same corner of the board.
         var usedCells = new List<Vector3>();
         foreach (var kind in enemyKinds) SpawnKind(kind, usedCells);
+
+        StartCoroutine(AnnounceSpawned());
+    }
+
+    // Timed like the portals and started after them, then a frame more, so every
+    // enemy is already active by the time it goes off. A sequence cut short by a
+    // death or a level change stops this along with the portals.
+    private IEnumerator AnnounceSpawned()
+    {
+        yield return new WaitForSeconds(WarningDuration);
+        yield return null;
+        Spawned?.Invoke();
+    }
+
+    // One enemy of every kind on the board right now, keyed by the scene object
+    // the kind is cloned from - the name the guide book and the tour know it by.
+    public Dictionary<string, GameObject> OnBoard()
+    {
+        var found = new Dictionary<string, GameObject>();
+        foreach (var kind in enemyKinds)
+        {
+            if (kind.template == null || kind.Pool == null) continue;
+            foreach (var e in kind.Pool)
+            {
+                if (e == null || !e.activeInHierarchy) continue;
+                found[kind.template.name] = e;
+                break;
+            }
+        }
+        return found;
     }
 
     private void SpawnKind(EnemyKind kind, List<Vector3> usedCells)

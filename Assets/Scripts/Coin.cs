@@ -54,6 +54,22 @@ public class Coin : MonoBehaviour
 
     private Vector3 _tumble;
 
+    // How the disc lies in the prefab - face up - before Start sets it tumbling.
+    private Quaternion _restRotation;
+
+    void Awake()
+    {
+        _restRotation = transform.localRotation;
+    }
+
+    // Laid back face up and turned about the vertical: the first-time tour's
+    // close-up, taken while the board - and the tumble with it - is stopped, and
+    // a coin caught edge on would be a line rather than a coin.
+    public void Present(float degrees)
+    {
+        transform.localRotation = Quaternion.Euler(0f, degrees, 0f) * _restRotation;
+    }
+
     // The board is seen from straight above, so a coin turning about a single
     // axis only ever repeats one silhouette. Turning about two at once tumbles
     // it instead - the face comes round flat, on edge, and at every tilt in

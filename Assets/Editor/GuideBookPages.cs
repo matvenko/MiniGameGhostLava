@@ -55,63 +55,14 @@ internal static class GuideBookPages
     // ---- the colours the roles are written in -------------------------------
 
     private static readonly Color You = Hex(0x22E5F0);
-    private static readonly Color Hunter = Hex(0xFF5D73);
-    private static readonly Color Wanderer = Hex(0xB58CFF);
-    private static readonly Color Boss = Hex(0xFFB23E);
-    private static readonly Color Friend = Hex(0x46E8A6);
+    private static readonly Color Wanderer = CharacterCodex.WandererInk;
+    private static readonly Color Friend = CharacterCodex.FriendInk;
     private static readonly Color Ability = Hex(0x6FB0FF);
     private static readonly Color Board = Hex(0xFFC93A);
 
-    // ---- the enemies, by the scene object each kind is cloned from ----------
-
-    private struct Foe
-    {
-        public string Template, Name, Role, Tagline, Body, Tip;
-        public Color RoleColour, Glow;
-        public int Danger;
-    }
-
-    // In the order the book introduces them. A kind in the spawn table with no
-    // entry here is left out of the book, and the builder says so.
-    private static readonly Foe[] Foes =
-    {
-        new Foe
-        {
-            Template = "EnemySpectralFrost", Name = "Frost Hunter", Role = "HUNTER",
-            RoleColour = Hunter, Glow = Hex(0x59C8FF), Danger = 3,
-            Tagline = "Cold, patient, and it always knows the shortest way to you.",
-            Body = "The Frost Hunter works out the quickest route across the board and follows it " +
-                   "without a single wrong turn. It is slow, but it never gets lost.",
-            Tip = "Keep moving and stay out of dead ends. Given time, it will always find you."
-        },
-        new Foe
-        {
-            Template = "EnemySpectralHunter", Name = "Violet Wanderer", Role = "WANDERER",
-            RoleColour = Wanderer, Glow = Hex(0xA27BFF), Danger = 2,
-            Tagline = "It isn't hunting you, but it is still deadly to touch.",
-            Body = "The Violet Wanderer drifts about the board on errands of its own, picking a spot " +
-                   "and gliding there. It never aims for you, but bumping into it costs a life all the same.",
-            Tip = "Watch which way it is heading and step aside. It is the one enemy you can walk around on purpose."
-        },
-        new Foe
-        {
-            Template = "EnemySpectralEmber", Name = "Ember Hunter", Role = "HUNTER",
-            RoleColour = Hunter, Glow = Hex(0xFF6A3D), Danger = 3,
-            Tagline = "Hot-headed and quick, it charges straight at you.",
-            Body = "The Ember Hunter is faster than the Frost Hunter but never thinks ahead. At every turn " +
-                   "it simply steps toward you, so it can charge into dead ends or get stuck behind lava.",
-            Tip = "Put lava between you and it. It will press up against the far side instead of going round."
-        },
-        new Foe
-        {
-            Template = "EnemyGhoul", Name = "Apex Ghoul", Role = "BOSS",
-            RoleColour = Boss, Glow = Hex(0xFFB23E), Danger = 5,
-            Tagline = "The top of the food chain: fast and clever.",
-            Body = "The Apex Ghoul is as clever as the Frost Hunter and faster than any other enemy. " +
-                   "It takes the shortest path to you and closes the gap quickly.",
-            Tip = "Save a Freeze or a Teleport for the moment it corners you."
-        },
-    };
+    // The enemies' words - in the order the book introduces them, by the scene
+    // object each kind is cloned from - are CharacterCodex's, which the
+    // first-time tour reads too.
 
     // How clever each way of moving is, out of five.
     private static int Smarts(EnemyChaser.PathingStrategy strategy)
@@ -207,9 +158,9 @@ internal static class GuideBookPages
         warden.Facts.Add(new Fact("Holds up to " + maxLives));
         characters.Pages.Add(warden);
 
-        foreach (Foe words in Foes)
+        foreach (CharacterCodex.Entry words in CharacterCodex.Enemies)
         {
-            FoeData data = foes.Find(f => f.Template != null && f.Template.name == words.Template);
+            FoeData data = foes.Find(f => f.Template != null && f.Template.name == words.Key);
             if (data.Template == null) continue;
 
             var page = new Page
@@ -230,20 +181,20 @@ internal static class GuideBookPages
                                     : "Up to " + most + " at once"));
             characters.Pages.Add(page);
 
-            if (words.Template == "EnemyGhoul") ghoulFrom = from;
+            if (words.Key == "EnemyGhoul") ghoulFrom = from;
         }
 
         if (friendly != null)
         {
             int reward = Int(fleeData, "catchReward", 1000);
+            CharacterCodex.Entry words = CharacterCodex.Friendly;
             var page = new Page
             {
-                Name = "Friendly Spectral", Role = "FRIEND", RoleColour = Friend, Glow = Friend,
-                Tagline = "A shy, smiling ghost worth a small fortune.",
-                Body = "From level " + friendlyFrom + " a Friendly Spectral joins the board, once a level. " +
-                       "It is harmless and scared of you, and always runs for the tile furthest away. " +
-                       "Catch it for " + reward + " coins, the biggest prize on the board.",
-                Tip = "Herd it into a corner or a dead end, where it has nowhere left to run.",
+                Name = words.Name, Role = words.Role, RoleColour = Friend, Glow = words.Glow,
+                Tagline = words.Tagline,
+                Body = "From level " + friendlyFrom + " a " + words.Name + " joins the board, once a level. " +
+                       CharacterCodex.FriendlyBody(reward),
+                Tip = words.Tip,
                 Model = VisualOf(friendly), ModelFrame = friendly.transform
             };
             page.Meters.Add(new KeyValuePair<string, int>("SPEED", Pips(friendlySpeed)));
@@ -484,9 +435,9 @@ internal static class GuideBookPages
                 Counts = counts.ToArray()
             });
 
-            if (System.Array.FindIndex(Foes, f => f.Template == template.name) < 0)
+            if (CharacterCodex.Find(template.name) == null)
                 Debug.LogWarning("[GuideBook] The spawn table fields " + template.name + ", which the book has no " +
-                                 "page for. Give it one in GuideBookPages.Foes.");
+                                 "page for. Give it one in CharacterCodex.Enemies.");
         }
         return found;
     }

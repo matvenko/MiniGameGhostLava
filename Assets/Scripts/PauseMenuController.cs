@@ -56,6 +56,10 @@ public class PauseMenuController : MonoBehaviour
     // and the shop is opened over the top of this and closes back into it.
     public void Toggle()
     {
+        // The first-time tour has stopped the board itself, and its card has its
+        // own way on. Resume would start the game again underneath it.
+        if (FirstTimeTour.Running) return;
+
         // With the guide book open, Escape - which is also Android's back button -
         // goes back a page to this card rather than straight out to the board.
         if (GuideBookUI.Instance != null && GuideBookUI.Instance.IsOpen)
