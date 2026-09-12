@@ -22,7 +22,7 @@ public class LoadingScreenController : MonoBehaviour
     private readonly Color orange = new Color(1f, .36f, .16f);
     private readonly Color mint = new Color(.63f, 1f, .86f);
     private AsyncOperation load;
-    private RectTransform safeRoot, hero, orbit, fill, playRect, progressWell;
+    private RectTransform safeRoot, hero, orbit, fill, playRect, progressWell, playShadow;
     private CanvasGroup entrance;
     private Image curtain;
     private TextMeshProUGUI soundLabel, playLabel, playNote;
@@ -167,11 +167,11 @@ public class LoadingScreenController : MonoBehaviour
         controls=Rect(design,"Play area",new Vector2(0,-300),new Vector2(840,420));
         BuildModeCard();
         BuildStartButtons();
-        var sound=MakeButton(design,"Sound",Vector2.zero,new Vector2(212,52),new Color(.25f,.17f,.45f),ToggleSound);
+        var sound=MakeButton(design,"Sound",Vector2.zero,new Vector2(300,52),new Color(.25f,.17f,.45f),ToggleSound);
         sound.GetComponent<Image>().sprite=roundSprite; sound.GetComponent<Image>().type=Image.Type.Sliced;
         sound.name="Sound control";
-        Shape(sound.transform,"Speaker",new Vector2(-70,1),new Vector2(36,32),new Color(.92f,.86f,1),11);
-        soundLabel=Label(sound.transform,"",new Vector2(18,0),new Vector2(150,40),18,new Color(.92f,.86f,1));
+        Shape(sound.transform,"Speaker",new Vector2(-107,1),new Vector2(36,32),new Color(.92f,.86f,1),11);
+        soundLabel=Label(sound.transform,"",new Vector2(20,0),new Vector2(220,40),18,new Color(.92f,.86f,1));
         RefreshSoundLabel();
         BuildRecords();
         // Both cards are built after the record pill so they cover it: a card
@@ -202,8 +202,8 @@ public class LoadingScreenController : MonoBehaviour
         controls.anchoredPosition=new Vector2(0,portrait?-424:-300);
         // The record and the sound switch are the two things that are not part
         // of starting a run, so they sit out of the way in the top corners.
-        design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(232,664):new Vector2(636,432);
-        bestPill.anchoredPosition=portrait?new Vector2(-206,664):new Vector2(-626,432);
+        design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(220,664):new Vector2(625,432);
+        bestPill.anchoredPosition=portrait?new Vector2(-220,664):new Vector2(-625,432);
     }
 
     // The mode is picked before the run starts and nowhere else, so it sits on
@@ -281,27 +281,27 @@ public class LoadingScreenController : MonoBehaviour
     // starts the new run and the second button is not offered at all.
     private void BuildStartButtons()
     {
-        Rounded(controls,"Button shadow",new Vector2(0,-46),new Vector2(480,110),new Color(.55f,.24f,.09f));
-        play=MakeButton(controls,"Play",new Vector2(0,-35),new Vector2(480,110),new Color(1,.76f,.21f),OnPlayPressed);
+        playShadow=Rounded(controls,"Button shadow",new Vector2(0,-105),new Vector2(470,100),new Color(.55f,.24f,.09f)).rectTransform;
+        play=MakeButton(controls,"Play",new Vector2(0,-95),new Vector2(470,100),new Color(1,.76f,.21f),OnPlayPressed);
         var buttonImage=play.GetComponent<Image>(); buttonImage.sprite=roundSprite; buttonImage.type=Image.Type.Sliced;
-        Rounded(play.transform,"Button shine",new Vector2(0,36),new Vector2(408,10),new Color(1,.91f,.48f));
+        Rounded(play.transform,"Button shine",new Vector2(0,33),new Vector2(398,9),new Color(1,.91f,.48f));
         playRect=play.GetComponent<RectTransform>();
-        Shape(play.transform,"Play arrow",new Vector2(-140,4),new Vector2(42,46),new Color(.35f,.20f,.15f),8);
-        playLabel=Label(play.transform,"LOADING...",new Vector2(28,13),new Vector2(320,56),38,new Color(.35f,.20f,.15f));
-        playNote=Label(play.transform,"",new Vector2(28,-24),new Vector2(340,34),20,new Color(.47f,.29f,.12f));
+        Shape(play.transform,"Play arrow",new Vector2(-174,4),new Vector2(38,42),new Color(.35f,.20f,.15f),8);
+        playLabel=Label(play.transform,"LOADING...",new Vector2(20,12),new Vector2(350,52),35,new Color(.35f,.20f,.15f));
+        playNote=Label(play.transform,"",new Vector2(20,-22),new Vector2(370,32),18,new Color(.47f,.29f,.12f));
         // The board is still loading for a second or two after the menu is up,
         // so the gold button carries its own progress along the base rather than
         // the layout keeping room for a bar that is gone almost immediately.
-        var well=Rounded(play.transform,"Progress well",new Vector2(0,-44),new Vector2(400,12),new Color(.70f,.47f,.09f,.6f));
+        var well=Rounded(play.transform,"Progress well",new Vector2(0,-40),new Vector2(390,10),new Color(.70f,.47f,.09f,.6f));
         progressWell=well.rectTransform;
         fill=Rounded(well.transform,"Progress",Vector2.zero,Vector2.zero,new Color(1,.97f,.72f)).rectTransform;
         fill.anchorMin=Vector2.zero; fill.anchorMax=new Vector2(0,1); fill.offsetMin=fill.offsetMax=Vector2.zero;
         play.interactable=false;
 
-        fresh=MakeButton(controls,"New game",new Vector2(0,-152),new Vector2(444,74),new Color(.47f,.35f,.85f),OnNewGamePressed);
+        fresh=MakeButton(controls,"New game",new Vector2(236,-95),new Vector2(260,100),new Color(.47f,.35f,.85f),OnNewGamePressed);
         var freshImage=fresh.GetComponent<Image>(); freshImage.sprite=roundSprite; freshImage.type=Image.Type.Sliced;
-        Shape(fresh.transform,"Restart arrow",new Vector2(-112,2),new Vector2(38,38),new Color(.96f,.93f,1),9);
-        Label(fresh.transform,"NEW GAME",new Vector2(24,0),new Vector2(300,50),28,new Color(.98f,.96f,1));
+        Shape(fresh.transform,"Restart arrow",new Vector2(-92,1),new Vector2(32,32),new Color(.96f,.93f,1),9);
+        Label(fresh.transform,"NEW GAME",new Vector2(20,0),new Vector2(190,50),23,new Color(.98f,.96f,1));
         RefreshModePills();
     }
 
@@ -324,7 +324,12 @@ public class LoadingScreenController : MonoBehaviour
                 : where;
         }
         else playLabel.text="GETTING READY";
-        fresh.gameObject.SetActive(resuming && ready);
+        bool showFresh=resuming && ready;
+        fresh.gameObject.SetActive(showFresh);
+        // Keep the action row centered whether it contains one or two buttons.
+        float playX=showFresh?-145f:0f;
+        playRect.anchoredPosition=new Vector2(playX,-95);
+        playShadow.anchoredPosition=new Vector2(playX,-105);
     }
 
     // The two ways a record reaches the menu: a pill that always says how far the
