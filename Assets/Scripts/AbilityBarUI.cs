@@ -44,8 +44,19 @@ public class AbilityBarUI : MonoBehaviour
     [Tooltip("How far up from the bottom edge, in the bottom two corners.")]
     [SerializeField] private float bottomMargin = 36f;
 
+    // Trap, freeze, shield, teleport, on the controller: A, X, Y, B, in the
+    // colours an Xbox pad prints them in.
+    private static readonly PadButton[] PadButtons = { PadButton.South, PadButton.West, PadButton.North, PadButton.East };
+    private static readonly string[] PadLetters = { "A", "X", "Y", "B" };
+    private static readonly Color[] PadColours =
+    {
+        new Color(.45f, .85f, .30f), new Color(.30f, .60f, 1f), new Color(1f, .82f, .18f), new Color(.95f, .32f, .28f)
+    };
+
     private readonly int[] _held = new int[Count];
     private RectTransform _bar;
+    private GameObject[] _padLetters;
+    private bool _padLettersShown;
 
     void Awake()
     {
@@ -53,6 +64,7 @@ public class AbilityBarUI : MonoBehaviour
         _bar = (RectTransform)transform;
         for (int i = 0; i < Count; i++)
             SetCount((Ability)i, startingCounts != null && i < startingCounts.Length ? startingCounts[i] : 0);
+        BuildPadLetters();
     }
 
     void OnEnable()
@@ -64,6 +76,125 @@ public class AbilityBarUI : MonoBehaviour
     void OnDisable()
     {
         GameSettings.Changed -= ApplyLayout;
+    }
+
+    // On a keyboard the number keys press the buttons: 1 is the first ability the
+    // player has any of, 2 the next, and so on in bar order - so with only freeze
+    // and shield bought, 1 is freeze and 2 is shield.
+    //
+    // A controller's face buttons go the other way: each is always the same
+    // ability, whatever else is bought - A trap, X freeze, Y shield, B teleport -
+    // with its letter drawn in the corner of the button while the controller is in
+    // use. Nobody looks down at a controller mid-run, and a button whose meaning
+    // moves when something new is bought is a button pressed wrong.
+    //
+    // Either way the press goes through the button itself, which is what a tap
+    // does, so each manager's own refusals still apply. What a tap can't reach -
+    // anything behind the pause, shop or level-complete popups, all of which stop
+    // the clock - a key can't either.
+    void Update()
+    {
+        ShowPadLetters(Pad.InUse);
+        if (!AcceptsKeys()) return;
+
+        int slot = PressedDigit();
+        for (int i = 0; slot >= 0 && i < Count; i++)
+        {
+            if (_held[i] > 0 && slot-- == 0) Press(i);
+        }
+
+        // The frame a menu had the controller is the menu's: the A that pressed
+        // Resume is not also a trap on the way out (see GamepadMenus).
+        if (GamepadMenus.BusyFrame == Time.frameCount) return;
+        for (int i = 0; i < Count; i++)
+            if (Pad.Pressed(PadButtons[i])) Press(i);
+    }
+
+    private void Press(int i)
+    {
+        var button = buttons != null && i < buttons.Length ? buttons[i] : null;
+        if (button != null && button.isActiveAndEnabled && button.interactable)
+            button.onClick.Invoke();
+    }
+
+    // The controller letter in the top corner of each button; the count badge has
+    // the bottom one. A shadowed pair of labels rather than an outline, which would
+    // mean a material of its own per label.
+    private void BuildPadLetters()
+    {
+        if (buttons == null) return;
+        _padLetters = new GameObject[Count];
+        for (int i = 0; i < Count && i < buttons.Length; i++)
+        {
+            if (buttons[i] == null) continue;
+            var corner = new GameObject("Pad " + PadLetters[i], typeof(RectTransform));
+            var rect = (RectTransform)corner.transform;
+            rect.SetParent(buttons[i].transform, false);
+            rect.anchorMin = new Vector2(.02f, .68f);
+            rect.anchorMax = new Vector2(.32f, .98f);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+
+            TMP_FontAsset font = countLabels != null && i < countLabels.Length && countLabels[i] != null ? countLabels[i].font : null;
+            PadLetter(rect, font, new Vector2(2f, -2f), new Color(.08f, .05f, .16f, .9f), PadLetters[i]);
+            PadLetter(rect, font, Vector2.zero, PadColours[i], PadLetters[i]);
+
+            corner.SetActive(false);
+            _padLetters[i] = corner;
+        }
+    }
+
+    private static void PadLetter(RectTransform corner, TMP_FontAsset font, Vector2 offset, Color colour, string letter)
+    {
+        var rect = new GameObject(letter, typeof(RectTransform)).GetComponent<RectTransform>();
+        rect.SetParent(corner, false);
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = rect.offsetMax = offset;
+        var label = rect.gameObject.AddComponent<TextMeshProUGUI>();
+        if (font != null) label.font = font;
+        label.text = letter;
+        label.fontSize = 28;
+        label.fontStyle = FontStyles.Bold;
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = colour;
+        label.raycastTarget = false;
+    }
+
+    private void ShowPadLetters(bool show)
+    {
+        if (_padLetters == null || show == _padLettersShown) return;
+        _padLettersShown = show;
+        foreach (var letter in _padLetters)
+            if (letter != null) letter.SetActive(show);
+    }
+
+    private static bool AcceptsKeys()
+    {
+        if (Time.timeScale == 0f) return false;
+        if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return false;
+        if (LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive) return false;
+        if (GuideBookUI.Instance != null && GuideBookUI.Instance.IsOpen) return false;
+        return true;
+    }
+
+    // Which of 1-4 went down this frame, top row or keypad, counted from zero;
+    // -1 for none.
+    private static int PressedDigit()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        if (kb == null) return -1;
+        if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame) return 0;
+        if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame) return 1;
+        if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame) return 2;
+        if (kb.digit4Key.wasPressedThisFrame || kb.numpad4Key.wasPressedThisFrame) return 3;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) return 0;
+        if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) return 1;
+        if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) return 2;
+        if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) return 3;
+#endif
+        return -1;
     }
 
     public Button GetButton(Ability ability)

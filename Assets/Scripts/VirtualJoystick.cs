@@ -82,13 +82,17 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     // when the player turns it back on.
     private void ApplyPreferences()
     {
-        _drawn = !GameSettings.HideJoystick;
+        _drawn = !GameSettings.HideJoystick && !Pad.InUse;
         _restSide = GameSettings.AbilitiesOnLeft ? 1 : -1;
         SetStickAlpha(_pointer == NoPointer ? idleAlpha : activeAlpha);
     }
 
     void Update()
     {
+        // Picking up a controller puts the picture of the stick away the same way
+        // the setting does, and a touch brings it back.
+        if (_drawn != (!GameSettings.HideJoystick && !Pad.InUse)) ApplyPreferences();
+
         if (stick == null || _pointer != NoPointer) return;
 
         // Unscaled, because the stick should still be settling back into place

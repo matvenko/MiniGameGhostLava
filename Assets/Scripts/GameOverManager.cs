@@ -31,6 +31,11 @@ public class GameOverManager : MonoBehaviour
         if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
         if (mainMenuButton != null) mainMenuButton.onClick.AddListener(OnMainMenuClicked);
 
+        // With a controller the card starts on carrying on, and B does nothing:
+        // giving up is a button to press, not something to back into by accident.
+        GamepadMenus.Register(gameOverPanel, 50,
+            () => watchAdButton != null && watchAdButton.interactable ? watchAdButton : mainMenuButton);
+
         // The label authored on the button promises a video; with no ad network
         // behind it yet the same button just hands the life over.
         if (!RewardedAds.Live && watchAdButton != null)

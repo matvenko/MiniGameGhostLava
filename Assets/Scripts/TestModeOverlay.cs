@@ -244,10 +244,11 @@ public class TestModeOverlay : MonoBehaviour
                 : PlaytestLog.LastFilePath,
             new Vector2(0, -318), new Vector2(1200, 28), 16, new Color(.5f, .55f, .7f));
 
-        Button(card, "Again", "RUN AGAIN", new Vector2(-170, -385), new Vector2(300, 70),
+        var again = Button(card, "Again", "RUN AGAIN", new Vector2(-170, -385), new Vector2(300, 70),
             TestIdle, TestModeSession.RunAgain, out _);
         Button(card, "Menu", "MAIN MENU", new Vector2(170, -385), new Vector2(300, 70),
             new Color(.30f, .30f, .42f), TestModeSession.ExitToMenu, out _);
+        GamepadMenus.Register(backdrop.gameObject, 60, () => again);
     }
 
     // One row per level, scrolling once a run gets deep enough to need it.

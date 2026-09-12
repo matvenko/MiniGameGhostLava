@@ -52,6 +52,36 @@ public class ShopUIController : MonoBehaviour
         if (buyFreezeButton != null) buyFreezeButton.onClick.AddListener(OnBuyFreezeClicked);
         if (buyTeleportButton != null) buyTeleportButton.onClick.AddListener(OnBuyTeleportClicked);
         if (buyShieldButton != null) buyShieldButton.onClick.AddListener(OnBuyShieldClicked);
+
+        GamepadMenus.Register(shopPanel, 30, FirstChoice, Close);
+    }
+
+    // Select on a controller is the shop button on the HUD: it opens the shop from
+    // the board and closes it again. Only from the board - the button it stands in
+    // for is under every other popup, where no finger could reach it.
+    void Update()
+    {
+        if (!Pad.Pressed(PadButton.Select)) return;
+        if (IsOpen) Close();
+        else if (CanOpenFromBoard()) OpenFromHud();
+    }
+
+    private bool CanOpenFromBoard()
+    {
+        if (Time.timeScale == 0f) return false;
+        if (hudOpenButton == null || !hudOpenButton.isActiveAndEnabled || !hudOpenButton.interactable) return false;
+        if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOverActive) return false;
+        if (LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive) return false;
+        return true;
+    }
+
+    // With a controller the card starts on the first thing there is money for, or
+    // on the way out when there is nothing.
+    private Selectable FirstChoice()
+    {
+        foreach (var buy in new[] { buyExtraLifeButton, buyTrapButton, buyFreezeButton, buyTeleportButton, buyShieldButton })
+            if (buy != null && buy.interactable) return buy;
+        return closeButton;
     }
 
     private bool _openedFromPause;

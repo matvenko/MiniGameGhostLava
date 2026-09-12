@@ -78,6 +78,8 @@ public class GuideBookUI : MonoBehaviour
     // How far down the window a page has to reach before the rail calls it the
     // one being read.
     private const float ReadingLine = 0.3f;
+    // Canvas units a second with the right stick all the way over.
+    private const float StickScrollSpeed = 1600f;
 
     private int _chapter = -1, _page = -1;
     private bool _jumping;
@@ -102,6 +104,12 @@ public class GuideBookUI : MonoBehaviour
             int page = i;
             if (pages[i].row != null) pages[i].row.onClick.AddListener(() => JumpToPage(page));
         }
+
+        // With a controller the book starts on the tab of the chapter being read,
+        // and B goes back to the pause card the way the cross does.
+        GamepadMenus.Register(bookPanel, 40,
+            () => _chapter >= 0 && _chapter < chapters.Length && chapters[_chapter].tab != null ? chapters[_chapter].tab : closeButton,
+            Close);
     }
 
     public void Open()
@@ -138,8 +146,23 @@ public class GuideBookUI : MonoBehaviour
     void Update()
     {
         if (!IsOpen || scroll == null) return;
+        StickScroll();
         if (_jumping) Glide();
         Spy(false);
+    }
+
+    // The right stick reads down the page the way a thumb drags it, and takes over
+    // from a jump the same way.
+    private void StickScroll()
+    {
+        float stick = Pad.Scroll;
+        if (Mathf.Abs(stick) < .2f) return;
+        _jumping = false;
+        scroll.velocity = Vector2.zero;
+        RectTransform content = scroll.content;
+        Vector2 at = content.anchoredPosition;
+        at.y = Mathf.Clamp(at.y - stick * StickScrollSpeed * Time.unscaledDeltaTime, 0f, MaxScroll());
+        content.anchoredPosition = at;
     }
 
     // ---- getting about the book -------------------------------------------

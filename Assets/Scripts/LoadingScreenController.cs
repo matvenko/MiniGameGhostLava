@@ -177,6 +177,11 @@ public class LoadingScreenController : MonoBehaviour
         // Both cards are built after the record pill so they cover it: a card
         // that can be pressed through is not really a question.
         BuildStartOver();
+        // The controller's way round the menu (see GamepadMenus): it starts on the
+        // gold button once there is something to start, and on the chosen
+        // difficulty until then.
+        GamepadMenus.Register(design.gameObject, 10,
+            () => play.interactable ? play : (DifficultySettings.IsNormal ? normalChoice.button : hardChoice.button));
         curtain=Box(root.transform,"Transition",Vector2.zero,Vector2.zero,new Color(ink.r,ink.g,ink.b,0));
         Stretch(curtain.rectTransform); curtain.raycastTarget=false;
         LayoutIntro();
@@ -343,6 +348,9 @@ public class LoadingScreenController : MonoBehaviour
         // and pressing beside it is how the card is put away.
         var dim=MakeButton(recordsOverlay,"Dim",Vector2.zero,new Vector2(3200,2400),new Color(.02f,.02f,.06f,.72f),CloseRecords);
         dim.transition=Selectable.Transition.None;
+        // A controller closes the card with B, so the ring never lands on the
+        // backdrop.
+        dim.navigation=new Navigation{mode=Navigation.Mode.None};
         var card=Rounded(recordsOverlay,"Records card",Vector2.zero,new Vector2(580,680),new Color(.16f,.11f,.33f));
         card.raycastTarget=true;
         recordsCard=card.rectTransform;
@@ -363,6 +371,7 @@ public class LoadingScreenController : MonoBehaviour
         var close=MakeButton(recordsCard,"Close",new Vector2(0,-282),new Vector2(240,58),new Color(.55f,.96f,.72f),CloseRecords);
         var closeImage=close.GetComponent<Image>(); closeImage.sprite=roundSprite; closeImage.type=Image.Type.Sliced;
         Label(close.transform,"CLOSE",new Vector2(0,-1),new Vector2(230,52),24,new Color(.10f,.24f,.18f));
+        GamepadMenus.Register(recordsOverlay.gameObject,20,()=>close,CloseRecords);
         recordsOverlay.gameObject.SetActive(false);
         // The mode pills were dressed before this existed, so the first fill is
         // done here rather than waiting for the player to press one.
@@ -673,6 +682,8 @@ public class LoadingScreenController : MonoBehaviour
 #elif ENABLE_LEGACY_INPUT_MANAGER
         pressed = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space);
 #endif
+        // Start on a controller is Enter.
+        pressed |= Pad.Pressed(PadButton.Start);
         // Enter starts the run, but not from behind a card - the key press
         // belongs to whatever is actually in front of the player.
         bool covered = recordsOverlay.gameObject.activeSelf || startOverOverlay.gameObject.activeSelf;
@@ -759,6 +770,7 @@ public class LoadingScreenController : MonoBehaviour
         startOverOverlay = Rect(design, "Start over", Vector2.zero, Vector2.zero);
         var dim = MakeButton(startOverOverlay, "Dim", Vector2.zero, new Vector2(3200, 2400), new Color(.02f, .02f, .06f, .74f), CloseStartOver);
         dim.transition = Selectable.Transition.None;
+        dim.navigation = new Navigation { mode = Navigation.Mode.None };
         var card = Rounded(startOverOverlay, "Start over card", Vector2.zero, new Vector2(700, 440), new Color(.16f, .11f, .33f));
         card.raycastTarget = true;
         Label(card.transform, "START A NEW GAME?", new Vector2(0, 152), new Vector2(640, 56), 34, new Color(1, .86f, .38f));
@@ -769,6 +781,9 @@ public class LoadingScreenController : MonoBehaviour
         var keep = MakeButton(card.transform, "Keep", new Vector2(166, -152), new Vector2(300, 74), new Color(.30f, .22f, .52f), CloseStartOver);
         var keepImage = keep.GetComponent<Image>(); keepImage.sprite = roundSprite; keepImage.type = Image.Type.Sliced;
         Label(keep.transform, "KEEP MY RUN", new Vector2(0, -1), new Vector2(288, 66), 22, new Color(.92f, .87f, 1));
+        // A controller starts on keeping the run - wiping a deep save should take
+        // a deliberate step across - and B keeps it too.
+        GamepadMenus.Register(startOverOverlay.gameObject, 20, () => keep, CloseStartOver);
         startOverOverlay.gameObject.SetActive(false);
     }
 

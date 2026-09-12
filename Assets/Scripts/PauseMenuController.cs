@@ -30,6 +30,9 @@ public class PauseMenuController : MonoBehaviour
         if (mainMenuButton != null) mainMenuButton.onClick.AddListener(OnMainMenu);
         if (musicToggleButton != null) musicToggleButton.onClick.AddListener(ToggleMusic);
         if (sfxToggleButton != null) sfxToggleButton.onClick.AddListener(ToggleSfx);
+
+        // With a controller the popup starts on Resume, and B does what the cross does.
+        GamepadMenus.Register(pausePanel, 20, () => resumeButton, Toggle);
     }
 
     void Start()
@@ -38,9 +41,14 @@ public class PauseMenuController : MonoBehaviour
         RefreshIcons();
     }
 
+    // Start on a controller is Escape. B is not: it is back in the menus and an
+    // ability on the board, and some Android pads send it as the system back key -
+    // that is, as Escape - in the same frame, which taken twice would open the
+    // popup and close it again.
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) Toggle();
+        bool escape = Input.GetKeyDown(KeyCode.Escape) && !Pad.Pressed(PadButton.East);
+        if (escape || Pad.Pressed(PadButton.Start)) Toggle();
     }
 
     // Escape, and the gear on the HUD. Both are refused while something else owns

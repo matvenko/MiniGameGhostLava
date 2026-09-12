@@ -524,10 +524,11 @@ public class GhostScript : MonoBehaviour
             z -= joy.y;
         }
 
-        // gamepad left stick - separate custom axes (not the shared
-        // "Horizontal"/"Vertical") so this never double-counts keyboard input
-        x -= Input.GetAxis("GamepadHorizontal");
-        z -= Input.GetAxis("GamepadVertical");
+        // controller - left stick and D-pad, read through Pad so every
+        // controller steers the same way on every platform
+        Vector2 pad = Pad.Move;
+        x -= pad.x;
+        z -= pad.y;
 
         // The test bot, while it has the board, is the only hand on the stick.
         if (PlaytestBot.TrySteer(out Vector3 steer))

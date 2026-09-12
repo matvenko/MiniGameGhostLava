@@ -67,6 +67,7 @@ public class LevelManager : MonoBehaviour
         Instance = this;
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.onClick.AddListener(NextLevel);
+        GamepadMenus.Register(levelCompletePanel, 50, () => nextLevelButton);
         // Where the last run got to on this difficulty. NEW GAME on the menu is
         // what puts it back to one (see RunProgress); anything else - a continue,
         // a restart, giving up on a board - carries on from the level reached.
