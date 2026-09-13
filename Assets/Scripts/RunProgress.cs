@@ -4,8 +4,8 @@ using UnityEngine;
 // the abilities still in their pocket. One save per difficulty.
 //
 // Two saves, never one, for the same reason the Leaderboard keeps two tables
-// (see Leaderboard): normal walks the hunters at 0.6 speed, pays the good end
-// of every coin and hands out a spare life, so a level reached there is not the
+// (see Leaderboard): normal walks the hunters at 0.6 speed and hands out a
+// spare life, so a level reached there is not the
 // same achievement as the same level on hard - and a wallet filled on normal is
 // not a wallet earned on hard. Switching mode on the menu switches saves whole:
 // level, coins and abilities all follow the pills.

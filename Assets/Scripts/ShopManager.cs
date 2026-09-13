@@ -1,28 +1,25 @@
 using UnityEngine;
 
 // A consumable top-up: buying "Extra Life" restores one life immediately
-// (capped at LivesManager.HardCap), priced by how far the player has
-// progressed - placeholder tiers, to be tuned later. Not a permanent
+// (capped at LivesManager.HardCap), at one price all game. Not a permanent
 // unlock, so it stays useful all game and can be repurchased any time
 // after losing lives mid-run.
 public class ShopManager : MonoBehaviour
 {
     public static ShopManager Instance { get; private set; }
 
-    private const int EarlyLevelThreshold = 5;
-    private const int EarlyLevelCost = 1000;
-    private const int LateLevelCost = 2000;
+    private const int ExtraLifeCost = 1200;
 
-    private const int TrapCost = 400;
+    private const int TrapCost = 500;
     private const int TrapsPerPurchase = 1;
 
-    private const int FreezeCost = 1500;
+    private const int FreezeCost = 1000;
     private const int FreezesPerPurchase = 1;
 
-    private const int TeleportCost = 2500;
+    private const int TeleportCost = 1000;
     private const int TeleportsPerPurchase = 1;
 
-    private const int ShieldCost = 1000;
+    private const int ShieldCost = 500;
     private const int ShieldsPerPurchase = 1;
 
     void Awake()
@@ -32,8 +29,7 @@ public class ShopManager : MonoBehaviour
 
     public int GetExtraLifeCost()
     {
-        int level = LevelManager.Instance != null ? LevelManager.Instance.CurrentLevel : 1;
-        return level <= EarlyLevelThreshold ? EarlyLevelCost : LateLevelCost;
+        return ExtraLifeCost;
     }
 
     public bool IsExtraLifeMaxed()
@@ -105,7 +101,7 @@ public class ShopManager : MonoBehaviour
         return true;
     }
 
-    // Teleport charges are stock like the other two, and the dearest of them:
+    // Teleport charges are stock like the other two, priced with the freeze:
     // a freeze buys five seconds of standing still, a teleport takes the player
     // out of the corner it was about to be caught in entirely.
     public int GetTeleportCost()
@@ -129,9 +125,10 @@ public class ShopManager : MonoBehaviour
         return true;
     }
 
-    // The cheapest of the four charges, and the one that asks the most of the
-    // player: it buys seconds rather than a way out, and those seconds are
-    // only worth anything if they are spent walking somewhere.
+    // Priced with the trap as the cheapest of the four charges, and the one
+    // that asks the most of the player: it buys seconds rather than a way out,
+    // and those seconds are only worth anything if they are spent walking
+    // somewhere.
     public int GetShieldCost()
     {
         return ShieldCost;

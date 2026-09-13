@@ -46,10 +46,18 @@ public class PlaytestBotProfile
     public float deadEndCaution;
 
     [Header("Hands")]
-    [Tooltip("Degrees the stick wanders off the line the bot means to walk.")]
+    [Tooltip("Degrees off the line the bot means to walk that the stick can be put down at, each time the hand looks again.")]
     public float aimError;
-    [Tooltip("How close to a tile's middle the bot gets before turning the corner. Bigger cuts corners - and lava.")]
+    [Tooltip("Average seconds the hand leaves the stick where it put it before looking again - the drift a person does not notice until it has built up.")]
+    public float steerHold;
+    [Tooltip("Degrees off the way it means to go at which the drift is noticed at once, rather than at the next look.")]
+    public float correctAngle;
+    [Tooltip("How close to a tile's middle counts as having reached it where the route goes straight on. Corners are swung by turnLate and turnSpread instead.")]
     public float cornerTolerance;
+    [Tooltip("Tiles past the middle of a corner at which the stick is swung round it, on average. Above nought is late.")]
+    public float turnLate;
+    [Tooltip("Spread of that from one corner to the next, in tiles. A swing two thirds of a tile late with lava beyond the corner is a fall.")]
+    public float turnSpread;
     [Tooltip("Extra cost, in steps, of cutting diagonally between two pools of lava that touch at a corner. Low and it takes such shortcuts the way people do; below zero, never. The burn it risks on the way through is its aim's business.")]
     public float diagonalCutCost;
     [Tooltip("Hunters drawn under a resting thumb are not seen: the bottom corners of the screen, as a share of its width and height. Zero for no hands in the way.")]
@@ -88,7 +96,7 @@ public class PlaytestBotProfile
     public static readonly PlaytestBotProfile Normal = new PlaytestBotProfile
     {
         name = "Normal",
-        reactionTime = .45f,
+        reactionTime = .6f,
         awareness = 4.5f,
         pathDistanceDanger = false,
         predictsMotion = false,
@@ -99,30 +107,50 @@ public class PlaytestBotProfile
         safeDistance = 3.5f,
         smartFlee = false,
         deadEndCaution = 1.5f,
-        aimError = 38f,
+        aimError = 40f,
+        steerHold = .55f,
+        correctAngle = 50f,
         cornerTolerance = .4f,
+        turnLate = .15f,
+        turnSpread = .45f,
         diagonalCutCost = 1f,
-        thumbCover = new Vector2(.25f, .35f),
+        thumbCover = new Vector2(.15f, .25f),
         distractionEvery = 20f,
         distractionMin = .4f,
         distractionMax = 1f,
         proactiveAbilities = false,
         panicDistance = 1.6f,
-        forgetChance = .4f,
+        forgetChance = .7f,
         abilityCooldown = 2f,
         friendlyGhostRange = 6f,
         friendlyGhostOnlyWhenSafe = false,
         strategicShopping = false
     };
 
-    // The player hard mode is for. Its hands and its reactions are fitted to
-    // recordings of a player on a phone (2026-09-13): the stick wandering 18
-    // degrees off the lane, 0.38 s to react to a hunter coming close, corners
-    // taken a quarter tile off the middle, a short pause about twice a minute.
+    // The player hard mode is for. Fitted to the phone runs of 2026-09-13,
+    // last to the two played on the rounded lava (15:50 and 16:05): the stick
+    // 19 degrees off the lane and left there until the drift shows, 0.45 s to
+    // react to a hunter coming close (the bot's own delay reads shorter than it
+    // is, since it leads what it sees), corners swung a sixth of a tile late
+    // with a wide spread - walking on past a turn into the lava is where most
+    // of the lives went - a short pause every forty seconds or so, corner gaps
+    // cut six times a minute, turning away at two steps, a life bought back
+    // straight after losing one, traps and shields in stock and spent when
+    // something is almost on top. The recorded player also took coins twice as
+    // fast as the bot does; making the bot braver about hunters and dead ends
+    // to match only walked it into traps - a person's speed there comes from
+    // reading the board, not from ignoring it - so its caution is left as it was.
+    //
+    // Since then its job changed: it is the bot that has to get through the
+    // lava to the ice (levels 1 to 10), which the recorded player never did.
+    // So its hands are steadier than theirs - the same late, spread-out corner
+    // swings, only tighter - and its head is sharper: quicker to react, rarely
+    // forgetting what is in its pocket, using it ahead of trouble, looking away
+    // less, and keeping four lives in hand.
     public static readonly PlaytestBotProfile Hard = new PlaytestBotProfile
     {
         name = "Hard",
-        reactionTime = .36f,
+        reactionTime = .35f,
         awareness = 8f,
         pathDistanceDanger = true,
         predictsMotion = true,
@@ -133,17 +161,21 @@ public class PlaytestBotProfile
         safeDistance = 3.5f,
         smartFlee = true,
         deadEndCaution = 5f,
-        aimError = 30f,
+        aimError = 22f,
+        steerHold = .4f,
+        correctAngle = 40f,
         cornerTolerance = .3f,
-        diagonalCutCost = 1f,
-        thumbCover = new Vector2(.25f, .35f),
-        distractionEvery = 33f,
-        distractionMin = .3f,
-        distractionMax = .7f,
+        turnLate = .05f,
+        turnSpread = .15f,
+        diagonalCutCost = .3f,
+        thumbCover = new Vector2(.15f, .25f),
+        distractionEvery = 45f,
+        distractionMin = .35f,
+        distractionMax = .85f,
         proactiveAbilities = true,
-        panicDistance = 1.3f,
-        forgetChance = .05f,
-        abilityCooldown = 1.2f,
+        panicDistance = 1f,
+        forgetChance = .15f,
+        abilityCooldown = .8f,
         friendlyGhostRange = 8f,
         friendlyGhostOnlyWhenSafe = true,
         strategicShopping = true
@@ -232,18 +264,40 @@ public class PlaytestBot : MonoBehaviour
     private float _thinkTimer;
     private Coin _targetCoin;
     private bool _fleeing;
+    private float _calmSince;
+    private int _refuge = -1;
     private float _escapeRoom;
     private float _distractedUntil;
-    private float _noise;
-    private float _noiseTarget;
-    private float _noiseTimer;
+    // Where the hand last put the stick, and when it looks again.
+    private Vector3 _held;
+    private float _heldAngle;
+    private float _nextLook;
     private float _abilityReadyAt;
     private bool _inPanic;
+    private bool _trapHandled;
     private Vector3 _stuckFrom;
     private float _stuckTimer;
     private float _unstickUntil;
     private Vector3 _unstickDir;
     private float _levelCompleteWait = -1f;
+    private int _lives = -1;
+    private bool _shopWhenBack;
+
+    // The corner being walked round, and where the stick will be swung (see
+    // NoteCorner).
+    private bool _hasCorner;
+    private Vector3 _corner;
+    private Vector3 _cornerIn;
+    private Vector3 _cornerOut;
+    private float _cornerSwing;
+    private bool _cornerSwung;
+    private float _cornerAlong;
+    private float _cornerStall;
+
+    // Which way the character went last frame, and how far (see Track).
+    private Vector3 _lastAt;
+    private Vector3 _heading;
+    private float _stepLen;
 
     // Diagonal shortcuts through corner gaps, and dead ends: how deep into one
     // each tile is and which tile is its mouth (see MeasurePockets).
@@ -283,6 +337,7 @@ public class PlaytestBot : MonoBehaviour
 
         EnsureGrid();
         Observe();
+        ShopAfterDeath();
 
         if (_player.IsDead || EnemySpawnManager.PlayerFrozen || _nodes.Count == 0)
         {
@@ -343,18 +398,17 @@ public class PlaytestBot : MonoBehaviour
 
         if (_p.strategicShopping)
         {
-            // A spare life first, then a working stock of each ability - but
-            // never spending the price of the next life on anything else while
-            // there is room for one.
+            // Lives come first and the pocket holds one of each thing that
+            // gets it out of a real trap. Traps bought first and spent in
+            // every corridor, or shields re-bought after every scare, had each
+            // in turn left nothing for lives.
             for (int guard = 0; guard < 16; guard++)
             {
-                if (lives != null && lives.CurrentLives < 3 && shop.BuyExtraLife()) continue;
-                int reserve = lives != null && lives.CurrentLives < LivesManager.HardCap ? shop.GetExtraLifeCost() : 0;
-                int wallet = EconomyManager.Instance.TotalCoins;
-                if (Owned(AbilityBarUI.Ability.Freeze) < 2 && wallet - shop.GetFreezeCost() >= reserve && shop.BuyFreeze()) continue;
-                if (Owned(AbilityBarUI.Ability.Shield) < 2 && wallet - shop.GetShieldCost() >= reserve && shop.BuyShield()) continue;
-                if (Owned(AbilityBarUI.Ability.Teleport) < 1 && wallet - shop.GetTeleportCost() >= reserve && shop.BuyTeleport()) continue;
-                if (Owned(AbilityBarUI.Ability.Trap) < 2 && wallet - shop.GetTrapCost() >= reserve && shop.BuyTrap()) continue;
+                if (lives != null && lives.CurrentLives < 4 && shop.BuyExtraLife()) continue;
+                if (Owned(AbilityBarUI.Ability.Shield) < 1 && shop.BuyShield()) continue;
+                if (lives != null && lives.CurrentLives < 5 && shop.BuyExtraLife()) continue;
+                if (Owned(AbilityBarUI.Ability.Freeze) < 1 && shop.BuyFreeze()) continue;
+                if (Owned(AbilityBarUI.Ability.Trap) < 1 && shop.BuyTrap()) continue;
                 break;
             }
             return;
@@ -382,6 +436,21 @@ public class PlaytestBot : MonoBehaviour
                 case AbilityBarUI.Ability.Teleport: shop.BuyTeleport(); break;
             }
         }
+    }
+
+    // A life bought back as soon as the character is up again after losing
+    // one, from the shop the pause menu opens - the recorded player did it a
+    // few seconds after nearly every fall.
+    private void ShopAfterDeath()
+    {
+        var lives = LivesManager.Instance;
+        if (lives == null || !_p.strategicShopping) return;
+        if (lives.CurrentLives < _lives) _shopWhenBack = true;
+        _lives = lives.CurrentLives;
+        if (!_shopWhenBack || _player.IsDead || EnemySpawnManager.PlayerFrozen) return;
+        _shopWhenBack = false;
+        Shop();
+        _lives = lives.CurrentLives;
     }
 
     // ---- seeing -------------------------------------------------------------
@@ -417,6 +486,7 @@ public class PlaytestBot : MonoBehaviour
         MeasurePockets();
         _path.Clear();
         _targetCoin = null;
+        _refuge = -1;
     }
 
     private int NodeOf(Vector3 position)
@@ -482,7 +552,15 @@ public class PlaytestBot : MonoBehaviour
 
         NearestHunter(out float near, out int crowd, out Vector3 nearAt);
         float threat = _enemyDist[me];
-        _fleeing = !shielded && (threat <= _p.fleeDistance || (_fleeing && threat < _p.safeDistance));
+        // Once running, back to the coins only after the gap has stayed open
+        // for half a second: going back the moment it opened by a hair, and
+        // turning again when the hunter closed it, was the bot's stick thrown
+        // back and forth half a dozen times a minute where the recorded
+        // player's hardly ever was.
+        bool wasFleeing = _fleeing;
+        if (threat < _p.safeDistance) _calmSince = Time.time;
+        _fleeing = !shielded && (threat <= _p.fleeDistance || (wasFleeing && Time.time - _calmSince < .5f));
+        if (!_fleeing) _refuge = -1;
         int goal = _fleeing ? FleeGoal(me) : ChooseTarget(me);
         _mode = goal < 0 ? 0 : _fleeing ? 2 : _friendlyTarget ? 3 : 1;
         _goalAt = goal >= 0 ? _nodes[goal] : _player.transform.position;
@@ -635,7 +713,9 @@ public class PlaytestBot : MonoBehaviour
         }
 
         // The cheapest coin to reach, sticking with the current one unless
-        // another is clearly better, so the route does not flicker.
+        // another is clearly better - a hunter moving shifts every cost a
+        // little, and re-picking on that had the bot turning back for a coin
+        // behind it and then back again - so the route does not flicker.
         Coin cheapest = null;
         float cheapestCost = float.MaxValue;
         foreach (var coin in coins)
@@ -648,7 +728,7 @@ public class PlaytestBot : MonoBehaviour
         if (stillOut)
         {
             int current = NodeOf(_targetCoin.transform.position);
-            if (current >= 0 && _cost[current] <= cheapestCost * 1.25f) cheapest = _targetCoin;
+            if (current >= 0 && _cost[current] <= cheapestCost * 1.5f + 2f) cheapest = _targetCoin;
         }
         _targetCoin = cheapest;
         return cheapest != null ? NodeOf(cheapest.transform.position) : -1;
@@ -680,8 +760,15 @@ public class PlaytestBot : MonoBehaviour
     // player looks further, and also counts the ways out - a tile with three
     // neighbours beats a pocket with one. The other has no thought for whether
     // it is running into a dead end, which is how a casual player gets cornered.
+    //
+    // A corner gap between two pools of lava is a way out like any other -
+    // better than most, since no hunter can follow through it. Counted only as
+    // the four sides, a tile whose one other way out was a corner gap looked
+    // like the end of a dead end, and the bot stood in it and waited to be
+    // caught.
     private int FleeGoal(int me)
     {
+        bool cuts = _p.diagonalCutCost >= 0f;
         int reach = _p.smartFlee ? 7 : 4;
         for (int i = 0; i < _nodes.Count; i++)
         {
@@ -697,11 +784,15 @@ public class PlaytestBot : MonoBehaviour
         {
             int current = _queue.Dequeue();
             if (_depth[current] >= reach) continue;
-            foreach (int next in _adj[current])
+            foreach (int next in Ways(current, cuts))
             {
                 if (_depth[next] >= 0) continue;
                 _depth[next] = _depth[current] + 1;
-                if (_enemyDist[next] < 1f) continue;
+                // Not towards a tile a hunter would be standing on by the time
+                // the bot got there: a hunter covers about three quarters of a
+                // tile for every one the player does. The careless player only
+                // half sees it.
+                if (_enemyDist[next] < 1f + _depth[next] * (_p.smartFlee ? .75f : .35f)) continue;
                 _prev[next] = current;
                 _queue.Enqueue(next);
                 float score = RefugeScore(next);
@@ -710,6 +801,31 @@ public class PlaytestBot : MonoBehaviour
                 refuge = next;
             }
         }
+
+        // Keep running for the refuge already chosen while it is still a safe
+        // way to go and nearly as good. Weighed afresh every tenth of a second,
+        // two refuges on either side scored about the same, and the bot ran
+        // back and forth between them into the hunter.
+        if (_refuge >= 0 && _refuge < _nodes.Count && _refuge != me && _prev[_refuge] >= 0 && RefugeScore(_refuge) >= best - 1f)
+            refuge = _refuge;
+
+        // Nowhere that counts as safe: still move, onto whichever next tile
+        // has the most room, rather than stand on this one and wait - which is
+        // how half the bot's lives to hunters went. Someone with a hunter at
+        // their heels keeps going.
+        if (refuge == me)
+        {
+            float room = _enemyDist[me];
+            foreach (int next in Ways(me, cuts))
+            {
+                if (_enemyDist[next] <= room) continue;
+                room = _enemyDist[next];
+                refuge = next;
+            }
+            if (refuge != me) _prev[refuge] = me;
+        }
+
+        _refuge = refuge;
         _escapeRoom = _enemyDist[refuge];
         return refuge;
     }
@@ -720,8 +836,11 @@ public class PlaytestBot : MonoBehaviour
     // from the hunter right now.
     private float RefugeScore(int node) =>
         Mathf.Min(_enemyDist[node], 10f)
-        + (_p.smartFlee ? .6f * _adj[node].Length - .1f * _depth[node] : .3f * _adj[node].Length)
+        + (_p.smartFlee ? .6f * Exits(node) - .1f * _depth[node] : .3f * Exits(node))
         - .25f * _p.deadEndCaution * Mathf.Min(_pocketDepth[node], 4);
+
+    // Ways out of a tile: its sides, and its corner gaps for a bot that takes them.
+    private int Exits(int node) => _adj[node].Length + (_p.diagonalCutCost >= 0f ? _diag[node].Length : 0);
 
     // ---- abilities ----------------------------------------------------------
 
@@ -736,13 +855,32 @@ public class PlaytestBot : MonoBehaviour
 
         if (!_p.proactiveAbilities)
         {
+            // Trapped: the best tile within reach is still two steps from a
+            // hunter and one is closing in - a dead end, or one hunter each
+            // side, which is where nearly all the bot's lives to hunters went.
+            // Someone who can see they are caught reaches for the shield or
+            // the freeze, and is only half as likely to forget it as in an
+            // ordinary scare.
+            bool trapped = _fleeing && !_player.ShieldActive && _escapeRoom <= 2f && near <= 2.2f;
+            if (trapped && !_trapHandled)
+            {
+                _trapHandled = true;
+                if (Random.value >= _p.forgetChance * .5f
+                    && (UseAny(AbilityBarUI.Ability.Shield, AbilityBarUI.Ability.Freeze, AbilityBarUI.Ability.Teleport) || BuyAndUseShield()))
+                {
+                    Spent();
+                    return;
+                }
+            }
+            if (!trapped && near > _p.panicDistance + 1f) _trapHandled = false;
+
             // Only when something is right on top of them, once per scare, and
             // not every time: sometimes the button is simply forgotten.
             if (near > _p.panicDistance + 1f) _inPanic = false;
             if (near <= _p.panicDistance && !_inPanic)
             {
                 _inPanic = true;
-                if (Random.value >= _p.forgetChance && UseAny(Shuffled())) Spent();
+                if (Random.value >= _p.forgetChance && (UseAny(Shuffled()) || BuyAndUseShield())) Spent();
                 return;
             }
             // Now and then a trap goes down behind them while something follows.
@@ -763,6 +901,10 @@ public class PlaytestBot : MonoBehaviour
             bool used = cornered
                 ? UseAny(AbilityBarUI.Ability.Teleport, AbilityBarUI.Ability.Freeze, AbilityBarUI.Ability.Shield)
                 : UseAny(AbilityBarUI.Ability.Shield, AbilityBarUI.Ability.Freeze, AbilityBarUI.Ability.Teleport);
+            // Only a real trap is worth buying one on the spot for: a level
+            // pays about what a life costs from level six on, and shields
+            // spent on every scare had left nothing for lives.
+            if (!used && cornered) used = BuyAndUseShield();
             if (used)
             {
                 Spent();
@@ -790,9 +932,14 @@ public class PlaytestBot : MonoBehaviour
         return toHunter.sqrMagnitude > .0001f && Vector3.Dot(_steer.normalized, toHunter.normalized) < -.3f;
     }
 
+    // Pockets empty in a scare: the careful shopper opens the shop, buys a
+    // shield and puts it up there and then, as the recorded player did.
+    private bool BuyAndUseShield() =>
+        _p.strategicShopping && ShopManager.Instance != null && ShopManager.Instance.BuyShield() && Use(AbilityBarUI.Ability.Shield);
+
     private static AbilityBarUI.Ability[] Shuffled()
     {
-        var all = new[] { AbilityBarUI.Ability.Shield, AbilityBarUI.Ability.Freeze, AbilityBarUI.Ability.Teleport };
+        var all = new[] { AbilityBarUI.Ability.Shield, AbilityBarUI.Ability.Trap, AbilityBarUI.Ability.Freeze, AbilityBarUI.Ability.Teleport };
         for (int i = all.Length - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
@@ -842,6 +989,11 @@ public class PlaytestBot : MonoBehaviour
     {
         if (Time.time < _distractedUntil) return true;
         if (_p.distractionEvery <= 0f || Random.value >= Time.deltaTime / _p.distractionEvery) return false;
+        // Nobody looks away with a hunter at their heels: the recorded pauses
+        // were all with nothing near.
+        if (_fleeing) return false;
+        NearestHunter(out float near, out _, out _);
+        if (near < 3f) return false;
         _distractedUntil = Time.time + Random.Range(_p.distractionMin, _p.distractionMax);
         return true;
     }
@@ -849,6 +1001,7 @@ public class PlaytestBot : MonoBehaviour
     private void Steer()
     {
         Vector3 at = _player.transform.position;
+        Track(at);
         if (Unsticking(at)) return;
         if (_path.Count == 0)
         {
@@ -858,17 +1011,159 @@ public class PlaytestBot : MonoBehaviour
 
         // On to the next tile once this one is close enough - or once it has
         // been passed along the line to the next, so the bot never doubles back
-        // to touch a tile centre it has already walked through.
-        while (_waypoint < _path.Count - 1 && Reached(at, _path[_waypoint], _path[_waypoint + 1])) _waypoint++;
+        // to touch a tile centre it has already walked through. A corner is
+        // passed once the stick has been swung round it.
+        while (_waypoint < _path.Count - 1)
+        {
+            NoteCorner(at, _waypoint);
+            if (!Passed(at, _waypoint)) break;
+            _waypoint++;
+        }
+
+        if (Corner(at, out Vector3 round))
+        {
+            _steer = Hand(round);
+            return;
+        }
 
         Vector3 to = _path[_waypoint] - at;
         to.y = 0f;
-        if (to.magnitude < .06f)
+        // Close enough to stop is within most of a frame's walk: at four times
+        // speed a frame covers a seventh of a tile, and a fixed hair's breadth
+        // had the bot stepping over the middle of its tile and back, frame
+        // after frame, for as long as it meant to stand there.
+        if (to.magnitude < Mathf.Max(.06f, _stepLen * .75f))
         {
             _steer = Vector3.zero;
             return;
         }
-        _steer = Quaternion.Euler(0f, Noise(), 0f) * to.normalized;
+        _steer = Hand(to.normalized);
+    }
+
+    // The stick is put down pointing roughly the right way - off by up to
+    // aimError - and left there. A person does not re-aim every frame; they
+    // look again every so often, or at once when the drift has grown past
+    // correctAngle. Between looks the character runs on the line it was given,
+    // which is how the recorded players drifted into the lava beside a lane.
+    private Vector3 Hand(Vector3 want)
+    {
+        float wanted = Mathf.Atan2(want.x, want.z) * Mathf.Rad2Deg;
+        if (Time.time >= _nextLook || _held.sqrMagnitude < .01f
+            || Mathf.Abs(Mathf.DeltaAngle(_heldAngle, wanted)) > _p.correctAngle)
+        {
+            _heldAngle = wanted + Random.Range(-_p.aimError, _p.aimError);
+            _held = Quaternion.Euler(0f, _heldAngle, 0f) * Vector3.forward;
+            _nextLook = Time.time + Random.Range(.5f, 1.5f) * _p.steerHold;
+        }
+        return _held;
+    }
+
+    // Where the route turns, a person swings the stick round when the
+    // character is some way past the middle of the corner tile, not at the
+    // moment the arithmetic says: the recorded player swung a sixth of a tile
+    // late on average, now and then half a tile out either way, and walking on
+    // two thirds of a tile past a corner with lava beyond it is a fall. So each
+    // corner gets its own swing point, drawn once from turnLate and turnSpread
+    // and kept however often the route is planned again on the way there.
+    private void NoteCorner(Vector3 at, int k)
+    {
+        if (_hasCorner && Planar(at, _corner) > 1.6f) _hasCorner = false;
+
+        Vector3 w = _path[k];
+        Vector3 outDir = Lane(_path[k + 1] - w);
+        if (_hasCorner && w == _corner)
+        {
+            if (_cornerSwung) return;
+            // Planned again to go straight on, or back: no corner after all.
+            if (outDir == Vector3.zero || Mathf.Abs(Vector3.Dot(outDir, _cornerIn)) > .5f) _hasCorner = false;
+            else _cornerOut = outDir;
+            return;
+        }
+
+        // Coming in along the route - or, for the tile the bot is on, which is
+        // where every new plan starts, the lane the character is actually
+        // walking down. Not the way the stick points: that is off by the
+        // hand's whole error, and read as a lane it once had the bot walking
+        // on towards a hunter it meant to turn away from.
+        Vector3 inDir = k > 0 ? Lane(_path[k] - _path[k - 1]) : _heading;
+        if (inDir == Vector3.zero || outDir == Vector3.zero || Mathf.Abs(Vector3.Dot(inDir, outDir)) > .5f) return;
+
+        _hasCorner = true;
+        _corner = w;
+        _cornerIn = inDir;
+        _cornerOut = outDir;
+        _cornerSwung = false;
+        _cornerSwing = _p.turnLate + Gaussian() * _p.turnSpread;
+        _cornerAlong = float.NegativeInfinity;
+        _cornerStall = 0f;
+    }
+
+    private bool Passed(Vector3 at, int k)
+    {
+        if (_hasCorner && _path[k] == _corner) return _cornerSwung;
+        return Reached(at, _path[k], _path[k + 1]);
+    }
+
+    // Up to the swing point the stick stays along the lane it came in on,
+    // drawn back towards its middle; there it is swung round onto the new one.
+    private bool Corner(Vector3 at, out Vector3 want)
+    {
+        want = Vector3.zero;
+        if (!_hasCorner || _cornerSwung || _path[_waypoint] != _corner) return false;
+
+        Vector3 offset = at - _corner;
+        offset.y = 0f;
+        float along = Vector3.Dot(offset, _cornerIn);
+
+        // Held up - a wall or the edge of the board past the corner - and the
+        // stick comes round anyway: nobody keeps pushing into a wall.
+        float moved = float.IsNegativeInfinity(_cornerAlong) ? 0f : along - _cornerAlong;
+        _cornerStall = moved > .005f ? 0f : _cornerStall + Time.deltaTime;
+        _cornerAlong = along;
+
+        // Half the last frame's step ahead, so a coarse clock - a run at four
+        // times speed moves a seventh of a tile a frame - swings no later than
+        // a phone does.
+        if (along + .5f * Mathf.Max(moved, 0f) < _cornerSwing && _cornerStall < .12f)
+        {
+            want = (_cornerIn - (offset - _cornerIn * along)).normalized;
+            return true;
+        }
+
+        _cornerSwung = true;
+        want = (_cornerOut - .5f * (offset - _cornerOut * Vector3.Dot(offset, _cornerOut))).normalized;
+        if (_waypoint < _path.Count - 1) _waypoint++;
+        return true;
+    }
+
+    // How far the character went last frame, and the lane it went along if it
+    // kept to one - what anyone watching it would say it was doing.
+    private void Track(Vector3 at)
+    {
+        Vector3 step = at - _lastAt;
+        step.y = 0f;
+        _lastAt = at;
+        float length = step.magnitude;
+        // A respawn or a teleport is not a step.
+        _stepLen = length < .5f ? length : 0f;
+        Vector3 lane = _stepLen > .01f ? Lane(step / length) : Vector3.zero;
+        _heading = lane != Vector3.zero && Vector3.Dot(step / length, lane) > .9f ? lane : Vector3.zero;
+    }
+
+    // The lane a one-tile step runs along; nothing for a diagonal cut or a
+    // standing stick.
+    private static Vector3 Lane(Vector3 v)
+    {
+        v.y = 0f;
+        float m = v.magnitude;
+        if (m < .3f || m > 1.2f) return Vector3.zero;
+        return Mathf.Abs(v.x) > Mathf.Abs(v.z) ? new Vector3(Mathf.Sign(v.x), 0f, 0f) : new Vector3(0f, 0f, Mathf.Sign(v.z));
+    }
+
+    private static float Gaussian()
+    {
+        float u = Mathf.Max(1e-6f, 1f - Random.value);
+        return Mathf.Sqrt(-2f * Mathf.Log(u)) * Mathf.Cos(2f * Mathf.PI * Random.value);
     }
 
     private bool Reached(Vector3 at, Vector3 waypoint, Vector3 next)
@@ -881,20 +1176,6 @@ public class PlaytestBot : MonoBehaviour
         float ahead = Vector3.Dot(offset, along.normalized);
         float aside = (offset - along.normalized * ahead).magnitude;
         return ahead > 0f && aside <= _p.cornerTolerance;
-    }
-
-    // The stick never points exactly where it is meant to: it drifts a few
-    // degrees either side and settles somewhere new every few tenths of a second.
-    private float Noise()
-    {
-        _noiseTimer -= Time.deltaTime;
-        if (_noiseTimer <= 0f)
-        {
-            _noiseTimer = Random.Range(.2f, .5f);
-            _noiseTarget = Random.Range(-_p.aimError, _p.aimError);
-        }
-        _noise = Mathf.MoveTowards(_noise, _noiseTarget, 60f * Time.deltaTime);
-        return _noise;
     }
 
     // Pushing into a wall corner for a second and a half is not a strategy

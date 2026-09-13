@@ -31,7 +31,7 @@ public class Coin : MonoBehaviour
     // around. Flat odds - every entry is as likely as any other, so adding a
     // fifth number here changes the odds of all of them.
     [Tooltip("One of these is paid into the wallet, picked at random, each time a coin is taken.")]
-    [SerializeField] private int[] walletValues = { 50, 100, 150, 200 };
+    [SerializeField] private int[] walletValues = { 150, 200, 250, 300 };
 
     // Optional burst played where the coin was taken. It is spawned unparented:
     // the pickup animation destroys the coin's whole prefab root a moment later,
@@ -112,14 +112,12 @@ public class Coin : MonoBehaviour
     }
 
     // Pays nothing rather than throwing if the list is emptied in the Inspector,
-    // so a mis-set field costs the player their reward but not the run.
-    // Normal mode pays the good end of the roll every time rather than rolling
-    // (see DifficultySettings), so a younger player's shop progress does not
-    // depend on the dice.
+    // so a mis-set field costs the player their reward but not the run. Both
+    // modes roll the same list.
     private int RollWalletValue() =>
         walletValues == null || walletValues.Length == 0
             ? 0
-            : DifficultySettings.CoinWalletValue(walletValues[Random.Range(0, walletValues.Length)]);
+            : walletValues[Random.Range(0, walletValues.Length)];
 
     private IEnumerator PickupAnimation()
     {

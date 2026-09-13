@@ -226,42 +226,40 @@ internal static class GuideBookPages
         float shield = Float(Data<ShieldManager>(), "shieldDuration", 5f);
         float jump = Float(Data<TeleportManager>(), "minJumpDistance", 5f);
 
-        abilities.Pages.Add(AbilityPage("Trap", "tile_trap", Hex(0xB06CFF), Shop("TrapCost", 400),
+        abilities.Pages.Add(AbilityPage("Trap", "tile_trap", Hex(0xB06CFF), Shop("TrapCost", 500),
             "A snare for whoever is right behind you.",
             "Drops a trap on the tile you are standing on. The first enemy to step on it is stuck there for " +
             Seconds(stun) + ", and the trap is used up. Traps still waiting when the level ends are lost.",
             "Lay one in a narrow corridor while something is chasing you.",
             "Stops 1 enemy", Seconds(stun)));
 
-        abilities.Pages.Add(AbilityPage("Freeze", "tile_freeze", Hex(0x59D8FF), Shop("FreezeCost", 1500),
+        abilities.Pages.Add(AbilityPage("Freeze", "tile_freeze", Hex(0x59D8FF), Shop("FreezeCost", 1000),
             "Stop the whole board in its tracks.",
             "Encases every enemy on the board in ice for " + Seconds(freeze) + ". During the countdown at the " +
             "start of a level there is nothing to freeze yet, so the button waits and keeps your charge.",
             "Use it to grab a coin that a hunter is sitting right next to.",
             "Every enemy", Seconds(freeze)));
 
-        abilities.Pages.Add(AbilityPage("Teleport", "tile_teleport", Hex(0xC77DFF), Shop("TeleportCost", 2500),
+        abilities.Pages.Add(AbilityPage("Teleport", "tile_teleport", Hex(0xC77DFF), Shop("TeleportCost", 1000),
             "Your emergency exit.",
             "Lifts you off the board and sets you down on a random safe tile: never lava, at least " +
             Mathf.RoundToInt(jump) + " tiles from where you were, and as far from the enemies as the board allows.",
-            "It is the priciest charge, so keep one for the Apex Ghoul.",
+            "It costs no more than a freeze and gets you right out, so keep one for the Apex Ghoul.",
             "Safe landing", null));
 
-        abilities.Pages.Add(AbilityPage("Shield", "tile_shield", Hex(0x4FE08A), Shop("ShieldCost", 1000),
+        abilities.Pages.Add(AbilityPage("Shield", "tile_shield", Hex(0x4FE08A), Shop("ShieldCost", 500),
             "A few seconds when nothing can touch you.",
             "Wraps you in a bubble for " + Seconds(shield) + ". Enemies can't catch you, and stepping into lava " +
             "just puts you back on the edge instead of costing a life. The bubble pulses faster just before it runs out.",
             "Walk straight past a hunter that is blocking the only way to a coin.",
             Seconds(shield), null));
 
-        int lifeEarly = Shop("EarlyLevelCost", 1000), lifeLate = Shop("LateLevelCost", 2000);
-        int lifeUntil = Shop("EarlyLevelThreshold", 5);
-        var life = AbilityPage("Extra Life", "tile_extralife", Hex(0xE59BFF), lifeEarly,
+        int lifeCost = Shop("ExtraLifeCost", 1200);
+        var life = AbilityPage("Extra Life", "tile_extralife", Hex(0xE59BFF), lifeCost,
             "One more try, straight away.",
-            "Gives you back one life right now, up to " + maxLives + ". It costs " + lifeEarly + " coins up to level " +
-            lifeUntil + " and " + lifeLate + " after that.",
+            "Gives you back one life right now, up to " + maxLives + ". It costs " + lifeCost + " coins on every level.",
             "Buy it before a tough level, not after the last life has gone.",
-            lifeLate + " after level " + lifeUntil, "Up to " + maxLives + " lives");
+            "Same price every level", "Up to " + maxLives + " lives");
         life.Role = "SHOP";
         abilities.Pages.Add(life);
 
@@ -281,9 +279,8 @@ internal static class GuideBookPages
             Name = "Coins", Role = "GOAL", RoleColour = Board, Glow = Board,
             Tagline = "Collect them all to clear the level.",
             Body = "Every coin on the board has to be collected to finish the level. Each one adds " +
-                   Min(values, 0) + " to " + Max(values) + " coins to your wallet (" +
-                   DifficultySettings.NormalCoinWalletValue + " every time on Normal). When only one is left, " +
-                   "a golden arrow points the way to it.",
+                   Min(values, 0) + " to " + Max(values) + " coins to your wallet, a different amount each time. " +
+                   "When only one is left, a golden arrow points the way to it.",
             Tip = "Pick up the coins in dead ends while the way out is clear, not last.",
             // Drawn lying face up, for the camera straight over the board.
             Model = coinPrefab, Elevation = 58f, Zoom = 1.45f
@@ -461,7 +458,7 @@ internal static class GuideBookPages
     {
         var coin = coinPrefab != null ? coinPrefab.GetComponent<Coin>() : null;
         int[] values = Ints(coin != null ? new SerializedObject(coin) : null, "walletValues");
-        return values.Length > 0 ? values : new[] { 50, 100, 150, 200 };
+        return values.Length > 0 ? values : new[] { 150, 200, 250, 300 };
     }
 
     private static Vector2Int[] Boards(SerializedObject level)

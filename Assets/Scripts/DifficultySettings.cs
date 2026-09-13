@@ -14,9 +14,8 @@ public enum Difficulty
 // Hard is the game exactly as it was tuned before modes existed: it never
 // scales or overrides anything, so whatever is authored on a component in the
 // scene is what hard plays with. Normal is aimed at younger players - the
-// hunters chase slowly enough to be walked away from on purpose, a coin always
-// pays the good end of its roll so shop progress does not stall while the board
-// is still being learned, and there is one more life to spend learning it.
+// hunters chase slowly enough to be walked away from on purpose, and there is
+// one more life to spend learning the board.
 //
 // Deliberately one file: the modes differ only by these numbers, so a third
 // difference later is added here rather than as another "if normal" somewhere
@@ -30,11 +29,6 @@ public static class DifficultySettings
     // them slow enough that a small child can get away on purpose instead of
     // only ever being caught.
     public const float NormalEnemySpeedMultiplier = .6f;
-
-    // What a coin pays in normal mode, in place of the roll authored on the
-    // prefab (50 / 100 / 150 / 200 at the time of writing). The good end of
-    // that roll, every time.
-    public const int NormalCoinWalletValue = 100;
 
     // Lives a run starts with in normal mode, in place of the authored three.
     public const int NormalStartingLives = 4;
@@ -84,9 +78,6 @@ public static class DifficultySettings
     // scene - every hunter has its own speed - keeps working.
     public static float EnemySpeed(float authoredSpeed) =>
         IsNormal ? authoredSpeed * NormalEnemySpeedMultiplier : authoredSpeed;
-
-    public static int CoinWalletValue(int authoredValue) =>
-        IsNormal ? NormalCoinWalletValue : authoredValue;
 
     public static int StartingLives(int authoredLives) =>
         IsNormal ? NormalStartingLives : authoredLives;

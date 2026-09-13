@@ -9,8 +9,10 @@ using UnityEngine.SceneManagement;
 // Playtests/bot for PlaytestAnalysis to compare against the recordings.
 //
 // The frame clock is fixed at a sixtieth of a second, as a phone at 60 fps
-// would play it, and the board runs at double speed - still under a twentieth
-// of a second of game time per frame, which is what the trace samples at.
+// would play it, and the board runs at four times speed - a fifteenth of a
+// second of game time per frame, a seventh of a tile of walking. That is a
+// little over the twentieth the trace samples at, so it gets a sample every
+// frame instead; PlaytestAnalysis times samples by the gaps between them.
 //
 // The queue is kept in SessionState, so a script reload part way through picks
 // it up again at the next run.
@@ -19,8 +21,9 @@ public static class PlaytestEditorBatch
 {
     private const string QueueKey = "PlaytestEditorBatch.queue";
     private const string DoneKey = "PlaytestEditorBatch.done";
-    private const float Speed = 2f;
-    private const float Timeout = 1800f;
+    private const float Speed = 4f;
+    // Game seconds before a run is called off: long enough for ten levels.
+    private const float Timeout = 3600f;
 
     private enum Phase { Load, Wait, Running }
 
@@ -34,8 +37,10 @@ public static class PlaytestEditorBatch
         EditorApplication.update += Tick;
     }
 
-    [MenuItem("Tools/Playtest/Run Bots In Editor (Normal + Hard, 3 each)")]
-    private static void RunDefault() => Queue("normal,hard,normal,hard,normal,hard");
+    // The bot fitted to the recordings, three times - enough to see whether it
+    // plays like them. Queue takes any other mix.
+    [MenuItem("Tools/Playtest/Run Bots In Editor (Hard, 3 runs)")]
+    private static void RunDefault() => Queue("hard,hard,hard");
 
     [MenuItem("Tools/Playtest/Stop Bots In Editor")]
     private static void StopMenu()

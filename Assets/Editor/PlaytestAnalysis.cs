@@ -147,6 +147,7 @@ public static class PlaytestAnalysis
                 var trace = Trace.Load(tracePath);
                 group.traced++;
                 Behaviour(trace, report, group);
+                Swings(trace, group);
                 Coins(trace, report, group);
             }
             catch (Exception e)
@@ -199,7 +200,7 @@ public static class PlaytestAnalysis
         var abilityTimes = report.events.Where(e => e.type == "ability").Select(e => e.t).ToList();
         var deathTimes = report.events.Where(e => e.type == "death").Select(e => e.t).ToList();
 
-        int idle = 0;
+        float idle = 0f;
         int toward = 0;
         bool inCall = false;
         float callStart = 0f;
@@ -210,6 +211,10 @@ public static class PlaytestAnalysis
         for (int i = 0; i < s.Count; i++)
         {
             var x = s[i];
+            // The gap since the sample before, not the trace's nominal interval:
+            // a bot run at four times speed on a 60 fps clock is sampled every
+            // frame, a fifteenth of a second apart.
+            float span = i > 0 ? Mathf.Clamp(x.t - s[i - 1].t, 0f, .25f) : dt;
             // Alive and playing, and standing over a tile of floor - the centre
             // can hang out over the lava for a moment, most of all through a
             // corner gap, and those moments are no reason to lose the thread.
@@ -227,14 +232,14 @@ public static class PlaytestAnalysis
 
             if (!live)
             {
-                FlushIdle(g, ref idle, dt);
+                FlushIdle(g, ref idle);
                 prev = null;
                 toward = 0;
                 if (!alive) lastLevel = null;
                 continue;
             }
 
-            g.liveSeconds += dt;
+            g.liveSeconds += span;
             float mag = x.stick.magnitude;
             bool moving = mag > .2f;
             Vector2 dir = moving ? x.stick / mag : Vector2.zero;
@@ -243,8 +248,8 @@ public static class PlaytestAnalysis
             // Standing still with nothing near: what a moment of looking away
             // looks like from outside.
             if (calm) g.Add("still", moving ? 0f : 1f);
-            if (calm && !moving) idle++;
-            else FlushIdle(g, ref idle, dt);
+            if (calm && !moving) idle += span;
+            else FlushIdle(g, ref idle);
 
             // How far off the lanes the stick points. The board is all right
             // angles, so every degree off the nearest axis is the hand, not the
@@ -257,8 +262,15 @@ public static class PlaytestAnalysis
             {
                 bool wasX = Mathf.Abs(prev.stick.x) > Mathf.Abs(prev.stick.y);
                 bool isX = Mathf.Abs(x.stick.x) > Mathf.Abs(x.stick.y);
-                if (wasX != isX && AxisAngle(prev.stick.normalized) < 30f && AxisAngle(dir) < 30f)
+                bool onLanes = AxisAngle(prev.stick.normalized) < 30f && AxisAngle(dir) < 30f;
+                if (wasX != isX && onLanes)
+                {
                     g.Add("corner", Vector2.Distance(x.at, x.level.tiles[x.node]));
+                    if (Swing(s, i, prev.stick, dir, out float swing)) g.Add("swing", swing);
+                }
+                // Straight back the way it came, from one sample to the next.
+                else if (wasX == isX && onLanes && mag > .5f && prev.stick.magnitude > .5f && Vector2.Dot(prev.stick, x.stick) < 0f)
+                    g.reversals++;
             }
 
             // How far off the middle of the row the character is while the
@@ -333,7 +345,7 @@ public static class PlaytestAnalysis
 
             prev = x;
         }
-        FlushIdle(g, ref idle, dt);
+        FlushIdle(g, ref idle);
 
         // Where on the screen each life was lost, and which of the lava deaths
         // were in a corner gap.
@@ -356,15 +368,77 @@ public static class PlaytestAnalysis
     // The bottom corners, where the thumbs rest.
     private static bool InCorner(Vector2 view) => Mathf.Min(view.x, 1f - view.x) < .3f && view.y < .4f;
 
-    private static void FlushIdle(Group g, ref int idle, float dt)
+    // How fast the stick is swung round, and how often right round: from a
+    // firm push one way to a firm push a quarter of the way round, or all the
+    // way round, within 0.6 s. A thumb takes its time over both; a program
+    // does either between one frame and the next.
+    private static void Swings(Trace trace, Group g)
     {
-        if (idle * dt >= .3f)
+        var s = trace.samples;
+        for (int i = 0; i + 1 < s.Count; i++)
         {
-            g.Add("idleLen", idle * dt);
+            if ((s[i].flags & (Dead | Held | Card)) != 0 || s[i].stick.magnitude < .5f) continue;
+            Vector2 next = s[i + 1].stick;
+            if (next.magnitude >= .5f && Vector2.Angle(s[i].stick, next) < 20f) continue;
+            for (int j = i + 1; j < s.Count && s[j].t - s[i].t <= .6f; j++)
+            {
+                if ((s[j].flags & (Dead | Held | Card)) != 0) break;
+                if (s[j].stick.magnitude < .5f) continue;
+                float angle = Vector2.Angle(s[i].stick, s[j].stick);
+                if (angle >= 150f)
+                {
+                    g.turnRounds++;
+                    g.Add("roundTime", s[j].t - s[i].t);
+                    break;
+                }
+                if (angle >= 70f && angle <= 110f)
+                {
+                    g.Add("quarterTime", s[j].t - s[i].t);
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void FlushIdle(Group g, ref float idle)
+    {
+        if (idle >= .3f)
+        {
+            g.Add("idleLen", idle);
             g.idlePauses++;
         }
-        idle = 0;
+        idle = 0f;
     }
+
+    // Where a turn was swung: how far past the middle of the corner tile - the
+    // one the new lane leaves from - the character was when the stick came
+    // round, along the way it had been going. Above nought is late. Only a
+    // swing the character then follows counts.
+    private static bool Swing(List<Sample> s, int i, Vector2 before, Vector2 after, out float swing)
+    {
+        swing = 0f;
+        var x = s[i];
+        Vector2Int a = Lane(before), b = Lane(after);
+        int k = i;
+        while (k < s.Count - 1 && s[k + 1].level == x.level && s[k].t - x.t < .4f) k++;
+        if (Vector2.Dot(s[k].at - x.at, b) < .3f) return false;
+
+        var cell = x.level.CellAt(x.at);
+        float best = float.MaxValue;
+        for (int m = -1; m <= 1; m++)
+        {
+            var corner = cell + a * m;
+            if (!x.level.Walkable(corner) || !x.level.Walkable(corner + b)) continue;
+            float along = Vector2.Dot(x.at - x.level.Centre(corner), a);
+            if (Mathf.Abs(along) >= best) continue;
+            best = Mathf.Abs(along);
+            swing = along;
+        }
+        return best < float.MaxValue;
+    }
+
+    private static Vector2Int Lane(Vector2 d) =>
+        Mathf.Abs(d.x) > Mathf.Abs(d.y) ? new Vector2Int(d.x > 0f ? 1 : -1, 0) : new Vector2Int(0, d.y > 0f ? 1 : -1);
 
     // Degrees between a direction and the nearest of the four lanes: 0 is
     // straight down a corridor, 45 is dead diagonal.
@@ -428,7 +502,7 @@ public static class PlaytestAnalysis
 
     // ---- the table ----------------------------------------------------------------
 
-    private enum Stat { Mean, Median, P90, Share }
+    private enum Stat { Mean, Median, P10, P90, Share }
 
     private struct Row
     {
@@ -459,6 +533,11 @@ public static class PlaytestAnalysis
         new Row("Stick off the lane, median degrees", "aim", Stat.Median, "0.0", "aimError"),
         new Row("Stick off the lane, 90th percentile", "aim", Stat.P90, "0.0", "aimError"),
         new Row("Distance from tile centre when turning", "corner", Stat.Median, "0.00", "cornerTolerance"),
+        new Row("Turn swung past the corner's middle, median tiles", "swing", Stat.Median, "0.00", "turnLate"),
+        new Row("Turn swung past the corner's middle, 10th pct", "swing", Stat.P10, "0.00", "turnSpread"),
+        new Row("Turn swung past the corner's middle, 90th pct", "swing", Stat.P90, "0.00", "turnSpread"),
+        new Row("Quarter turn of the stick, median s", "quarterTime", Stat.Median, "0.00", "no setting yet"),
+        new Row("Stick turned right round, median s", "roundTime", Stat.Median, "0.00", "no setting yet"),
         new Row("Off the middle of the lane going straight, median tiles", "offLane", Stat.Median, "0.00", "aimError"),
         new Row("Off the middle of the lane going straight, 90th pct", "offLane", Stat.P90, "0.00", "aimError"),
     };
@@ -515,6 +594,14 @@ public static class PlaytestAnalysis
                   + " (" + (g.diagonalCrossings + g.diagonalDeaths) + ")"
                 : "-")))
             .Append(" | aimError |\n");
+        sb.Append("| Stick thrown straight back per minute | ")
+            .Append(string.Join(" | ", groups.Select(g => g.liveSeconds > 0f
+                ? (g.reversals / (g.liveSeconds / 60f)).ToString("0.0", CultureInfo.InvariantCulture) : "-")))
+            .Append(" | fleeDistance, safeDistance |\n");
+        sb.Append("| Stick turned right round (150 degrees or more) per minute | ")
+            .Append(string.Join(" | ", groups.Select(g => g.liveSeconds > 0f
+                ? (g.turnRounds / (g.liveSeconds / 60f)).ToString("0.0", CultureInfo.InvariantCulture) : "-")))
+            .Append(" | fleeDistance, safeDistance |\n");
         Section(sb, "Head", Head, groups);
         Section(sb, "Screen", ScreenRows, groups);
 
@@ -562,6 +649,7 @@ public static class PlaytestAnalysis
         switch (row.stat)
         {
             case Stat.Median: value = Percentile(v, .5f); break;
+            case Stat.P10: value = Percentile(v, .1f); break;
             case Stat.P90: value = Percentile(v, .9f); break;
             default: value = v.Average(); break;
         }
@@ -586,6 +674,8 @@ public static class PlaytestAnalysis
         public int idlePauses;
         public int diagonalCrossings;
         public int diagonalDeaths;
+        public int reversals;
+        public int turnRounds;
         public readonly Dictionary<string, List<float>> values = new Dictionary<string, List<float>>();
         // level -> plays, deaths, lava deaths
         public readonly SortedDictionary<int, int[]> byLevel = new SortedDictionary<int, int[]>();
@@ -649,6 +739,7 @@ public static class PlaytestAnalysis
         public int Node(Vector2 p) => _index.TryGetValue(Cell(p), out int i) ? i : -1;
 
         public Vector2Int CellAt(Vector2 p) => Cell(p);
+        public Vector2 Centre(Vector2Int c) => new Vector2(c.x + _originX, c.y + _originZ);
         public bool Walkable(Vector2Int c) => _index.ContainsKey(c);
 
         // Inside the board and not floor. Measured off the floor's own extent,
