@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sample;
 
 public class Coin : MonoBehaviour
 {
@@ -87,11 +88,58 @@ public class Coin : MonoBehaviour
     void Update()
     {
         transform.Rotate(_tumble * Time.deltaTime, Space.World);
+        // Every stop in the game - tour, pause, shop, level complete - holds
+        // time at zero, and a coin must not be taken from under a frozen board.
+        if (!_collected && Time.timeScale > 0f && PlayerOnTile()) Collect();
+    }
+
+    // Taking a coin is decided by the tile it lies on, not by touching the
+    // disc. The disc is small and tumbles, so its collider could slip past a
+    // player who walked across the tile off-centre - which read as a coin that
+    // refused to be picked up. Tiles are one unit and the coin sits in the
+    // middle of its tile, so the tile is everything within half a unit of it.
+    private const float TileHalf = 0.5f;
+
+    private static CharacterController _player;
+    private static GhostScript _playerGhost;
+    private static float _nextPlayerSearch;
+
+    private bool PlayerOnTile()
+    {
+        if (_player == null && !FindPlayer()) return false;
+        if (_playerGhost != null && _playerGhost.IsDead) return false;
+        // The middle of the body, not the transform: the capsule sits a little
+        // behind it.
+        Vector3 body = _player.transform.TransformPoint(_player.center);
+        Vector3 here = transform.position;
+        return Mathf.Abs(body.x - here.x) < TileHalf && Mathf.Abs(body.z - here.z) < TileHalf;
+    }
+
+    // Found the way the other scripts find the player - the character
+    // controller named Ghost - so the friendly ghost never takes coins. Shared
+    // by every coin, and searched for at most twice a second while missing.
+    private static bool FindPlayer()
+    {
+        if (Time.unscaledTime < _nextPlayerSearch) return false;
+        _nextPlayerSearch = Time.unscaledTime + 0.5f;
+        foreach (var ctrl in FindObjectsByType<CharacterController>(FindObjectsInactive.Exclude))
+        {
+            if (ctrl.gameObject.name != "Ghost") continue;
+            _player = ctrl;
+            _playerGhost = ctrl.GetComponentInParent<GhostScript>();
+            return true;
+        }
+        return false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (_collected || !other.CompareTag("Ghost")) return;
+        if (other.CompareTag("Ghost")) Collect();
+    }
+
+    private void Collect()
+    {
+        if (_collected) return;
         _collected = true;
         Uncollected.Remove(this);
 

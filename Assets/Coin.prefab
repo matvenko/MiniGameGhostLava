@@ -137,6 +137,7 @@ GameObject:
   - component: {fileID: 1177574067448802536}
   - component: {fileID: 3539375120456498556}
   - component: {fileID: 8412663590127440215}
+  - component: {fileID: 1904202133510505841}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: Untagged
@@ -271,3 +272,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   segments: 32
   rimUV: {x: 0.045, y: 0.045}
+--- !u!114 &1904202133510505841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3570442217006685362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ab2ef04b8d9cd743b0927e45dd0a380, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinShine
+  interval: {x: 1.4, y: 3.2}
+  flashDuration: 0.45
+  size: 0.5
+  tint: {r: 4, g: 3.2, b: 1.5, a: 1}
