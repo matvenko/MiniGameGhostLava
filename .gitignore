@@ -10,6 +10,10 @@
 [Rr]ecordings/
 /TEST/
 
+# Playtest reports and traces pulled off the phone or written by bot batches
+/[Pp]laytests/
+/[Pp]laytests-archive/
+
 # Visual Studio / VS Code cache
 .vs/
 .vscode/

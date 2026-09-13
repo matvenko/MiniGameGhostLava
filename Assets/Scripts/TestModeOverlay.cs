@@ -17,6 +17,15 @@ using UnityEngine.UI;
 // to a file (see PlaytestLog). The chip beside it picks the bot: by default the
 // one the difficulty is for, or either one on purpose.
 //
+// REC is the same run with a person on the stick: a new game on a fresh copy
+// of the save, recorded into the same report and trace the bot's runs are, so
+// the bot can be tuned until it plays like the recordings. While it records the
+// bar gets out of the thumb's way and leaves only its status line, coming back
+// - with STOP REC - whenever the game is held still behind the pause card.
+//
+// STATS opens the same charts without running anything: the newest reports on
+// the device, with the board held still behind them until CLOSE.
+//
 // It shows itself in the editor and in development builds and nowhere else, so
 // a release APK handed to a player has no cheat bar in it and there is nothing
 // to remember to switch off before shipping.
@@ -35,13 +44,22 @@ public class TestModeOverlay : MonoBehaviour
     private static readonly Color Gold = new Color(1f, .83f, .29f);
     private static readonly Color TestIdle = new Color(.12f, .47f, .55f);
     private static readonly Color TestRunning = new Color(.66f, .20f, .24f);
+    private static readonly Color RecIdle = new Color(.55f, .16f, .22f);
+    private static readonly Color RecInk = new Color(1f, .45f, .45f);
 
     private RectTransform _root;
+    private Image _backing;
+    private GameObject _controls;
     private TextMeshProUGUI _statusLabel;
     private Button _coinsButton;
     private Button _skipButton;
+    private Button _recButton;
+    private Button _statsButton;
+    // The clock as STATS found it, to hand back on CLOSE.
+    private float _heldTimeScale = 1f;
     private Button _botButton;
     private TextMeshProUGUI _botLabel;
+    private Button _speedButton;
     private TextMeshProUGUI _speedLabel;
     private Button _testButton;
     private TextMeshProUGUI _testLabel;
@@ -100,29 +118,42 @@ public class TestModeOverlay : MonoBehaviour
         if (_statusLabel == null) return;
 
         bool running = TestModeSession.Active;
+        bool recording = running && TestModeSession.Human;
         int level = LevelManager.Instance != null ? LevelManager.Instance.CurrentLevel : 0;
         if (running)
         {
             int lives = LivesManager.Instance != null ? LivesManager.Instance.CurrentLives : 0;
-            _statusLabel.text = "BOT " + TestModeSession.Profile.name.ToUpperInvariant()
-                                + "  ·  x" + TestModeSession.PlaySpeed.ToString("0.#")
-                                + "  ·  LEVEL " + level + "  ·  LIVES " + lives;
+            string who = recording
+                ? "REC"
+                : "BOT " + TestModeSession.Profile.name.ToUpperInvariant() + "  ·  x" + TestModeSession.PlaySpeed.ToString("0.#");
+            _statusLabel.text = who + "  ·  LEVEL " + level + "  ·  LIVES " + lives;
         }
         else
         {
             _statusLabel.text = level > 0 ? "LEVEL " + level : "TEST";
         }
+        _statusLabel.color = recording ? RecInk : Ink;
+
+        // A thumb landing anywhere picks the joystick up, and the bar sits right
+        // where one lands - so while a person plays, only the status line stays,
+        // until the game is held still.
+        bool showBar = !recording || Time.timeScale == 0f;
+        if (_controls.activeSelf != showBar) _controls.SetActive(showBar);
+        _backing.enabled = showBar;
 
         // The cheats would put numbers into the report that no play earned, and
         // the bot is chosen before a run, not during one.
         _coinsButton.interactable = !running;
         _skipButton.interactable = !running;
+        _recButton.interactable = !running;
+        _statsButton.interactable = !running;
         _botButton.interactable = !running;
+        _speedButton.interactable = !recording;
         _botLabel.text = BotLabel();
         _speedLabel.text = SpeedLabel();
         _testButton.interactable = running || TestModeSession.CanStart;
         _testButton.image.color = running ? TestRunning : TestIdle;
-        _testLabel.text = running ? "STOP TEST" : "TEST MODE";
+        _testLabel.text = running ? (recording ? "STOP REC" : "STOP TEST") : "TEST MODE";
     }
 
     private static string SpeedLabel() => "x" + TestModeSession.PlaySpeed.ToString("0.#");
@@ -131,8 +162,8 @@ public class TestModeOverlay : MonoBehaviour
     {
         switch (TestModeSession.Choice)
         {
-            case BotChoice.Kid: return "BOT: KID";
-            case BotChoice.Teen: return "BOT: TEEN";
+            case BotChoice.Normal: return "BOT: NORMAL";
+            case BotChoice.Hard: return "BOT: HARD";
             default: return "BOT: AUTO (" + TestModeSession.ProfileFor(BotChoice.MatchDifficulty).name.ToUpperInvariant() + ")";
         }
     }
@@ -154,21 +185,30 @@ public class TestModeOverlay : MonoBehaviour
 
         // Bottom centre, clear of the joystick on the left and the ability bar
         // on the right, and clear of the HUD along the top.
-        var bar = Rect(root.transform, "Bar", new Vector2(0, 112), new Vector2(560, 184));
+        var bar = Rect(root.transform, "Bar", new Vector2(0, 112), new Vector2(740, 184));
         bar.anchorMin = bar.anchorMax = new Vector2(.5f, 0f);
-        Box(bar, "Backing", Vector2.zero, new Vector2(560, 184), new Color(.04f, .05f, .12f, .82f));
+        _backing = Box(bar, "Backing", Vector2.zero, new Vector2(740, 184), new Color(.04f, .05f, .12f, .82f));
         _statusLabel = Label(bar, "Level", "TEST", new Vector2(0, 70), new Vector2(540, 30), 22, Ink);
 
-        _coinsButton = Button(bar, "Coins", "+" + coinsPerPress, new Vector2(-136, 18), new Vector2(250, 60),
+        // Everything but the status line, so a recording can put it all away at once.
+        var controls = Rect(bar, "Controls", Vector2.zero, new Vector2(740, 184));
+        _controls = controls.gameObject;
+
+        _coinsButton = Button(controls, "Coins", "+" + coinsPerPress, new Vector2(-270, 18), new Vector2(170, 60),
             new Color(.16f, .52f, .25f), GiveCoins, out _);
-        _skipButton = Button(bar, "Skip", "SKIP LEVEL", new Vector2(136, 18), new Vector2(250, 60),
-            new Color(.42f, .26f, .58f), SkipLevel, out _);
-        _botButton = Button(bar, "Bot", BotLabel(), new Vector2(-166, -52), new Vector2(190, 60),
+        _skipButton = Button(controls, "Skip", "SKIP LEVEL", new Vector2(-90, 18), new Vector2(170, 60),
+            new Color(.42f, .26f, .58f), SkipLevel, out var skipLabel);
+        skipLabel.fontSize = 22;
+        _recButton = Button(controls, "Rec", "REC", new Vector2(90, 18), new Vector2(170, 60),
+            RecIdle, TestModeSession.StartRecording, out _);
+        _statsButton = Button(controls, "Stats", "STATS", new Vector2(270, 18), new Vector2(170, 60),
+            new Color(.20f, .36f, .55f), OpenStats, out _);
+        _botButton = Button(controls, "Bot", BotLabel(), new Vector2(-166, -52), new Vector2(190, 60),
             new Color(.24f, .28f, .42f), CycleBot, out _botLabel);
         _botLabel.fontSize = 19;
-        Button(bar, "Speed", SpeedLabel(), new Vector2(-6, -52), new Vector2(110, 60),
+        _speedButton = Button(controls, "Speed", SpeedLabel(), new Vector2(-6, -52), new Vector2(110, 60),
             new Color(.24f, .28f, .42f), TestModeSession.CycleSpeed, out _speedLabel);
-        _testButton = Button(bar, "Test", "TEST MODE", new Vector2(166, -52), new Vector2(190, 60),
+        _testButton = Button(controls, "Test", "TEST MODE", new Vector2(166, -52), new Vector2(190, 60),
             TestIdle, ToggleTest, out _testLabel);
         _testLabel.fontSize = 24;
     }
@@ -199,12 +239,43 @@ public class TestModeOverlay : MonoBehaviour
     private static void ToggleTest()
     {
         if (TestModeSession.Active) TestModeSession.Stop("stopped");
-        else TestModeSession.Start();
+        else TestModeSession.StartBot();
     }
 
     // ---- the report card -----------------------------------------------------
 
-    private void ShowReport(PlaytestReport r)
+    private void ShowReport(PlaytestReport r) => ShowCard(r, browsing: false);
+
+    // STATS: the charts without a run. The board waits behind them, however
+    // it was going - playing, or already held by a card of its own.
+    private void OpenStats()
+    {
+        if (TestModeSession.Active || _reportCard != null) return;
+        var latest = PlaytestLog.RecentReports(1);
+        _heldTimeScale = Time.timeScale;
+        Time.timeScale = 0f;
+        ShowCard(latest.Count > 0 ? latest[0] : null, browsing: true);
+    }
+
+    private void CloseStats()
+    {
+        if (_reportCard != null) Destroy(_reportCard);
+        _reportCard = null;
+        Time.timeScale = _heldTimeScale;
+    }
+
+    private UnityEngine.UI.Button CloseButton(Transform card)
+    {
+        var close = Button(card, "Close", "CLOSE", new Vector2(790, -474), new Vector2(240, 52),
+            new Color(.30f, .30f, .42f), CloseStats, out var label);
+        label.fontSize = 22;
+        return close;
+    }
+
+    // The report card. Straight after a run it is that run's report, with RUN
+    // AGAIN and MAIN MENU; opened from STATS it is the newest report on the
+    // device - or word that there is none yet - with CLOSE.
+    private void ShowCard(PlaytestReport r, bool browsing)
     {
         if (this == null || _root == null) return;
         if (_reportCard != null) Destroy(_reportCard);
@@ -217,44 +288,71 @@ public class TestModeOverlay : MonoBehaviour
         backdrop.rectTransform.anchorMax = Vector2.one;
         _reportCard = backdrop.gameObject;
 
-        var card = Box(backdrop.transform, "Card", Vector2.zero, new Vector2(1280, 920), new Color(.07f, .08f, .17f, .97f)).transform;
+        // As much of the screen as there is: six charts side by side want the
+        // room, and a wide phone is shorter than the layout's own 1080.
+        var card = Box(backdrop.transform, "Card", Vector2.zero, new Vector2(1840, 1010), new Color(.071f, .078f, .161f, .97f)).transform;
+        var area = _root.rect;
+        float fit = Mathf.Min(1f, (area.height - 24f) / 1010f, (area.width - 24f) / 1840f);
+        if (fit > 0f) card.localScale = Vector3.one * fit;
 
-        Label(card, "Title", "TEST REPORT", new Vector2(0, 410), new Vector2(1200, 60), 44, Gold);
-        Label(card, "Who", r.difficulty.ToUpperInvariant() + "  ·  " + r.botProfile.ToUpperInvariant() + " BOT  ·  x"
+        Label(card, "Title", browsing ? "TEST STATISTICS" : "TEST REPORT", new Vector2(0, 470), new Vector2(1760, 50), 40, Gold);
+        if (r == null)
+        {
+            Label(card, "Empty", "No test reports on this device yet - finish a TEST MODE or REC run first.",
+                new Vector2(0, 40), new Vector2(1600, 40), 26, Ink);
+            var closeEmpty = CloseButton(card);
+            GamepadMenus.Register(backdrop.gameObject, 60, () => closeEmpty);
+            return;
+        }
+        bool human = r.botProfile == TestModeSession.HumanName;
+        Label(card, "Who", r.difficulty.ToUpperInvariant() + "  ·  "
+                           + (human ? "PLAYER" : PlaytestBotProfile.DisplayName(r.botProfile).ToUpperInvariant() + " BOT") + "  ·  x"
                            + r.speed.ToString("0.#") + "  ·  " + EndReason(r.endReason),
-            new Vector2(0, 360), new Vector2(1200, 34), 24, Ink);
+            new Vector2(0, 432), new Vector2(1760, 30), 22, Ink);
 
-        string mostDeaths = r.mostDeathsLevel > 0 ? "most on level " + r.mostDeathsLevel : "none";
         Label(card, "Summary",
             "Level " + r.startLevel + " → " + r.endLevel + "   ·   " + r.levelsCompleted + " cleared   ·   "
-            + r.coinsCollected + " coins  (+" + r.walletEarned + " wallet, −" + r.coinsSpent + " spent)\n"
-            + r.deaths + " deaths  (" + r.lavaDeaths + " lava, " + r.enemyDeaths + " hunters) — " + mostDeaths
-            + "   ·   " + r.abilitiesUsed + " abilities   ·   " + r.purchases + " purchases\n"
-            + RunRecord.Clock(Mathf.RoundToInt(r.gameSeconds)) + " of game time, played in "
-            + RunRecord.Clock(Mathf.RoundToInt(r.realSeconds)),
-            new Vector2(0, 270), new Vector2(1200, 120), 25, Color.white);
+            + r.coinsCollected + " coins picked up   ·   " + RunRecord.Clock(Mathf.RoundToInt(r.gameSeconds))
+            + " of game time, played in " + RunRecord.Clock(Mathf.RoundToInt(r.realSeconds)),
+            new Vector2(0, 392), new Vector2(1760, 30), 21, Color.white);
 
-        var header = Label(card, "Header", Row("LV", "TIME", "COINS", "WALLET", "DEATHS", "TRAP", "FRZ", "SHLD", "TELE", "BOUGHT", "LIVES"),
-            new Vector2(0, 186), new Vector2(1160, 30), 21, Gold);
-        header.alignment = TextAlignmentOptions.Left;
+        // Level by level, as charts - this run, the last few side by side, or
+        // the table (see PlaytestReportView).
+        new PlaytestReportView(card, r, !browsing, new Vector2(0, -40), new Vector2(1820, 780));
 
-        Table(card, r);
+        // Opened from STATS there is no file just written - only the folder
+        // they all live in.
+        string where = browsing ? "Reports in " + System.IO.Path.Combine(Application.persistentDataPath, "playtests")
+            : string.IsNullOrEmpty(PlaytestLog.LastFilePath) ? "Report file could not be written"
+            : PlaytestLog.LastFilePath;
+        var file = Label(card, "File", where,
+            new Vector2(-330, -474), new Vector2(1100, 24), 15, new Color(.5f, .55f, .7f));
+        file.alignment = TextAlignmentOptions.Left;
 
-        Label(card, "File", string.IsNullOrEmpty(PlaytestLog.LastFilePath) ? "Report file could not be written"
-                : PlaytestLog.LastFilePath,
-            new Vector2(0, -318), new Vector2(1200, 28), 16, new Color(.5f, .55f, .7f));
+        if (browsing)
+        {
+            var close = CloseButton(card);
+            GamepadMenus.Register(backdrop.gameObject, 60, () => close);
+            return;
+        }
 
-        var again = Button(card, "Again", "RUN AGAIN", new Vector2(-170, -385), new Vector2(300, 70),
-            TestIdle, TestModeSession.RunAgain, out _);
-        Button(card, "Menu", "MAIN MENU", new Vector2(170, -385), new Vector2(300, 70),
-            new Color(.30f, .30f, .42f), TestModeSession.ExitToMenu, out _);
+        var again = Button(card, "Again", human ? "RECORD AGAIN" : "RUN AGAIN", new Vector2(540, -474), new Vector2(240, 52),
+            TestIdle, TestModeSession.RunAgain, out var againLabel);
+        againLabel.fontSize = 22;
+        Button(card, "Menu", "MAIN MENU", new Vector2(790, -474), new Vector2(240, 52),
+            new Color(.30f, .30f, .42f), TestModeSession.ExitToMenu, out var menuLabel);
+        menuLabel.fontSize = 22;
         GamepadMenus.Register(backdrop.gameObject, 60, () => again);
     }
 
-    // One row per level, scrolling once a run gets deep enough to need it.
-    private static void Table(Transform card, PlaytestReport r)
+    // One row per level under a header, scrolling once a run gets deep enough
+    // to need it - the report card's table view.
+    internal static void Table(Transform parent, PlaytestReport r, Vector2 position, Vector2 size)
     {
-        var viewport = Rect(card, "Levels", new Vector2(0, -60), new Vector2(1160, 460));
+        var header = Label(parent, "Header", Row("LV", "TIME", "COINS", "WALLET", "DEATHS", "TRAP", "FRZ", "SHLD", "TELE", "BOUGHT", "LIVES"),
+            new Vector2(position.x, position.y + size.y * .5f - 15f), new Vector2(size.x, 30), 21, Gold);
+        header.alignment = TextAlignmentOptions.Left;
+        var viewport = Rect(parent, "Levels", new Vector2(position.x, position.y - 20f), new Vector2(size.x, size.y - 40f));
         viewport.gameObject.AddComponent<RectMask2D>();
         var hit = viewport.gameObject.AddComponent<Image>();
         hit.color = new Color(0f, 0f, 0f, .001f);
@@ -308,7 +406,7 @@ public class TestModeOverlay : MonoBehaviour
 
     private static readonly int[] Columns = { 0, 6, 14, 24, 35, 52, 59, 66, 73, 80, 93 };
 
-    private static string Row(params string[] cells)
+    internal static string Row(params string[] cells)
     {
         var line = new StringBuilder();
         for (int i = 0; i < cells.Length && i < Columns.Length; i++)
@@ -316,7 +414,7 @@ public class TestModeOverlay : MonoBehaviour
         return line.ToString();
     }
 
-    private static string EndReason(string reason)
+    internal static string EndReason(string reason)
     {
         switch (reason)
         {
@@ -329,7 +427,7 @@ public class TestModeOverlay : MonoBehaviour
 
     // ---- the little bit of UI it needs -------------------------------------
 
-    private static RectTransform Rect(Transform parent, string name, Vector2 position, Vector2 size)
+    internal static RectTransform Rect(Transform parent, string name, Vector2 position, Vector2 size)
     {
         var node = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
         node.SetParent(parent, false);
@@ -339,7 +437,7 @@ public class TestModeOverlay : MonoBehaviour
         return node;
     }
 
-    private static Image Box(Transform parent, string name, Vector2 position, Vector2 size, Color colour)
+    internal static Image Box(Transform parent, string name, Vector2 position, Vector2 size, Color colour)
     {
         var image = Rect(parent, name, position, size).gameObject.AddComponent<Image>();
         image.color = colour;
@@ -347,7 +445,7 @@ public class TestModeOverlay : MonoBehaviour
         return image;
     }
 
-    private static TextMeshProUGUI Label(Transform parent, string name, string text, Vector2 position, Vector2 size,
+    internal static TextMeshProUGUI Label(Transform parent, string name, string text, Vector2 position, Vector2 size,
         float fontSize, Color colour)
     {
         var label = Rect(parent, name, position, size).gameObject.AddComponent<TextMeshProUGUI>();
@@ -360,7 +458,7 @@ public class TestModeOverlay : MonoBehaviour
         return label;
     }
 
-    private static Button Button(Transform parent, string name, string text, Vector2 position, Vector2 size,
+    internal static Button Button(Transform parent, string name, string text, Vector2 position, Vector2 size,
         Color colour, UnityEngine.Events.UnityAction action, out TextMeshProUGUI label)
     {
         var image = Box(parent, name, position, size, colour);

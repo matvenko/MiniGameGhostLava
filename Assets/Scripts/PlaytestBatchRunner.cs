@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 //
 //   -playtest                     turn this on
 //   -playtestDifficulty normal    or hard
-//   -playtestBot auto             or kid / teen
+//   -playtestBot auto             or normal / hard
 //   -playtestRuns 5
 //   -playtestOut <folder>
 //   -playtestSpeed 1              game speed; the frame clock is already fixed
@@ -44,7 +44,7 @@ public class PlaytestBatchRunner : MonoBehaviour
         DifficultySettings.OverrideForSession(hard ? Difficulty.Hard : Difficulty.Normal);
 
         string bot = Arg(args, "-playtestBot", "auto").ToLowerInvariant();
-        TestModeSession.Choice = bot == "kid" ? BotChoice.Kid : bot == "teen" ? BotChoice.Teen : BotChoice.MatchDifficulty;
+        TestModeSession.Choice = bot == "normal" ? BotChoice.Normal : bot == "hard" ? BotChoice.Hard : BotChoice.MatchDifficulty;
 
         _runs = Mathf.Max(1, (int)Number(args, "-playtestRuns", 1));
         _timeout = Number(args, "-playtestTimeout", 1800f);
@@ -128,6 +128,10 @@ public class PlaytestBatchRunner : MonoBehaviour
         {
             string name = "run" + _finished.ToString("00") + "-" + Path.GetFileName(PlaytestLog.LastFilePath);
             File.Copy(PlaytestLog.LastFilePath, Path.Combine(_outDir, name), true);
+            // The trace travels with its report under the same name, which is
+            // how PlaytestAnalysis pairs them up.
+            if (!string.IsNullOrEmpty(PlaytestLog.LastTracePath) && File.Exists(PlaytestLog.LastTracePath))
+                File.Copy(PlaytestLog.LastTracePath, Path.Combine(_outDir, Path.ChangeExtension(name, ".trace.json")), true);
         }
         catch (Exception e)
         {

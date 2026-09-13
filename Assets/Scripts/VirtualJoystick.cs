@@ -45,6 +45,11 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     // -1..1 on each axis; (0,0) when not being touched
     public Vector2 InputDirection { get; private set; }
 
+    // Where on the screen the steering finger is, in pixels, while one is down -
+    // for the playtest trace, which wants to know what the thumb was covering.
+    public bool Held => _pointer != NoPointer;
+    public Vector2 PointerPosition { get; private set; }
+
     // Pointer ids are plain ints and 0 is a real touch, so "nobody is holding
     // it" needs a value no pointer can ever have.
     private const int NoPointer = int.MinValue;
@@ -108,6 +113,7 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
         if (_pointer != NoPointer) return;
 
         _pointer = eventData.pointerId;
+        PointerPosition = eventData.position;
         PlaceUnder(eventData);
         SetStickAlpha(activeAlpha);
         OnDrag(eventData);
@@ -116,6 +122,7 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     public void OnDrag(PointerEventData eventData)
     {
         if (eventData.pointerId != _pointer || stick == null) return;
+        PointerPosition = eventData.position;
 
         Vector2 localPoint;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(stick, eventData.position, eventData.pressEventCamera, out localPoint))

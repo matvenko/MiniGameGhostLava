@@ -6,7 +6,7 @@ using Sample;
 //
 // A bot reading the board out of the code knows where every hunter is, this
 // frame, to the millimetre, and could dodge them all forever - which says
-// nothing about whether a child can finish level four. So everything a player
+// nothing about whether someone playing normal can finish level four. So everything a player
 // is limited by is written down here instead: how late they see things, how far
 // they look, how straight they steer, how much they plan, how often they forget
 // they have a freeze in their pocket.
@@ -42,12 +42,18 @@ public class PlaytestBotProfile
     public float safeDistance;
     [Tooltip("Runs for open floor with a way out, rather than just stepping away from the nearest hunter.")]
     public bool smartFlee;
+    [Tooltip("How much a hunter near the mouth of a dead end keeps the bot out of it - it will not walk into a pocket it could not be back out of before the hunter got there. Nought never thinks about it.")]
+    public float deadEndCaution;
 
     [Header("Hands")]
     [Tooltip("Degrees the stick wanders off the line the bot means to walk.")]
     public float aimError;
     [Tooltip("How close to a tile's middle the bot gets before turning the corner. Bigger cuts corners - and lava.")]
     public float cornerTolerance;
+    [Tooltip("Extra cost, in steps, of cutting diagonally between two pools of lava that touch at a corner. Low and it takes such shortcuts the way people do; below zero, never. The burn it risks on the way through is its aim's business.")]
+    public float diagonalCutCost;
+    [Tooltip("Hunters drawn under a resting thumb are not seen: the bottom corners of the screen, as a share of its width and height. Zero for no hands in the way.")]
+    public Vector2 thumbCover;
     [Tooltip("Average seconds between moments of looking away.")]
     public float distractionEvery;
     public float distractionMin;
@@ -70,13 +76,19 @@ public class PlaytestBotProfile
     [Tooltip("Keeps a life in reserve and a stock of each ability, rather than buying whatever it can afford.")]
     public bool strategicShopping;
 
-    // Aimed at the 10-15 year olds normal mode is for: slower to react, watches
-    // only what is near, heads for the coin it can see, cuts corners, forgets
-    // its abilities, and spends on impulse.
-    public static readonly PlaytestBotProfile Kid = new PlaytestBotProfile
+    // Reports written before the bots were named after their modes still say
+    // Kid and Teen; they are shown under the names they have now.
+    public static string DisplayName(string profile) =>
+        profile == "Kid" ? "Normal" : profile == "Teen" ? "Hard" : profile;
+
+    // The player normal mode is for: slower to react, watches only what is
+    // near, heads for the coin it can see, cuts corners, forgets its abilities,
+    // and spends on impulse. Its hands are the recorded player's (see Hard)
+    // made a notch worse.
+    public static readonly PlaytestBotProfile Normal = new PlaytestBotProfile
     {
-        name = "Kid",
-        reactionTime = .30f,
+        name = "Normal",
+        reactionTime = .45f,
         awareness = 4.5f,
         pathDistanceDanger = false,
         predictsMotion = false,
@@ -86,9 +98,12 @@ public class PlaytestBotProfile
         fleeDistance = 2.2f,
         safeDistance = 3.5f,
         smartFlee = false,
-        aimError = 12f,
+        deadEndCaution = 1.5f,
+        aimError = 38f,
         cornerTolerance = .4f,
-        distractionEvery = 25f,
+        diagonalCutCost = 1f,
+        thumbCover = new Vector2(.25f, .35f),
+        distractionEvery = 20f,
         distractionMin = .4f,
         distractionMax = 1f,
         proactiveAbilities = false,
@@ -100,11 +115,14 @@ public class PlaytestBotProfile
         strategicShopping = false
     };
 
-    // Sixteen and up, which is who hard is for.
-    public static readonly PlaytestBotProfile Teen = new PlaytestBotProfile
+    // The player hard mode is for. Its hands and its reactions are fitted to
+    // recordings of a player on a phone (2026-09-13): the stick wandering 18
+    // degrees off the lane, 0.38 s to react to a hunter coming close, corners
+    // taken a quarter tile off the middle, a short pause about twice a minute.
+    public static readonly PlaytestBotProfile Hard = new PlaytestBotProfile
     {
-        name = "Teen",
-        reactionTime = .19f,
+        name = "Hard",
+        reactionTime = .36f,
         awareness = 8f,
         pathDistanceDanger = true,
         predictsMotion = true,
@@ -114,11 +132,14 @@ public class PlaytestBotProfile
         fleeDistance = 2f,
         safeDistance = 3.5f,
         smartFlee = true,
-        aimError = 4f,
-        cornerTolerance = .12f,
-        distractionEvery = 90f,
-        distractionMin = .2f,
-        distractionMax = .4f,
+        deadEndCaution = 5f,
+        aimError = 30f,
+        cornerTolerance = .3f,
+        diagonalCutCost = 1f,
+        thumbCover = new Vector2(.25f, .35f),
+        distractionEvery = 33f,
+        distractionMin = .3f,
+        distractionMax = .7f,
         proactiveAbilities = true,
         panicDistance = 1.3f,
         forgetChance = .05f,
@@ -150,6 +171,21 @@ public class PlaytestBot : MonoBehaviour
             return false;
         }
         direction = _driver._steer;
+        return true;
+    }
+
+    // What the bot is about, for the playtest trace: 0 nothing, 1 a coin,
+    // 2 running, 3 the friendly ghost, 4 looking away - and where it is headed.
+    public static bool TraceState(out int mode, out Vector3 goal)
+    {
+        if (_driver == null || !_driver.isActiveAndEnabled)
+        {
+            mode = -1;
+            goal = Vector3.zero;
+            return false;
+        }
+        mode = _driver._mode;
+        goal = _driver._goalAt;
         return true;
     }
 
@@ -209,6 +245,18 @@ public class PlaytestBot : MonoBehaviour
     private Vector3 _unstickDir;
     private float _levelCompleteWait = -1f;
 
+    // Diagonal shortcuts through corner gaps, and dead ends: how deep into one
+    // each tile is and which tile is its mouth (see MeasurePockets).
+    private int[][] _diag;
+    private int[] _pocketDepth;
+    private int[] _pocketMouth;
+    private Camera _camera;
+
+    // What it is doing, for the trace.
+    private int _mode;
+    private Vector3 _goalAt;
+    private bool _friendlyTarget;
+
     public void Init(PlaytestBotProfile profile)
     {
         _p = profile;
@@ -246,6 +294,7 @@ public class PlaytestBot : MonoBehaviour
         if (Distracted())
         {
             _steer = Vector3.zero;
+            _mode = 4;
             return;
         }
 
@@ -364,6 +413,8 @@ public class PlaytestBot : MonoBehaviour
         _cost = new float[count];
         _prev = new int[count];
         _depth = new int[count];
+        BuildShortcuts();
+        MeasurePockets();
         _path.Clear();
         _targetCoin = null;
     }
@@ -414,7 +465,7 @@ public class PlaytestBot : MonoBehaviour
         _p.predictsMotion ? seen.position + seen.velocity * _p.reactionTime : seen.position;
 
     private bool Watching(Seen seen, Vector3 from) =>
-        !seen.stunned && Planar(Perceived(seen), from) <= _p.awareness;
+        !seen.stunned && Planar(Perceived(seen), from) <= _p.awareness && !UnderThumb(seen.position);
 
     // ---- thinking -----------------------------------------------------------
 
@@ -433,6 +484,8 @@ public class PlaytestBot : MonoBehaviour
         float threat = _enemyDist[me];
         _fleeing = !shielded && (threat <= _p.fleeDistance || (_fleeing && threat < _p.safeDistance));
         int goal = _fleeing ? FleeGoal(me) : ChooseTarget(me);
+        _mode = goal < 0 ? 0 : _fleeing ? 2 : _friendlyTarget ? 3 : 1;
+        _goalAt = goal >= 0 ? _nodes[goal] : _player.transform.position;
 
         UseAbilities(me, near, crowd, nearAt);
 
@@ -488,7 +541,7 @@ public class PlaytestBot : MonoBehaviour
         float closeness = Mathf.Max(0f, 1f - d / _p.dangerRadius);
         float cost = 1f + _p.dangerWeight * closeness * closeness;
         if (d < 1f) cost += 40f;
-        return cost;
+        return cost + _p.deadEndCaution * PocketRisk(node);
     }
 
     // Cheapest way from here to every tile, where a tile near a hunter costs
@@ -509,14 +562,9 @@ public class PlaytestBot : MonoBehaviour
             var top = Pop();
             int current = top.Value;
             if (top.Key > _cost[current]) continue;
-            foreach (int next in _adj[current])
-            {
-                float cost = _cost[current] + StepCost(next);
-                if (cost >= _cost[next]) continue;
-                _cost[next] = cost;
-                _prev[next] = current;
-                Push(cost, next);
-            }
+            foreach (int next in _adj[current]) Relax(current, next, _cost[current] + StepCost(next));
+            if (_p.diagonalCutCost < 0f) continue;
+            foreach (int next in _diag[current]) Relax(current, next, _cost[current] + StepCost(next) * 1.41f + _p.diagonalCutCost);
         }
     }
 
@@ -548,7 +596,8 @@ public class PlaytestBot : MonoBehaviour
 
     private int ChooseTarget(int me)
     {
-        if (FriendlyGhostWorthIt(out int ghostNode)) return ghostNode;
+        _friendlyTarget = FriendlyGhostWorthIt(out int ghostNode);
+        if (_friendlyTarget) return ghostNode;
 
         var coins = Coin.Active;
         if (coins.Count == 0) return -1;
@@ -630,7 +679,7 @@ public class PlaytestBot : MonoBehaviour
     // get there, to whichever tile has the most room from them. The careful
     // player looks further, and also counts the ways out - a tile with three
     // neighbours beats a pocket with one. The other has no thought for whether
-    // it is running into a dead end, which is how children get cornered.
+    // it is running into a dead end, which is how a casual player gets cornered.
     private int FleeGoal(int me)
     {
         int reach = _p.smartFlee ? 7 : 4;
@@ -665,11 +714,14 @@ public class PlaytestBot : MonoBehaviour
         return refuge;
     }
 
-    // Even a child sees a pocket with one way in, a little: the ways out count
-    // for something either way, only much more for the careful player.
+    // Even a casual player sees a pocket with one way in, a little: the ways out count
+    // for something either way, only much more for the careful player. A dead
+    // end is a worse place to run to the deeper it goes, however far it looks
+    // from the hunter right now.
     private float RefugeScore(int node) =>
         Mathf.Min(_enemyDist[node], 10f)
-        + (_p.smartFlee ? .6f * _adj[node].Length - .1f * _depth[node] : .3f * _adj[node].Length);
+        + (_p.smartFlee ? .6f * _adj[node].Length - .1f * _depth[node] : .3f * _adj[node].Length)
+        - .25f * _p.deadEndCaution * Mathf.Min(_pocketDepth[node], 4);
 
     // ---- abilities ----------------------------------------------------------
 
@@ -887,6 +939,132 @@ public class PlaytestBot : MonoBehaviour
         _unstickUntil = Time.time + .4f;
         _steer = _unstickDir;
         return true;
+    }
+
+    // ---- the shape of the board ------------------------------------------------
+
+    private static Vector2Int Cell(Vector3 p, Vector3 origin) =>
+        new Vector2Int(Mathf.RoundToInt(p.x - origin.x), Mathf.RoundToInt(p.z - origin.z));
+
+    // Two tiles of floor that touch only at a corner, with lava on both of the
+    // other two: the hunters cannot cut through there, but a player can, and
+    // the recordings have people doing it several times a minute - and burning
+    // on about one try in sixteen.
+    private void BuildShortcuts()
+    {
+        int count = _nodes.Count;
+        var cells = new Dictionary<Vector2Int, int>();
+        Vector3 origin = count > 0 ? _nodes[0] : Vector3.zero;
+        for (int i = 0; i < count; i++) cells[Cell(_nodes[i], origin)] = i;
+
+        _diag = new int[count][];
+        var cuts = new List<int>(4);
+        for (int i = 0; i < count; i++)
+        {
+            cuts.Clear();
+            var c = Cell(_nodes[i], origin);
+            for (int dx = -1; dx <= 1; dx += 2)
+                for (int dz = -1; dz <= 1; dz += 2)
+                    if (cells.TryGetValue(new Vector2Int(c.x + dx, c.y + dz), out int j)
+                        && !cells.ContainsKey(new Vector2Int(c.x + dx, c.y))
+                        && !cells.ContainsKey(new Vector2Int(c.x, c.y + dz)))
+                        cuts.Add(j);
+            _diag[i] = cuts.ToArray();
+        }
+    }
+
+    // Dead ends: every tile on a branch that leads nowhere, how many steps in
+    // it is from the tile where the branch leaves the rest of the board, and
+    // which tile that is. Found by peeling the loose ends off the board a tile
+    // at a time until only tiles with a way round are left. A corner gap
+    // counts as a way out when the bot is willing to take one.
+    private void MeasurePockets()
+    {
+        int count = _nodes.Count;
+        _pocketDepth = new int[count];
+        _pocketMouth = new int[count];
+        bool cuts = _p.diagonalCutCost >= 0f;
+        var degree = new int[count];
+        var peeled = new bool[count];
+
+        _queue.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            degree[i] = _adj[i].Length + (cuts ? _diag[i].Length : 0);
+            _pocketMouth[i] = i;
+            if (degree[i] <= 1) _queue.Enqueue(i);
+        }
+        int left = count;
+        while (_queue.Count > 0)
+        {
+            int i = _queue.Dequeue();
+            if (peeled[i]) continue;
+            peeled[i] = true;
+            left--;
+            foreach (int j in Ways(i, cuts))
+                if (!peeled[j] && --degree[j] == 1) _queue.Enqueue(j);
+        }
+        // A board with no loop anywhere has no inside to be safe in.
+        if (left == 0) return;
+
+        for (int i = 0; i < count; i++)
+            if (!peeled[i]) _queue.Enqueue(i);
+        while (_queue.Count > 0)
+        {
+            int i = _queue.Dequeue();
+            foreach (int j in Ways(i, cuts))
+            {
+                if (!peeled[j] || _pocketDepth[j] > 0) continue;
+                _pocketDepth[j] = _pocketDepth[i] + 1;
+                _pocketMouth[j] = peeled[i] ? _pocketMouth[i] : i;
+                _queue.Enqueue(j);
+            }
+        }
+    }
+
+    private IEnumerable<int> Ways(int node, bool cuts)
+    {
+        foreach (int j in _adj[node]) yield return j;
+        if (!cuts) yield break;
+        foreach (int j in _diag[node]) yield return j;
+    }
+
+    // How much of a trap a tile is right now: inside a dead end, with a hunter
+    // close enough to its mouth that going in and coming back out would not be
+    // done before the hunter was standing in it. Hunters walk at three quarters
+    // of the player's pace at most, so every step in is about one and a half
+    // of theirs, there and back.
+    private float PocketRisk(int node)
+    {
+        int depth = _pocketDepth[node];
+        if (depth == 0) return 0f;
+        float hunter = _enemyDist[_pocketMouth[node]];
+        if (hunter >= Far) return 0f;
+        float margin = hunter - depth * 1.5f;
+        return margin < 2f ? 2f - margin : 0f;
+    }
+
+    // Whether a thumb resting in a bottom corner of the screen is over this
+    // spot on the board.
+    private bool UnderThumb(Vector3 at)
+    {
+        if (_p.thumbCover.x <= 0f) return false;
+        if (_camera == null)
+        {
+            var follow = FindAnyObjectByType<CameraFollow>();
+            _camera = follow != null ? follow.GetComponent<Camera>() : Camera.main;
+            if (_camera == null) return false;
+        }
+        Vector3 view = _camera.WorldToViewportPoint(at);
+        return view.z > 0f && Mathf.Min(view.x, 1f - view.x) < _p.thumbCover.x && view.y < _p.thumbCover.y;
+    }
+
+    private void Relax(int from, int to, float cost)
+    {
+        if (cost >= _cost[to]) return;
+        _cost[to] = cost;
+        _prev[to] = from;
+        Push(cost, to);
     }
 
     // ---- small things -------------------------------------------------------

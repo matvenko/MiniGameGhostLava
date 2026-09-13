@@ -71,6 +71,10 @@ public class EnemyChaser : MonoBehaviour
 
     public bool IsStunned => _stunTimer > 0f;
 
+    // For the playtest trace: whether this one hunts at all, and how fast.
+    public PathingStrategy Strategy => strategy;
+    public float Speed => ChaseSpeed;
+
     // Called by Trap when this enemy walks onto one, and by the freeze ability
     // for every enemy at once. Being stopped has to be visible from across the
     // board, so it is shown twice over: the animator is held on the frame it

@@ -464,7 +464,11 @@ public class LevelManager : MonoBehaviour
         {
             if (blockMaterial != null || lavaMaterial != null) mr.sharedMaterial = lavaMaterial;
             bc.center = new Vector3(0f, 0.05f, 0f);
-            bc.size = new Vector3(1.18f, 1.3f, 1.18f);
+            // Exactly the tile it is drawn on and no wider, so a lane between
+            // two pools is as safe as it looks. It used to reach 0.09 past every
+            // edge, and the playtest recordings had players drifting into that
+            // invisible rim on half of all straight walking between lava.
+            bc.size = new Vector3(1f, 1.3f, 1f);
             bc.isTrigger = true;
             if (hazard == null) tile.gameObject.AddComponent<LavaHazard>();
             pos.y = _lavaTileY;

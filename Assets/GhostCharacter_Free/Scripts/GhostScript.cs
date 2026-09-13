@@ -97,9 +97,9 @@ public class GhostScript : MonoBehaviour
         if (EnemyPathGrid.Instance.AllNodes.Count == 0) return;
 
         Vector3 footing = EnemyPathGrid.Instance.NearestNode(transform.position);
-        // Only once there is nothing underfoot. The lava colliders reach a
-        // little past their own tiles, so being brushed by one while still
-        // standing on solid ground is leaning over the edge, not falling in -
+        // Only once there is nothing underfoot. The character is wider than a
+        // point, so being brushed by the lava beside it while still standing
+        // on solid ground is leaning over the edge, not falling in -
         // and a shielded character walking a lane beside lava would otherwise
         // be tugged back to the middle of every tile.
         if (Mathf.Abs(footing.x - transform.position.x) <= .5f &&
@@ -148,6 +148,12 @@ public class GhostScript : MonoBehaviour
     // their managers ask first, so a button pressed right as the player dies
     // doesn't spend the charge on an ability that was never going to fire.
     public bool IsDead => isDead;
+
+    // The blinking seconds after a respawn, and the direction the character
+    // was last told to move in, stick or bot, before it is normalised - both
+    // only for the playtest trace (see PlaytestTrace).
+    public bool GraceActive => _graceInvincible;
+    public Vector3 InputDirection { get; private set; }
 
     public void ActivateShield(float duration)
     {
@@ -350,6 +356,10 @@ public class GhostScript : MonoBehaviour
 
     void Update()
     {
+        // What the stick said this frame, for the playtest trace. Nothing
+        // steers while dead or held by the countdown, so those frames read as
+        // no input at all.
+        InputDirection = Vector3.zero;
         if (isDead) return;
         STATUS();
         GRAVITY();
@@ -536,6 +546,7 @@ public class GhostScript : MonoBehaviour
             x = steer.x;
             z = steer.z;
         }
+        InputDirection = new Vector3(x, 0f, z);
 
         // Held input resumes after the countdown, including joystick/gamepad.
         bool moving = x != 0f || z != 0f;

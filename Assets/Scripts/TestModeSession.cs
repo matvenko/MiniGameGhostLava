@@ -1,15 +1,14 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Which bot plays a test run. By default the one the chosen difficulty is for -
-// normal is the mode aimed at 10-15 year olds, hard at everyone older - but
-// either can be put on either board, which is how "is hard too hard for a
-// child" gets asked.
+// Which bot plays a test run. By default the one made for the chosen
+// difficulty, but either can be put on either board, which is how "is hard too
+// hard for someone who plays normal" gets asked.
 public enum BotChoice
 {
     MatchDifficulty,
-    Kid,
-    Teen
+    Normal,
+    Hard
 }
 
 // One test run from the button being pressed to the report card: the save is
@@ -23,7 +22,14 @@ public static class TestModeSession
 
     public static bool Active { get; private set; }
     public static BotChoice Choice { get; set; } = BotChoice.MatchDifficulty;
+    // Null while a person is playing a recording.
     public static PlaytestBotProfile Profile { get; private set; }
+
+    // A recording: the same run, the same copy of the save, the same report and
+    // trace, only with a person on the stick instead of the bot - what the bot's
+    // numbers are measured against.
+    public const string HumanName = "Human";
+    public static bool Human { get; private set; }
 
     // Set by RUN AGAIN: the board is reloaded from the real save and the next
     // one to come up starts a new test on its own.
@@ -35,9 +41,9 @@ public static class TestModeSession
     {
         switch (choice)
         {
-            case BotChoice.Kid: return PlaytestBotProfile.Kid;
-            case BotChoice.Teen: return PlaytestBotProfile.Teen;
-            default: return DifficultySettings.IsNormal ? PlaytestBotProfile.Kid : PlaytestBotProfile.Teen;
+            case BotChoice.Normal: return PlaytestBotProfile.Normal;
+            case BotChoice.Hard: return PlaytestBotProfile.Hard;
+            default: return DifficultySettings.IsNormal ? PlaytestBotProfile.Normal : PlaytestBotProfile.Hard;
         }
     }
 
@@ -64,6 +70,8 @@ public static class TestModeSession
     // moment and speeding back up - and the change goes into the report.
     public static void CycleSpeed()
     {
+        // A person plays at the speed the game is played at.
+        if (Active && Human) return;
         int i = System.Array.IndexOf(SpeedChoices, PlaySpeed);
         PlaySpeed = SpeedChoices[(i + 1) % SpeedChoices.Length];
         if (!Active) return;
@@ -71,20 +79,49 @@ public static class TestModeSession
         PlaytestLog.SpeedChanged(PlaySpeed);
     }
 
+    // TEST MODE on the bar: the bot, on the board as it stands.
+    public static void StartBot()
+    {
+        Human = false;
+        Start();
+    }
+
+    // REC on the bar: a new game on a fresh copy of the save, played by whoever
+    // is holding the phone. Fresh, so every recording starts where a batch of
+    // bot runs does - level one, starting lives, empty pockets - and the two can
+    // be compared run for run. The board is reloaded onto the copy, and the
+    // recording starts itself once it is up (see TestModeOverlay).
+    public static void StartRecording()
+    {
+        if (Active) return;
+        Human = true;
+        LeaveBoard();
+        RunProgress.EnterSandbox(fresh: true);
+        RerunPending = true;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    // Whichever of the two was chosen last - RUN AGAIN and a batch come back
+    // through here.
     public static void Start()
     {
         if (!CanStart) return;
         RerunPending = false;
-        Profile = ProfileFor(Choice);
+        Profile = Human ? null : ProfileFor(Choice);
+        float speed = Human ? 1f : PlaySpeed;
 
-        // A batch run has already put a fresh copy in place before the board was
-        // laid out; anything else copies the real save as it stands.
+        // A batch run or a recording has already put a fresh copy in place
+        // before the board was laid out; anything else copies the real save as
+        // it stands.
         if (!RunProgress.Sandboxed) RunProgress.EnterSandbox();
-        GameSpeed.Set(PlaySpeed);
-        PlaytestLog.Begin(Profile.name, PlaySpeed);
+        GameSpeed.Set(speed);
+        PlaytestLog.Begin(Human ? HumanName : Profile.name, speed);
 
-        _bot = new GameObject("Playtest Bot").AddComponent<PlaytestBot>();
-        _bot.Init(Profile);
+        if (!Human)
+        {
+            _bot = new GameObject("Playtest Bot").AddComponent<PlaytestBot>();
+            _bot.Init(Profile);
+        }
         Active = true;
     }
 
@@ -115,6 +152,11 @@ public static class TestModeSession
     // when the first run began.
     public static void RunAgain()
     {
+        if (Human)
+        {
+            StartRecording();
+            return;
+        }
         RerunPending = true;
         LeaveBoard();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -151,6 +193,7 @@ public static class TestModeSession
         Active = false;
         RerunPending = false;
         Profile = null;
+        Human = false;
         PlaySpeed = Speed;
         _bot = null;
     }

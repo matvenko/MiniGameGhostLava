@@ -115,6 +115,7 @@ public static class PlaytestLog
     // card reads, and what the batch runner hands back.
     public static PlaytestReport LastReport { get; private set; }
     public static string LastFilePath { get; private set; }
+    public static string LastTracePath { get; private set; }
 
     public static event Action<PlaytestReport> Finished;
 
@@ -146,8 +147,12 @@ public static class PlaytestLog
             startLevel = level,
             start = Inventory()
         };
+        PlaytestTrace.Begin(_startTime);
         Add("run_start", botProfile, 0);
-        OpenLevel(level, Coin.Active.Count, joinedMidLevel: true);
+        // A recording, a rerun and a batch run all start on a board that came
+        // up a moment ago, and that level is played whole; only a test started
+        // on a board someone was already playing joins it part way.
+        OpenLevel(level, Coin.Active.Count, joinedMidLevel: Time.timeSinceLevelLoad > 1f);
     }
 
     public static void LevelStarted(int level, int coinsOnBoard)
@@ -258,6 +263,7 @@ public static class PlaytestLog
         _finished = true;
         LastReport = r;
         LastFilePath = Write(r);
+        LastTracePath = PlaytestTrace.Finish(r, LastFilePath);
         Finished?.Invoke(r);
     }
 
@@ -273,6 +279,7 @@ public static class PlaytestLog
         };
         _report.levels.Add(_level);
         Add("level_start", null, coinsOnBoard);
+        PlaytestTrace.LevelStarted(level);
     }
 
     private static void CloseLevel()
@@ -317,6 +324,36 @@ public static class PlaytestLog
         return nearest == float.MaxValue ? -1f : Round(nearest);
     }
 
+    // The newest runs written to this device, newest first - what the report
+    // card compares the run that just ended against. Files that are not a
+    // report, or cannot be read, are passed over.
+    public static List<PlaytestReport> RecentReports(int count)
+    {
+        var reports = new List<PlaytestReport>();
+        try
+        {
+            string dir = Path.Combine(Application.persistentDataPath, "playtests");
+            if (!Directory.Exists(dir)) return reports;
+            var files = new List<string>(Directory.GetFiles(dir, "*.json"));
+            files.RemoveAll(f => f.EndsWith(".trace.json", StringComparison.OrdinalIgnoreCase));
+            // Named by the moment they were written, so the name sorts by age.
+            files.Sort((a, b) => string.CompareOrdinal(Path.GetFileName(b), Path.GetFileName(a)));
+            foreach (string file in files)
+            {
+                if (reports.Count >= count) break;
+                PlaytestReport report = null;
+                try { report = JsonUtility.FromJson<PlaytestReport>(File.ReadAllText(file)); }
+                catch (Exception) { }
+                if (report != null && report.schema != null && report.schema.StartsWith("mazeboo.playtest")) reports.Add(report);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("Playtest reports could not be listed: " + e.Message);
+        }
+        return reports;
+    }
+
     private static int Lives() => LivesManager.Instance != null ? LivesManager.Instance.CurrentLives : 0;
 
     private static PlaytestInventory Inventory() => new PlaytestInventory
@@ -340,8 +377,9 @@ public static class PlaytestLog
         {
             string dir = Path.Combine(Application.persistentDataPath, "playtests");
             Directory.CreateDirectory(dir);
+            string who = report.botProfile == TestModeSession.HumanName ? "human" : report.botProfile.ToLowerInvariant() + "-bot";
             string name = DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + report.difficulty.ToLowerInvariant()
-                          + "-" + report.botProfile.ToLowerInvariant() + ".json";
+                          + "-" + who + ".json";
             string path = Path.Combine(dir, name);
             File.WriteAllText(path, JsonUtility.ToJson(report, true));
             Debug.Log("Playtest report written to " + path);
@@ -363,6 +401,7 @@ public static class PlaytestLog
         _player = null;
         LastReport = null;
         LastFilePath = null;
+        LastTracePath = null;
         Finished = null;
     }
 }
