@@ -31,6 +31,21 @@ public sealed class Moonshard : MonoBehaviour
     private bool collected;
     private float phase;
 
+    // Every stone still out on the board, left the moment it is taken - the same
+    // list the coins keep, for the HUD to see what it is covering.
+    private static readonly List<Moonshard> Uncollected = new List<Moonshard>();
+    public static IReadOnlyList<Moonshard> Active => Uncollected;
+
+    private void OnEnable()
+    {
+        if (!collected) Uncollected.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        Uncollected.Remove(this);
+    }
+
     public static void Create(Vector3 position, Transform parent)
     {
         var go = new GameObject("Moonshard");
@@ -130,6 +145,7 @@ public sealed class Moonshard : MonoBehaviour
     private IEnumerator Collect()
     {
         collected = true;
+        Uncollected.Remove(this);
         if (EconomyManager.Instance != null) EconomyManager.Instance.AddMoonshard();
         AudioManager.Play(GameSound.Reward);
         foreach (var g in glints) g.gameObject.SetActive(false);

@@ -24,6 +24,8 @@ public class EconomyManager : MonoBehaviour
         TotalMoonshards = RunProgress.Moonshards;
         UpdateText();
         MoonshardHud.Create(this, crystalBar, walletText);
+        if (walletText != null && walletText.canvas != null)
+            HudCoinReveal.Create(walletText.canvas.rootCanvas);
     }
 
     public void AddCoins(int amount)
