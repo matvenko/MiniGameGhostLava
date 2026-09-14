@@ -1,0 +1,4 @@
+for_platform :ios do
+  app_identifier(ENV["IOS_BUNDLE_ID"])
+  team_id(ENV["APPLE_TEAM_ID"])
+end

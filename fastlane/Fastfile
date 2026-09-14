@@ -1,0 +1,74 @@
+# iOS builds run on GitHub Actions, no Mac needed: the Unity job exports the
+# Xcode project on Linux, then these lanes sign it on a macOS runner and send
+# it to TestFlight. Signing certificates live in the private match repository
+# (MATCH_REPOSITORY), encrypted with MATCH_PASSWORD.
+
+org, repo = (ENV["GITHUB_REPOSITORY"] || "").split("/")
+match_org, match_repo = (ENV["MATCH_REPOSITORY"] || "").split("/")
+bundle_id = ENV["IOS_BUNDLE_ID"]
+xcode_dir = "#{ENV['IOS_BUILD_PATH']}/iOS"
+xcodeproj = "#{xcode_dir}/Unity-iPhone.xcodeproj"
+
+platform :ios do
+  desc "One-time: give CI a deploy key for the match repository"
+  lane :init_ci do
+    github_action(
+      api_token: ENV["GH_PAT"],
+      org: org,
+      repo: repo,
+      match_org: match_org,
+      match_repo: match_repo,
+      writable_deploy_key: true
+    )
+  end
+
+  desc "Sign in to App Store Connect with the API key"
+  lane :asc_login do
+    app_store_connect_api_key(
+      key_id: ENV["APPSTORE_KEY_ID"],
+      issuer_id: ENV["APPSTORE_ISSUER_ID"],
+      key_content: ENV["APPSTORE_P8"]
+    )
+  end
+
+  desc "Create (first run) or fetch the App Store certificate and profile"
+  lane :sync_certificates do |options|
+    asc_login
+    match(
+      type: "appstore",
+      storage_mode: "git",
+      git_url: "git@github.com:#{match_org}/#{match_repo}.git",
+      app_identifier: bundle_id,
+      readonly: options[:readonly] || false
+    )
+  end
+
+  desc "Sign the exported Xcode project and upload it to TestFlight"
+  lane :beta do
+    setup_ci
+    sync_certificates(readonly: true)
+
+    # Apple needs a new build number on every upload; take it from TestFlight
+    # so nobody has to bump PlayerSettings by hand.
+    build_number = latest_testflight_build_number(app_identifier: bundle_id) + 1
+    set_info_plist_value(path: "#{xcode_dir}/Info.plist", key: "CFBundleVersion", value: build_number.to_s)
+
+    update_code_signing_settings(use_automatic_signing: true, path: xcodeproj)
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      team_id: ENV["sigh_#{bundle_id}_appstore_team-id"],
+      code_sign_identity: "iPhone Distribution",
+      targets: "Unity-iPhone",
+      path: xcodeproj,
+      profile_name: ENV["sigh_#{bundle_id}_appstore_profile-name"],
+      profile_uuid: ENV["sigh_#{bundle_id}_appstore"]
+    )
+    build_app(
+      project: xcodeproj,
+      scheme: "Unity-iPhone",
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
+    )
+    upload_to_testflight(skip_waiting_for_build_processing: true)
+  end
+end

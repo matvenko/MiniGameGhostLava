@@ -1,0 +1,21 @@
+name: iOS One-Time Setup
+
+# Run once from the Actions tab after the App Store Connect and match secrets
+# exist. It adds a deploy key for the match repository and stores it here as
+# the MATCH_DEPLOY_KEY secret; "Generate iOS Certs" then starts on its own.
+on: workflow_dispatch
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Create the match deploy key
+        run: bundle exec fastlane ios init_ci
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          MATCH_REPOSITORY: ${{ secrets.MATCH_REPOSITORY }}

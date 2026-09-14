@@ -1,0 +1,37 @@
+name: Generate iOS Certs
+
+# Creates the App Store distribution certificate and provisioning profile and
+# stores them, encrypted, in the match repository. Needed once, and again only
+# when the certificate expires (yearly).
+on:
+  workflow_run:
+    workflows: ['iOS One-Time Setup']
+    types:
+      - completed
+  workflow_dispatch:
+
+env:
+  IOS_BUNDLE_ID: com.mate-zakariadze.mazeboo
+
+jobs:
+  generate_certs:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Create certificate and profile
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add - <<< "${MATCH_DEPLOY_KEY}"
+          bundle exec fastlane ios sync_certificates
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
+          MATCH_REPOSITORY: ${{ secrets.MATCH_REPOSITORY }}
+          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}

@@ -5,7 +5,8 @@ using TMPro;
 // Drives the Shop popup: refreshes the wallet balance and each item's
 // price/owned/buy-state - extra life, traps, freeze, teleport and shield
 // charges - and applies a purchase through ShopManager when that item's Buy
-// is clicked.
+// is clicked. The moonshard balance sits beside the coins, and two tabs switch
+// between the abilities list and the (not yet stocked) characters page.
 //
 // There are two ways in and closing has to undo whichever it was. From the pause
 // menu the game is already stopped and the pause card is only hidden, so closing
@@ -39,6 +40,15 @@ public class ShopUIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI buyShieldButtonText;
     [SerializeField] private TextMeshProUGUI shieldStatusText;
     [SerializeField] private TextMeshProUGUI walletText;
+    [SerializeField] private TextMeshProUGUI gemsText;
+    [SerializeField] private Button abilitiesTab;
+    [SerializeField] private Button charactersTab;
+    [SerializeField] private GameObject abilitiesPage;
+    [SerializeField] private GameObject charactersPage;
+
+    // The tab art has the look baked in, so the tab not being shown is only
+    // dimmed rather than swapped for a second picture.
+    private static readonly Color IdleTab = new Color(.62f, .66f, .8f, 1f);
 
     void Awake()
     {
@@ -52,6 +62,8 @@ public class ShopUIController : MonoBehaviour
         if (buyFreezeButton != null) buyFreezeButton.onClick.AddListener(OnBuyFreezeClicked);
         if (buyTeleportButton != null) buyTeleportButton.onClick.AddListener(OnBuyTeleportClicked);
         if (buyShieldButton != null) buyShieldButton.onClick.AddListener(OnBuyShieldClicked);
+        if (abilitiesTab != null) abilitiesTab.onClick.AddListener(() => ShowTab(true));
+        if (charactersTab != null) charactersTab.onClick.AddListener(() => ShowTab(false));
 
         GamepadMenus.Register(shopPanel, 30, FirstChoice, Close);
     }
@@ -108,7 +120,18 @@ public class ShopUIController : MonoBehaviour
         if (shopPanel != null) shopPanel.SetActive(true);
         SetHudVisible(false);
         SetCountdownCovered(true);
+        ShowTab(true);
         Refresh();
+    }
+
+    // Abilities are what the shop sells today; the Characters page is only a
+    // placeholder until there is someone to buy with moonshards.
+    private void ShowTab(bool abilities)
+    {
+        if (abilitiesPage != null) abilitiesPage.SetActive(abilities);
+        if (charactersPage != null) charactersPage.SetActive(!abilities);
+        if (abilitiesTab != null) abilitiesTab.targetGraphic.color = abilities ? Color.white : IdleTab;
+        if (charactersTab != null) charactersTab.targetGraphic.color = abilities ? IdleTab : Color.white;
     }
 
     private void Close()
@@ -185,6 +208,8 @@ public class ShopUIController : MonoBehaviour
     {
         if (walletText != null && EconomyManager.Instance != null)
             walletText.text = EconomyManager.Instance.TotalCoins.ToString();
+        if (gemsText != null && EconomyManager.Instance != null)
+            gemsText.text = EconomyManager.Instance.TotalMoonshards.ToString();
 
         if (ShopManager.Instance == null) return;
 

@@ -12,6 +12,15 @@ using UnityEngine.EventSystems;
 // a phone, and a stick nailed to one corner makes the player look down mid-run to
 // find it; letting it come to the finger means they never have to.
 //
+// Steering is measured from where the finger came down, not from the picture.
+// The picture is pulled in from the screen edge so the whole ring stays in view,
+// and measured from there a thumb pressed low on the screen started the
+// character off towards the edge before it had moved at all. And once the thumb
+// goes past the rim the stick is towed along behind it: a thumb that had
+// wandered two rings out had to come all the way back to turn round, and in the
+// phone recordings that made a tenth-of-a-second reversal take nearly half a
+// second.
+//
 // The player can also turn the picture of it off in the settings. Steering does
 // not go with it - this component is the full-screen press area, not the drawing.
 //
@@ -29,7 +38,7 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
     [Tooltip("Fades the stick between its resting and held states.")]
     [SerializeField] private CanvasGroup stickGroup;
 
-    [Tooltip("How far from the stick's centre the handle can travel, in canvas units.")]
+    [Tooltip("How far from the stick's centre the handle can travel, in canvas units. A thumb that goes further pulls the stick along behind it.")]
     [SerializeField] private float handleRange = 80f;
     [Tooltip("Where the stick waits: this far up from the bottom edge.")]
     [SerializeField] private float restMargin = 230f;
@@ -56,6 +65,11 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
 
     private RectTransform _area;
     private int _pointer = NoPointer;
+
+    // The point steering is measured from, in the press area's space: where the
+    // finger came down, and then wherever the thumb has towed it to. Kept apart
+    // from the drawn stick, which may sit a little further in from the edge.
+    private Vector2 _origin;
 
     // Which way along the bottom edge the stick rests: away from the ability bar,
     // so a left thumb on the buttons and a right thumb on the stick never meet.
@@ -111,26 +125,33 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
         // First finger down owns the stick. A second one landing elsewhere is
         // somebody reaching for the trap button, not a second steering hand.
         if (_pointer != NoPointer) return;
+        if (!AreaPoint(eventData, out Vector2 point)) return;
 
         _pointer = eventData.pointerId;
-        PointerPosition = eventData.position;
-        PlaceUnder(eventData);
+        _origin = point;
         SetStickAlpha(activeAlpha);
         OnDrag(eventData);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (eventData.pointerId != _pointer || stick == null) return;
+        if (eventData.pointerId != _pointer) return;
         PointerPosition = eventData.position;
+        if (!AreaPoint(eventData, out Vector2 point)) return;
 
-        Vector2 localPoint;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(stick, eventData.position, eventData.pressEventCamera, out localPoint))
+        // Past the rim, the origin is dragged along so the thumb stays on it.
+        // Which way the character goes is still exactly which way the thumb is
+        // from the origin; what changes is that turning round never takes more
+        // than a ring's width of travel, however far the thumb has wandered.
+        Vector2 offset = point - _origin;
+        if (offset.sqrMagnitude > handleRange * handleRange)
         {
-            localPoint = Vector2.ClampMagnitude(localPoint, handleRange);
-            handle.anchoredPosition = localPoint;
-            InputDirection = localPoint / handleRange;
+            offset = offset.normalized * handleRange;
+            _origin = point - offset;
         }
+
+        InputDirection = offset / handleRange;
+        Draw(offset);
     }
 
     public void OnPointerUp(PointerEventData eventData)
@@ -150,22 +171,25 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
         if (stickGroup != null) stickGroup.alpha = _drawn ? alpha : 0f;
     }
 
-    // Drops the stick on the press point, kept far enough inside the screen that
-    // the whole ring stays visible - a stick half off the edge is one the player
-    // cannot judge the centre of.
-    private void PlaceUnder(PointerEventData eventData)
+    private bool AreaPoint(PointerEventData eventData, out Vector2 point) =>
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_area, eventData.position,
+            eventData.pressEventCamera, out point);
+
+    // The ring goes on the origin, kept far enough inside the screen that the
+    // whole of it stays visible - a stick half off the edge is one the player
+    // cannot judge the centre of. The handle shows the push itself rather than
+    // sitting under the finger, so near an edge, where the ring has been pulled
+    // in, it still says truthfully which way and how hard the stick is pushed.
+    private void Draw(Vector2 offset)
     {
         if (stick == null) return;
-
-        Vector2 localPoint;
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_area, eventData.position, eventData.pressEventCamera, out localPoint))
-            return;
 
         Vector2 half = stick.rect.size * 0.5f;
         Rect area = _area.rect;
         stick.anchoredPosition = new Vector2(
-            Mathf.Clamp(localPoint.x, area.xMin + half.x, area.xMax - half.x),
-            Mathf.Clamp(localPoint.y, area.yMin + half.y, area.yMax - half.y));
+            Mathf.Clamp(_origin.x, area.xMin + half.x, area.xMax - half.x),
+            Mathf.Clamp(_origin.y, area.yMin + half.y, area.yMax - half.y));
+        if (handle != null) handle.anchoredPosition = offset;
     }
 
     private void Release()
