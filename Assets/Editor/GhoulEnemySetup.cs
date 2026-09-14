@@ -25,7 +25,7 @@ public static class GhoulEnemySetup
     // which is what makes the model itself use our URP material instead of
     // importing a Standard-shader copy that renders magenta under URP.
     private const string FbxMaterialName = "StingrayPBS1";
-    private const string EnemyName = "EnemyGhoul";
+    private const string EnemyName = "EnemyApexGhoul";
 
     // The level the ghoul first turns up on. The two ghosts have the opening
     // levels to themselves, so the taller, faster thing arriving reads as the

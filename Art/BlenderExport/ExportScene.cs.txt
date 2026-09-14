@@ -32,7 +32,7 @@ internal class CommandScript : IRunCommand {
   var scene=SceneManager.GetActiveScene(); if(scene.path!="Assets/LavaScene.unity") throw new Exception("Unexpected scene");
   var data=new SceneData{source=scene.path}; var mats=new Dictionary<int,Material>();
   foreach(var root in scene.GetRootGameObjects()) {
-   if(new[]{"Ghost","Enemies","FriendlyGhost"}.Contains(root.name)){data.excluded.Add(root.name);continue;}
+   if(new[]{"Player","Enemies","FriendlySpectral"}.Contains(root.name)){data.excluded.Add(root.name);continue;}
    if(root.GetComponent<Canvas>()!=null) continue;
    foreach(var t in root.GetComponentsInChildren<Transform>(true)) {
     var n=new Node{id=t.GetHashCode(),parent=t.parent?t.parent.GetHashCode():0,name=t.name,root=root.name,visible=t.gameObject.activeInHierarchy};

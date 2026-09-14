@@ -4,7 +4,7 @@ Native Blender model, FBX rig and Unity player integration. Default is apricot o
 
 ## Edit the character
 
-Open `Assets/LavaScene.unity`, select `Ghost > LanternWarden_Visual > Model`. The WardenAppearance inspector has palette and eye buttons. Edit the prefab to change the shared default; scene overrides affect that scene. Skin assets live in `Assets/Characters/LanternWarden/Skins`; eye styles in `Eyes`. Shell, shadow, face, rim emission and eye emission are independently editable. Changes use property blocks and preserve ongoing teleport/death visibility.
+Open `Assets/LavaScene.unity`, select `Player > LanternWarden_Visual > Model`. The WardenAppearance inspector has palette and eye buttons. Edit the prefab to change the shared default; scene overrides affect that scene. Skin assets live in `Assets/Characters/LanternWarden/Skins`; eye styles in `Eyes`. Shell, shadow, face, rim emission and eye emission are independently editable. Changes use property blocks and preserve ongoing teleport/death visibility.
 
 Future inventory code can call `appearance.SetSkin(skin)` and `appearance.SetEyes(style)`. Stable skin IDs are `warden.ivory`, `warden.ice`, `warden.midnight`, `warden.apricot`. Purchasing, ownership checks and persistence are not implemented yet.
 
@@ -12,7 +12,7 @@ Eyes are separate MeshRenderers under animated Eye.L/R bones. Meshes are stored 
 
 ## Motion
 
-Eight bones; 14,684 triangles with default oval eyes; four distinct clips: idle (3 s), move (1 s), caught (0.5 s), death (1.2 s). Root motion is disabled. WardenMotion supplies speed-dependent forward lean and turn banking on a separate presentation pivot. CharacterController remains on the existing Ghost root. Catch gets at least 0.35 s before death dissolution; the existing game-over camera sequence may extend that hold. Death collapses the rig and fades all surfaces and the light. Respawn restores the presentation pivot and visibility.
+Eight bones; 14,684 triangles with default oval eyes; four distinct clips: idle (3 s), move (1 s), caught (0.5 s), death (1.2 s). Root motion is disabled. WardenMotion supplies speed-dependent forward lean and turn banking on a separate presentation pivot. CharacterController remains on the existing Player root. Catch gets at least 0.35 s before death dissolution; the existing game-over camera sequence may extend that hold. Death collapses the rig and fades all surfaces and the light. Respawn restores the presentation pivot and visibility.
 
 The original visuals remain disabled for recovery. The pre-install scene copy is `Assets/_Recovery/LavaScene_before_Warden_install.unity`. The main menu uses the same prefab with owned LDR portrait materials.
 

@@ -37,7 +37,7 @@ internal class CommandScript : IRunCommand
 
     public void Execute(ExecutionResult result)
     {
-        var original = GameObject.Find("Ghost");
+        var original = GameObject.Find("Player");
         var existing = original.GetComponentsInChildren<Renderer>(true);
         var enabled = existing.Select(r => r.enabled).ToArray();
         var character = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/FoxRobot/FoxRobot_Visual.prefab"));

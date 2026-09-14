@@ -124,7 +124,7 @@ public class Coin : MonoBehaviour
         _nextPlayerSearch = Time.unscaledTime + 0.5f;
         foreach (var ctrl in FindObjectsByType<CharacterController>(FindObjectsInactive.Exclude))
         {
-            if (ctrl.gameObject.name != "Ghost") continue;
+            if (ctrl.gameObject.name != "Player") continue;
             _player = ctrl;
             _playerGhost = ctrl.GetComponentInParent<GhostScript>();
             return true;

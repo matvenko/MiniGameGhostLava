@@ -120,7 +120,7 @@ public sealed class Moonshard : MonoBehaviour
         if (Time.timeScale <= 0 || LevelManager.Instance != null && LevelManager.Instance.IsLevelCompleteActive) return;
         if (player == null)
         {
-            var actor = GameObject.Find("Ghost");
+            var actor = GameObject.Find("Player");
             if (actor != null) player = actor.GetComponent<GhostScript>();
         }
         if (player == null || player.IsDead) return;

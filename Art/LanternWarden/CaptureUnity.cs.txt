@@ -17,7 +17,7 @@ internal class CommandScript:IRunCommand{
  }finally{foreach(var r in skins)r.enabled=true;foreach(var o in objects)result.DestroyObject(o);foreach(var m in meshes)Object.DestroyImmediate(m);}
  }
  public void Execute(ExecutionResult result){
- var original=GameObject.Find("Ghost");var hidden=original.GetComponentsInChildren<Renderer>(true);var enabled=hidden.Select(r=>r.enabled).ToArray();
+ var original=GameObject.Find("Player");var hidden=original.GetComponentsInChildren<Renderer>(true);var enabled=hidden.Select(r=>r.enabled).ToArray();
  var ghost=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/LanternWarden/LanternWarden_Visual.prefab"));result.RegisterObjectCreation(ghost);
  var cameraObject=new GameObject("Warden review camera");result.RegisterObjectCreation(cameraObject);
  var rt=new RenderTexture(600,600,24,RenderTextureFormat.ARGBHalf);var tile=new Texture2D(600,600,TextureFormat.RGB24,false);var atlas=new Texture2D(2400,1200,TextureFormat.RGB24,false);

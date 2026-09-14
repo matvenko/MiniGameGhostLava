@@ -34,7 +34,7 @@ public static class CharacterCodex
     {
         new Entry
         {
-            Key = "EnemySpectralFrost", Name = "Frost Hunter", Role = "HUNTER",
+            Key = "EnemyFrostHunter", Name = "Frost Hunter", Role = "HUNTER",
             RoleColour = HunterInk, Glow = Hex(0x59C8FF), Danger = 3,
             Tagline = "Cold, patient, and it always knows the shortest way to you.",
             Body = "The Frost Hunter works out the quickest route across the board and follows it " +
@@ -43,7 +43,7 @@ public static class CharacterCodex
         },
         new Entry
         {
-            Key = "EnemySpectralHunter", Name = "Violet Wanderer", Role = "WANDERER",
+            Key = "EnemyVioletWanderer", Name = "Violet Wanderer", Role = "WANDERER",
             RoleColour = WandererInk, Glow = Hex(0xA27BFF), Danger = 2,
             Tagline = "It isn't hunting you, but it is still deadly to touch.",
             Body = "The Violet Wanderer drifts about the board on errands of its own, picking a spot " +
@@ -52,7 +52,7 @@ public static class CharacterCodex
         },
         new Entry
         {
-            Key = "EnemySpectralEmber", Name = "Ember Hunter", Role = "HUNTER",
+            Key = "EnemyEmberHunter", Name = "Ember Hunter", Role = "HUNTER",
             RoleColour = HunterInk, Glow = Hex(0xFF6A3D), Danger = 3,
             Tagline = "Hot-headed and quick, it charges straight at you.",
             Body = "The Ember Hunter is faster than the Frost Hunter but never thinks ahead. At every turn " +
@@ -61,7 +61,7 @@ public static class CharacterCodex
         },
         new Entry
         {
-            Key = "EnemyGhoul", Name = "Apex Ghoul", Role = "BOSS",
+            Key = "EnemyApexGhoul", Name = "Apex Ghoul", Role = "BOSS",
             RoleColour = BossInk, Glow = Hex(0xFFB23E), Danger = 5,
             Tagline = "The top of the food chain: fast and clever.",
             Body = "The Apex Ghoul is as clever as the Frost Hunter and faster than any other enemy. " +
@@ -70,10 +70,10 @@ public static class CharacterCodex
         },
         new Entry
         {
-            Key = "EnemyAshWarden", Name = "Ash Warden", Role = "HUNTER",
+            Key = "EnemyScorchPredator", Name = "Scorch Predator", Role = "HUNTER",
             RoleColour = HunterInk, Glow = Hex(0xFF8A4C), Danger = 4,
-            Tagline = "A smouldering guard from the Burnt Lands.",
-            Body = "The Ash Warden plans its route as carefully as the Frost Hunter, but moves as fast as " +
+            Tagline = "A smouldering stalker from the Burnt Lands.",
+            Body = "The Scorch Predator plans its route as carefully as the Frost Hunter, but moves as fast as " +
                    "the Apex Ghoul. It never takes a wrong turn, and it does not slow down.",
             Tip = "Keep a pool of lava between you, and a Freeze ready for when it closes in."
         },
@@ -88,7 +88,7 @@ public static class CharacterCodex
         },
     };
 
-    public const string FriendlyKey = "FriendlyGhost";
+    public const string FriendlyKey = "FriendlySpectral";
 
     public static readonly Entry Friendly = new Entry
     {

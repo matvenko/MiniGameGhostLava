@@ -967,9 +967,12 @@ public static class GuideBookBuilder
             t.gameObject.tag = "Untagged";
         }
 
-        foreach (var script in subject.GetComponentsInChildren<MonoBehaviour>(true))
-            if (!(script is WardenAppearance) && !(script is SpectralHunterPalette))
-                Object.DestroyImmediate(script);
+        // Walk backwards: a script that requires another (CoinShine needs its Coin)
+        // sits after it, and Unity refuses to remove the required one first.
+        var scripts = subject.GetComponentsInChildren<MonoBehaviour>(true);
+        for (int i = scripts.Length - 1; i >= 0; i--)
+            if (!(scripts[i] is WardenAppearance) && !(scripts[i] is SpectralHunterPalette))
+                Object.DestroyImmediate(scripts[i]);
         foreach (var c in subject.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
         foreach (var b in subject.GetComponentsInChildren<Rigidbody>(true)) Object.DestroyImmediate(b);
         foreach (var l in subject.GetComponentsInChildren<Light>(true)) Object.DestroyImmediate(l);

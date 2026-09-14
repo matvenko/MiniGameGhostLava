@@ -2,7 +2,7 @@
 
 The body uses MiniGame/Moonmilk, a URP shader with soft directional shaping and a bright ambient floor so the friendly character stays luminous in dark areas. Facial details use URP/Lit.
 
-Created in Blender 5.2. Editable source: `Moonmallow.blend`; rebuild using Blender background Python with `build.py`. FBX and URP materials live in `Assets/Characters/FriendlyGhost`.
+Created in Blender 5.2. Editable source: `Moonmallow.blend`; rebuild using Blender background Python with `build.py`. FBX and URP materials live in `Assets/Characters/Moonmallow`.
 
 Warm pearl body, blackberry eyes with modeled glints, peach cheeks, rounded hug mittens and a honey star. Face is tilted upward for the overhead game camera. 18,428 triangles, 14 mesh parts, five materials. No texture dependencies or skeletal rig; FriendlyGhostVisual animates hovering and mittens independently of the gameplay root.
 

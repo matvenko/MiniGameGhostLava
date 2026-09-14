@@ -129,7 +129,7 @@ public class EnemySpawnManager : MonoBehaviour
     {
         foreach (var ctrl in FindObjectsByType<CharacterController>(FindObjectsSortMode.None))
         {
-            if (ctrl.gameObject.name == "Ghost")
+            if (ctrl.gameObject.name == "Player")
             {
                 _player = ctrl.transform;
                 break;

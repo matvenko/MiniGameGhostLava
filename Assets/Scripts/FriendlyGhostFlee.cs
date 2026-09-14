@@ -107,7 +107,7 @@ public class FriendlyGhostFlee : MonoBehaviour
         {
             foreach (var ctrl in FindObjectsByType<CharacterController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (ctrl.gameObject.name == "Ghost") { _target = ctrl.transform; break; }
+                if (ctrl.gameObject.name == "Player") { _target = ctrl.transform; break; }
             }
         }
 

@@ -53,7 +53,9 @@ public sealed class CharacterGlow : MonoBehaviour
         // Conservative bounds for the floor pool the shader spreads under the body.
         quad.bounds = new Bounds(Vector3.zero, Vector3.one * 4f);
         // The Warden already carries a light controlled by its death/teleport code.
-        if (GetComponentInChildren<Light>(true) == null)
+        // Only an active one counts: the player keeps its retired visuals, lamps
+        // included, switched off under the same root.
+        if (GetComponentInChildren<Light>() == null)
         {
             var go = new GameObject("Character soft light");
             go.transform.SetParent(transform, false);

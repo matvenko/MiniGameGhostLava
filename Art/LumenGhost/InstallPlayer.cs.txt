@@ -8,7 +8,7 @@ using System.Linq;
 using System.IO;
 internal class CommandScript : IRunCommand {
  public void Execute(ExecutionResult result){
-  var g=GameObject.Find("Ghost");
+  var g=GameObject.Find("Player");
   if(g==null || EditorApplication.isPlaying)throw new System.Exception("Need Ghost in edit mode.");
   const string dir="Assets/Characters/LumenGhost/";
   const string backup="Assets/_Recovery/LavaScene_before_Lumen_install.unity";

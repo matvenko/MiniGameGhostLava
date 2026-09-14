@@ -8,7 +8,7 @@ internal class CommandScript : IRunCommand
 {
  public void Execute(ExecutionResult result)
  {
-  var original=GameObject.Find("Ghost");
+  var original=GameObject.Find("Player");
   var hidden=original.GetComponentsInChildren<Renderer>(true);
   var states=hidden.Select(r=>r.enabled).ToArray();
   var p=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/LumenGhost/LumenGhost_Visual.prefab");

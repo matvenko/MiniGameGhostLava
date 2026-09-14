@@ -1,7 +1,7 @@
 using UnityEngine;using UnityEditor;using UnityEditor.SceneManagement;using System.Linq;using System.IO;
 internal class CommandScript:IRunCommand{public void Execute(ExecutionResult result){
  if(EditorApplication.isPlaying)throw new System.Exception("Finish Play mode first.");
- var player=GameObject.Find("Ghost");if(!player)throw new System.Exception("Open LavaScene first.");
+ var player=GameObject.Find("Player");if(!player)throw new System.Exception("Open LavaScene first.");
  const string backup="Assets/_Recovery/LavaScene_before_Warden_install.unity";
  if(!File.Exists(backup))EditorSceneManager.SaveScene(player.scene,backup,true);
  var root=player.transform.Find("LanternWarden_Visual");

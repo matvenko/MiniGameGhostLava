@@ -181,7 +181,7 @@ internal static class GuideBookPages
                                     : "Up to " + most + " at once"));
             characters.Pages.Add(page);
 
-            if (words.Key == "EnemyGhoul") ghoulFrom = from;
+            if (words.Key == "EnemyApexGhoul") ghoulFrom = from;
         }
 
         if (friendly != null)

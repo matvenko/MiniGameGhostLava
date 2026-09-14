@@ -123,7 +123,7 @@ internal class CommandScript : IRunCommand
         finally { result.DestroyObject(prefabRoot); }
         AssetDatabase.SaveAssets();
 
-        var player = GameObject.Find("Ghost");
+        var player = GameObject.Find("Player");
         if (player == null || player.scene.path != "Assets/LavaScene.unity") throw new Exception("Open LavaScene with the Ghost player");
         const string backup = "Assets/_Recovery/LavaScene_before_Fox_install.unity";
         if (!File.Exists(backup)) EditorSceneManager.SaveScene(player.scene, backup, true);

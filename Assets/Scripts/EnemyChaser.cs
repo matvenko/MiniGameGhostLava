@@ -161,7 +161,7 @@ public class EnemyChaser : MonoBehaviour
 
         foreach (var ctrl in FindObjectsByType<CharacterController>(FindObjectsSortMode.None))
         {
-            if (ctrl.gameObject.name == "Ghost")
+            if (ctrl.gameObject.name == "Player")
             {
                 _target = ctrl.transform;
                 break;
