@@ -164,7 +164,7 @@ public class CameraFollow : MonoBehaviour
         clampToMap = true;
 
         float largerSide = Mathf.Max(maxX - minX, maxZ - minZ);
-        float height = Mathf.Clamp(largerSide * 0.42f, 5f, 14f);
+        float height = Mathf.Clamp(largerSide * 0.378f, 5f, 14f);
         offset = new Vector3(0f, height, 0f);
     }
 
