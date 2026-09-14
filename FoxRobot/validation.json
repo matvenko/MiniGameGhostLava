@@ -1,0 +1,18 @@
+{
+  "parts": 33,
+  "triangles": 84154,
+  "bones": 12,
+  "actions": [
+    "Fox_Idle",
+    "Fox_Move",
+    "Fox_ShowOff",
+    "Fox_Caught",
+    "Fox_Death"
+  ],
+  "loop_errors": {
+    "Fox_Idle": 8.57252763722393e-18,
+    "Fox_Move": 2.0651710464715334e-17,
+    "Fox_ShowOff": 0.0
+  },
+  "unity_scale": 0.69
+}

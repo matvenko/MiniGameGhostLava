@@ -510,7 +510,7 @@ public class LoadingScreenController : MonoBehaviour
             {
                 if (materials[i] == null || portraitShader == null) continue;
                 var original = materials[i];
-                if (original.shader.name == "MiniGame/WardenSpirit")
+                if (original.shader.name == "MiniGame/WardenSpirit" || original.shader.name == "MiniGame/FoxPorcelain")
                 {
                     portraitLooksUp = true;
                     continue;

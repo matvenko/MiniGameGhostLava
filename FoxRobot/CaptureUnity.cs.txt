@@ -1,0 +1,98 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEngine.Rendering.Universal;
+using System.Linq;
+using System.IO;
+using System.Collections.Generic;
+
+internal class CommandScript : IRunCommand
+{
+    void RenderPose(Camera camera, GameObject character, ExecutionResult result)
+    {
+        var skins = character.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(r => r.enabled).ToArray();
+        var meshes = new List<UnityEngine.Mesh>();
+        var snapshots = new List<GameObject>();
+        try
+        {
+            foreach (var r in skins)
+            {
+                var m = new UnityEngine.Mesh(); r.BakeMesh(m); meshes.Add(m);
+                var go = new GameObject("Fox snapshot", typeof(MeshFilter), typeof(MeshRenderer));
+                result.RegisterObjectCreation(go); go.transform.SetParent(r.transform, false);
+                var s = r.transform.lossyScale;
+                go.transform.localScale = new Vector3(1/s.x,1/s.y,1/s.z);
+                go.GetComponent<MeshFilter>().sharedMesh = m;
+                go.GetComponent<MeshRenderer>().sharedMaterials = r.sharedMaterials;
+                r.enabled = false; snapshots.Add(go);
+            }
+            camera.Render();
+        }
+        finally
+        {
+            foreach (var r in skins) r.enabled = true;
+            foreach (var go in snapshots) result.DestroyObject(go);
+            foreach (var m in meshes) Object.DestroyImmediate(m);
+        }
+    }
+
+    public void Execute(ExecutionResult result)
+    {
+        var original = GameObject.Find("Ghost");
+        var existing = original.GetComponentsInChildren<Renderer>(true);
+        var enabled = existing.Select(r => r.enabled).ToArray();
+        var character = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Characters/FoxRobot/FoxRobot_Visual.prefab"));
+        result.RegisterObjectCreation(character);
+        var cameraObject = new GameObject("Fox review camera"); result.RegisterObjectCreation(cameraObject);
+        var camera = cameraObject.AddComponent<Camera>();
+        camera.orthographic = true; camera.nearClipPlane = .01f; camera.farClipPlane = 30;
+        camera.allowHDR = true; camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(.045f,.048f,.05f);
+        var additional = cameraObject.AddComponent<UniversalAdditionalCameraData>();
+        additional.renderPostProcessing = true;
+        additional.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+        additional.antialiasingQuality = AntialiasingQuality.High;
+        var rt = new RenderTexture(700,700,24,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB);
+        var texture = new Texture2D(700,700,TextureFormat.RGB24,false);
+        var previous = RenderTexture.active;
+        camera.targetTexture = rt;
+        try
+        {
+            foreach (var r in existing) r.enabled = false;
+            var clips = AssetDatabase.LoadAllAssetsAtPath("Assets/Characters/FoxRobot/FoxRobot.fbx").OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview__")).ToDictionary(c=>c.name);
+            var model = character.transform.Find("Model").gameObject;
+            clips["Fox_Idle"].SampleAnimation(model, 0);
+            character.transform.position = new Vector3(0,100,0);
+            camera.orthographicSize = .55f;
+            camera.transform.position = character.transform.position + new Vector3(2.8f,2.1f,2.5f);
+            camera.transform.LookAt(character.transform.position + new Vector3(0,.37f,0));
+            RenderPose(camera,character,result);
+            RenderTexture.active=rt; texture.ReadPixels(new Rect(0,0,700,700),0,0);texture.Apply();
+            File.WriteAllBytes("FoxRobot/unity_portrait.png",texture.EncodeToPNG());
+            character.transform.position = original.transform.position;
+            camera.orthographicSize = 1.9f;
+            camera.transform.position = character.transform.position + Vector3.up*10;
+            camera.transform.rotation = Quaternion.Euler(90,180,0);
+            RenderPose(camera,character,result);
+            RenderTexture.active=rt;texture.ReadPixels(new Rect(0,0,700,700),0,0);texture.Apply();
+            File.WriteAllBytes("FoxRobot/unity_overhead.png",texture.EncodeToPNG());
+            camera.orthographicSize = .56f;
+            RenderPose(camera,character,result);
+            RenderTexture.active=rt;texture.ReadPixels(new Rect(0,0,700,700),0,0);texture.Apply();
+            File.WriteAllBytes("FoxRobot/unity_detail.png",texture.EncodeToPNG());
+            camera.orthographicSize = 1.9f;
+            clips["Fox_ShowOff"].SampleAnimation(model,.40f);
+            RenderPose(camera,character,result);
+            RenderTexture.active=rt;texture.ReadPixels(new Rect(0,0,700,700),0,0);texture.Apply();
+            File.WriteAllBytes("FoxRobot/unity_showoff.png",texture.EncodeToPNG());
+            result.Log("Saved fox Unity portrait, overhead and show-off sample");
+        }
+        finally
+        {
+            for(int i=0;i<existing.Length;i++) if(existing[i]) existing[i].enabled=enabled[i];
+            camera.targetTexture=null;RenderTexture.active=previous;rt.Release();
+            Object.DestroyImmediate(rt);Object.DestroyImmediate(texture);
+            result.DestroyObject(character);result.DestroyObject(cameraObject);
+        }
+    }
+}
+

@@ -1,0 +1,174 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+
+internal class CommandScript : IRunCommand
+{
+    public void Execute(ExecutionResult result)
+    {
+        if (EditorApplication.isPlaying) throw new Exception("Stop Play mode first");
+        const string dir = "Assets/Characters/FoxRobot/";
+        const string source = "D:/Projects/MazeBoo/FoxRobot/FoxRobot.fbx";
+        Directory.CreateDirectory(dir);
+        File.Copy(source, dir + "FoxRobot.fbx", true);
+        File.Copy("D:/Projects/MazeBoo/FoxRobot/FoxPorcelain.shader",dir+"FoxPorcelain.shader",true);
+        AssetDatabase.Refresh();
+        var importer = (ModelImporter)AssetImporter.GetAtPath(dir + "FoxRobot.fbx");
+        importer.animationType = ModelImporterAnimationType.Generic;
+        importer.importAnimation = true;
+        importer.optimizeGameObjects = false;
+        importer.animationCompression = ModelImporterAnimationCompression.Off;
+        var defs = importer.defaultClipAnimations;
+        foreach (var clip in defs)
+        {
+            clip.name = clip.name.Substring(clip.name.LastIndexOf('|') + 1);
+            clip.loopTime = clip.name == "Fox_Idle" || clip.name == "Fox_Move";
+            clip.lockRootPositionXZ = true;
+            clip.lockRootHeightY = true;
+            clip.lockRootRotation = true;
+        }
+        importer.clipAnimations = defs;
+        importer.SaveAndReimport();
+
+        var shader = Shader.Find("MiniGame/FoxPorcelain");
+        if (shader == null || ShaderUtil.ShaderHasError(shader)) throw new Exception("Player shader unavailable");
+        var palette = new Dictionary<string, Color>
+        {
+            { "Fox_Coral", new Color(1.35f,.50f,.29f) },
+            { "Fox_Cream", new Color(1.25f,1.12f,.91f) },
+            { "Fox_Screen", new Color(.005f,.010f,.016f) },
+            { "Fox_Cyan", new Color(.015f,.60f,.68f) },
+            { "Fox_InnerEar", new Color(.003f,.18f,.21f) },
+            { "Fox_Seam", new Color(.17f,.042f,.019f) }
+        };
+        var mats = new Dictionary<string, Material>();
+        foreach (var pair in palette)
+        {
+            string path = dir + pair.Key + ".mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m == null) { m = new Material(shader); AssetDatabase.CreateAsset(m, path); }
+            m.shader = shader;
+            m.SetColor("_BaseColor", pair.Value);
+            m.SetColor("_ShadeColor", pair.Key == "Fox_Screen" ? pair.Value : pair.Key == "Fox_Coral" ? new Color(.85f,.15f,.055f) : pair.Value * .65f);
+            m.SetColor("_EmissionColor", pair.Key == "Fox_Cyan" ? new Color(.015f,2.8f,3.5f) : Color.black);
+            m.SetFloat("_Dissolve", 1);
+            m.SetFloat("_Gloss",pair.Key == "Fox_Screen" ? .8f : .5f);
+            m.SetFloat("_Glass",pair.Key == "Fox_Screen" ? 1 : 0);
+            EditorUtility.SetDirty(m);
+            mats[pair.Key] = m;
+        }
+
+        var clips = AssetDatabase.LoadAllAssetsAtPath(dir + "FoxRobot.fbx")
+            .OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview__"))
+            .ToDictionary(c => c.name);
+        foreach (var key in new[] { "Fox_Idle", "Fox_Move", "Fox_ShowOff", "Fox_Caught", "Fox_Death" })
+            if (!clips.ContainsKey(key)) throw new Exception("Missing clip " + key);
+        var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(dir + "FoxRobot.controller");
+        if (controller == null) controller = AnimatorController.CreateAnimatorControllerAtPath(dir + "FoxRobot.controller");
+        var sm = controller.layers[0].stateMachine;
+        string[] states = { "idle", "move", "caught", "dissolve", "surprised", "attack_shift", "show_off" };
+        string[] motions = { "Fox_Idle", "Fox_Move", "Fox_Caught", "Fox_Death", "Fox_Caught", "Fox_Move", "Fox_ShowOff" };
+        for (int i = 0; i < states.Length; i++)
+        {
+            var state = sm.states.Select(x => x.state).FirstOrDefault(x => x.name == states[i]) ?? sm.AddState(states[i], new Vector3(250, i * 65, 0));
+            state.motion = clips[motions[i]];
+            if (states[i] == "idle") sm.defaultState = state;
+            if (states[i] == "attack_shift") state.tag = "Attack";
+            if (states[i] == "show_off" || states[i] == "surprised" || states[i] == "attack_shift")
+            {
+                if (state.transitions.Length == 0)
+                {
+                    var transition = state.AddTransition(sm.defaultState);
+                    transition.hasExitTime = true;
+                    transition.exitTime = 1;
+                    transition.duration = .08f;
+                    transition.hasFixedDuration = true;
+                }
+            }
+        }
+        EditorUtility.SetDirty(controller);
+
+        var model = AssetDatabase.LoadAssetAtPath<GameObject>(dir + "FoxRobot.fbx");
+        var prefabRoot = new GameObject("FoxRobot_Visual");
+        result.RegisterObjectCreation(prefabRoot);
+        try
+        {
+            prefabRoot.transform.localScale = Vector3.one * .69f;
+            var motion = prefabRoot.AddComponent<WardenMotion>();
+            motion.forwardLean = 2f;
+            motion.turnBank = 1.5f;
+            var body = (GameObject)PrefabUtility.InstantiatePrefab(model, prefabRoot.transform);
+            body.name = "Model";
+            body.transform.localPosition = new Vector3(0,0,.19f);
+            foreach (var r in body.GetComponentsInChildren<Renderer>(true))
+                r.sharedMaterials = r.sharedMaterials.Select(m => mats[m.name]).ToArray();
+            var animator = body.GetComponent<Animator>();
+            if (!animator) animator = body.AddComponent<Animator>();
+            animator.runtimeAnimatorController = controller;
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            var lamp = new GameObject("Fox glow");
+            lamp.transform.SetParent(body.transform, false);
+            lamp.transform.localPosition = new Vector3(0, .55f, 0);
+            var light = lamp.AddComponent<Light>();
+            light.type = LightType.Point; light.range = 1.3f; light.intensity = .35f;
+            light.color = new Color(.2f,.85f,1); light.shadows = LightShadows.None;
+            PrefabUtility.SaveAsPrefabAsset(prefabRoot, dir + "FoxRobot_Visual.prefab");
+        }
+        finally { result.DestroyObject(prefabRoot); }
+        AssetDatabase.SaveAssets();
+
+        var player = GameObject.Find("Ghost");
+        if (player == null || player.scene.path != "Assets/LavaScene.unity") throw new Exception("Open LavaScene with the Ghost player");
+        const string backup = "Assets/_Recovery/LavaScene_before_Fox_install.unity";
+        if (!File.Exists(backup)) EditorSceneManager.SaveScene(player.scene, backup, true);
+        var oldFox = player.transform.Find("FoxRobot_Visual");
+        if (oldFox != null) result.DestroyObject(oldFox.gameObject);
+        var visual = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(dir + "FoxRobot_Visual.prefab"), player.transform);
+        result.RegisterObjectCreation(visual);
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
+        visual.transform.localScale = Vector3.one * .69f;
+        foreach (string name in new[] { "LanternWarden_Visual", "LumenGhost_Visual", "GhostMesh", "GhostArmature" })
+        {
+            var old = player.transform.Find(name);
+            if (old != null) { result.RegisterObjectModification(old.gameObject); old.gameObject.SetActive(false); }
+        }
+        var legacy = player.GetComponent<Animator>();
+        if (legacy != null) { result.RegisterObjectModification(legacy); legacy.enabled = false; }
+        var blink = player.GetComponent<PinkGhostBlink>();
+        if (blink != null) { result.RegisterObjectModification(blink); blink.enabled = false; }
+        var ghost = player.GetComponent<Sample.GhostScript>();
+        result.RegisterObjectModification(ghost);
+        var serialized = new SerializedObject(ghost);
+        var renderers = visual.GetComponentsInChildren<Renderer>(true);
+        var list = serialized.FindProperty("MeshR");
+        list.arraySize = renderers.Length;
+        for (int i = 0; i < renderers.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = renderers[i];
+        serialized.FindProperty("visualAnimator").objectReferenceValue = visual.GetComponentInChildren<Animator>();
+        serialized.FindProperty("visualLight").objectReferenceValue = visual.GetComponentInChildren<Light>();
+        serialized.ApplyModifiedProperties();
+        EditorSceneManager.MarkSceneDirty(player.scene);
+        EditorSceneManager.SaveScene(player.scene);
+
+        var menu = EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Additive);
+        try
+        {
+            var loader = menu.GetRootGameObjects().SelectMany(o => o.GetComponentsInChildren<LoadingScreenController>(true)).First();
+            result.RegisterObjectModification(loader);
+            var so = new SerializedObject(loader);
+            so.FindProperty("introCharacterPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(dir + "FoxRobot_Visual.prefab");
+            so.ApplyModifiedProperties();
+            EditorSceneManager.SaveScene(menu);
+        }
+        finally { EditorSceneManager.CloseScene(menu, true); }
+        AssetDatabase.SaveAssets();
+        result.Log("Fox installed: " + renderers.Length + " renderers, " + clips.Count + " clips including show-off, gameplay and main-menu preview");
+    }
+}
+

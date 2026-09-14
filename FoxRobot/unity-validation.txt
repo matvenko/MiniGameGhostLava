@@ -1,0 +1,9 @@
+Scale: 0.69 (6.15% increase)
+Model local Z: 0.19
+Idle/move: 31 sampled poses each, lean 0..2 degrees and bank -1.5..1.5 degrees
+Maximum planar radius: 0.496926 m
+Runtime Animator move state: passed
+Body world movement after 0.25s: 0.0273 m
+Paw world movement after 0.25s: 0.0331 m
+Tail rotation after 0.25s: 17.23 degrees
+Return to idle after crossfade: passed
