@@ -89,42 +89,46 @@ public class PlaytestBotProfile
     public static string DisplayName(string profile) =>
         profile == "Kid" ? "Normal" : profile == "Teen" ? "Hard" : profile;
 
-    // The player normal mode is for: slower to react, watches only what is
-    // near, heads for the coin it can see, cuts corners, forgets its abilities,
-    // and spends on impulse. Its hands are the recorded player's (see Hard)
-    // made a notch worse.
+    // The player normal mode is for: slower to react than Hard, watching less
+    // of the board, heading for the coin it can see rather than planning a
+    // route, and forgetting its abilities more often - a weaker player, not a
+    // careless one. Its corner swings were first given twice Hard's spread and
+    // that walked it off one corner in six straight into the lava, dead on
+    // level one; they are now only a little looser than Hard's. It reads the
+    // hunters by the way they have to walk, runs for open floor, keeps out of
+    // dead ends and shops for lives first, the way Hard does.
     public static readonly PlaytestBotProfile Normal = new PlaytestBotProfile
     {
         name = "Normal",
-        reactionTime = .6f,
-        awareness = 4.5f,
-        pathDistanceDanger = false,
+        reactionTime = .5f,
+        awareness = 6f,
+        pathDistanceDanger = true,
         predictsMotion = false,
         plansRoute = false,
-        dangerRadius = 3f,
-        dangerWeight = 6f,
+        dangerRadius = 3.5f,
+        dangerWeight = 7f,
         fleeDistance = 2.2f,
         safeDistance = 3.5f,
-        smartFlee = false,
-        deadEndCaution = 1.5f,
-        aimError = 40f,
-        steerHold = .55f,
-        correctAngle = 50f,
-        cornerTolerance = .4f,
-        turnLate = .15f,
-        turnSpread = .45f,
+        smartFlee = true,
+        deadEndCaution = 3.5f,
+        aimError = 30f,
+        steerHold = .5f,
+        correctAngle = 45f,
+        cornerTolerance = .35f,
+        turnLate = .1f,
+        turnSpread = .22f,
         diagonalCutCost = 1f,
         thumbCover = new Vector2(.15f, .25f),
-        distractionEvery = 20f,
+        distractionEvery = 30f,
         distractionMin = .4f,
         distractionMax = 1f,
         proactiveAbilities = false,
-        panicDistance = 1.6f,
-        forgetChance = .7f,
-        abilityCooldown = 2f,
+        panicDistance = 1.4f,
+        forgetChance = .4f,
+        abilityCooldown = 1.5f,
         friendlyGhostRange = 6f,
-        friendlyGhostOnlyWhenSafe = false,
-        strategicShopping = false
+        friendlyGhostOnlyWhenSafe = true,
+        strategicShopping = true
     };
 
     // The player hard mode is for. Fitted to the phone runs of 2026-09-13,
