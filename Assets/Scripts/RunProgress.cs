@@ -34,7 +34,16 @@ public static class RunProgress
     }
 
     public static int Coins { get => Read("coins", 0); set => Write("coins", Mathf.Max(0, value)); }
-    public static int Moonshards { get => Read("moonshards", 0); set => Write("moonshards", Mathf.Max(0, value)); }
+    // Moonshards are the one thing here that is not part of a run. They are rare
+    // enough that losing them to NEW GAME or leaving them behind in the other
+    // mode would feel like being robbed, so there is a single vault for the whole
+    // game: shared by both difficulties and never touched by Reset.
+    public static int Moonshards
+    {
+        get { MigrateVault(); return PlayerPrefs.GetInt(VaultKey, 0); }
+        set { MigrateVault(); PlayerPrefs.SetInt(VaultKey, Mathf.Max(0, value)); PlayerPrefs.Save(); }
+    }
+
     public static int Shields { get => Read("shields", 0); set => Write("shields", Mathf.Max(0, value)); }
     public static int Freezes { get => Read("freezes", 0); set => Write("freezes", Mathf.Max(0, value)); }
     public static int Teleports { get => Read("teleports", 0); set => Write("teleports", Mathf.Max(0, value)); }
@@ -72,7 +81,7 @@ public static class RunProgress
     // a new game, so the menu offers to start one instead of resuming it.
     public static bool Exists(Difficulty mode) =>
         Read(mode, "started", 0) != 0 || Read(mode, "level", 1) > 1
-        || Read(mode, "coins", 0) > 0 || Read(mode, "moonshards", 0) > 0 || AbilitiesOwned(mode) > 0;
+        || Read(mode, "coins", 0) > 0 || AbilitiesOwned(mode) > 0;
 
     public static int AbilitiesOwned(Difficulty mode) =>
         Read(mode, "shields", 0) + Read(mode, "freezes", 0)
@@ -82,10 +91,11 @@ public static class RunProgress
     public static int CoinsOf(Difficulty mode) => Read(mode, "coins", 0);
 
     // What NEW GAME does. Deleting rather than zeroing, so a save that has been
-    // started over reads exactly like one that never existed.
+    // started over reads exactly like one that never existed. The moonshard
+    // vault is not on the list on purpose.
     public static void Reset(Difficulty mode)
     {
-        foreach (string field in new[] { "level", "coins", "moonshards", "shields", "freezes", "teleports", "traps", "lives", "started" })
+        foreach (string field in Fields)
             PlayerPrefs.DeleteKey(Key(mode, field));
         PlayerPrefs.Save();
     }
@@ -116,7 +126,13 @@ public static class RunProgress
     // that hand their counts here need to know nothing about it.
 
     private const string SandboxPrefix = "playtest.progress.";
-    private static readonly string[] Fields = { "level", "coins", "moonshards", "shields", "freezes", "teleports", "traps", "lives", "started" };
+    private static readonly string[] Fields = { "level", "coins", "shields", "freezes", "teleports", "traps", "lives", "started" };
+
+    // The bot gets a copy of the vault as well, or every moonshard it found
+    // would land in the player's real one.
+    private const string RealVaultKey = "vault.moonshards";
+    private const string SandboxVaultKey = "playtest.vault.moonshards";
+    private static string VaultKey => Sandboxed ? SandboxVaultKey : RealVaultKey;
 
     public static bool Sandboxed { get; private set; }
 
@@ -143,6 +159,8 @@ public static class RunProgress
             if (values[i].HasValue) PlayerPrefs.SetInt(copy, values[i].Value);
             else PlayerPrefs.DeleteKey(copy);
         }
+        MigrateVault();
+        PlayerPrefs.SetInt(SandboxVaultKey, fresh ? 0 : PlayerPrefs.GetInt(RealVaultKey, 0));
         PlayerPrefs.Save();
     }
 
@@ -172,6 +190,27 @@ public static class RunProgress
         Carry(LegacyFreezesKey, Key(mode, "freezes"));
         Carry(LegacyTeleportsKey, Key(mode, "teleports"));
         Carry(LegacyTrapsKey, Key(mode, "traps"));
+        PlayerPrefs.Save();
+    }
+
+    // Moonshards used to be kept per mode alongside the coins. Whatever either
+    // mode had found is poured into the vault once, and the old keys go.
+    private static bool _vaultMigrated;
+
+    private static void MigrateVault()
+    {
+        if (_vaultMigrated) return;
+        _vaultMigrated = true;
+        int found = 0;
+        foreach (Difficulty mode in new[] { Difficulty.Normal, Difficulty.Hard })
+        {
+            string old = Prefix + mode + ".moonshards";
+            found += PlayerPrefs.GetInt(old, 0);
+            PlayerPrefs.DeleteKey(old);
+            PlayerPrefs.DeleteKey(SandboxPrefix + mode + ".moonshards");
+        }
+        if (found == 0) return;
+        PlayerPrefs.SetInt(RealVaultKey, PlayerPrefs.GetInt(RealVaultKey, 0) + found);
         PlayerPrefs.Save();
     }
 

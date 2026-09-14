@@ -102999,6 +102999,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EconomyManager
   walletText: {fileID: 1965869881}
+  crystalBar: {fileID: 21300000, guid: 3d9a6c1e7b2f4a8e9c0d5f1a2b3c4e5f, type: 3}
 --- !u!4 &1101818478
 Transform:
   m_ObjectHideFlags: 0

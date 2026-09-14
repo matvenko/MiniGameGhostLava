@@ -11,6 +11,8 @@ public class EconomyManager : MonoBehaviour
     public static EconomyManager Instance { get; private set; }
 
     [SerializeField] private TextMeshProUGUI walletText;
+    // The purple pill the moonshard balance is drawn on (see MoonshardHud).
+    [SerializeField] private Sprite crystalBar;
 
     public int TotalCoins { get; private set; }
     public int TotalMoonshards { get; private set; }
@@ -21,7 +23,7 @@ public class EconomyManager : MonoBehaviour
         TotalCoins = RunProgress.Coins;
         TotalMoonshards = RunProgress.Moonshards;
         UpdateText();
-        MoonshardHud.Create(this);
+        MoonshardHud.Create(this, crystalBar, walletText);
     }
 
     public void AddCoins(int amount)
