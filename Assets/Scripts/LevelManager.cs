@@ -45,6 +45,7 @@ public class LevelManager : MonoBehaviour
     };
     [SerializeField] private float lavaDensity = 0.27f;
     [SerializeField] private float coinHeightOffset = 0.83f;
+    [SerializeField, Range(0f, 1f)] private float moonshardChancePerLevel = 0.045f;
     [SerializeField] private GameObject friendlyGhost;
     [SerializeField] private int friendlyGhostFromLevel = 3;
     [SerializeField] private float friendlyGhostMinDistanceFromPlayer = 3f;
@@ -99,6 +100,7 @@ public class LevelManager : MonoBehaviour
     void Start()
     {
         int spawned = SpawnCoins(CoinsForLevel(_level));
+        SpawnMoonshard();
         if (RewardSystem.Instance != null) RewardSystem.Instance.ResetForNewLevel(spawned);
     }
 
@@ -151,6 +153,7 @@ public class LevelManager : MonoBehaviour
         if (enemySpawnManager != null) enemySpawnManager.SetLevel(_level);
 
         RespawnPlayerAndEnemies();
+        SpawnMoonshard();
     }
 
     // What the board is made of this level (see BoardThemes). Re-skins the tiles
@@ -528,6 +531,27 @@ public class LevelManager : MonoBehaviour
             Instantiate(coinPrefab, pos, Quaternion.identity, coinsParent);
         }
         return n;
+    }
+
+    private void SpawnMoonshard()
+    {
+        if (Random.value >= moonshardChancePerLevel) return;
+        var blocks = GameObject.Find("Blocks");
+        var coins = GameObject.Find("Coins");
+        if (blocks == null || coins == null) return;
+        var occupied = new HashSet<Vector2Int>();
+        foreach (Transform coin in coins.transform)
+            occupied.Add(new Vector2Int(Mathf.RoundToInt(coin.position.x), Mathf.RoundToInt(coin.position.z)));
+        var free = new List<Transform>();
+        foreach (Transform tile in blocks.transform)
+        {
+            var cell = new Vector2Int(Mathf.RoundToInt(tile.position.x), Mathf.RoundToInt(tile.position.z));
+            if (!occupied.Contains(cell) && (ghost == null || Vector2.Distance(new Vector2(tile.position.x, tile.position.z),
+                new Vector2(ghost.transform.position.x, ghost.transform.position.z)) >= 3f)) free.Add(tile);
+        }
+        if (free.Count == 0) return;
+        var spot = free[Random.Range(0, free.Count)];
+        Moonshard.Create(spot.position + Vector3.up * coinHeightOffset, coins.transform);
     }
 
     private void RespawnPlayerAndEnemies()

@@ -34,6 +34,7 @@ public static class RunProgress
     }
 
     public static int Coins { get => Read("coins", 0); set => Write("coins", Mathf.Max(0, value)); }
+    public static int Moonshards { get => Read("moonshards", 0); set => Write("moonshards", Mathf.Max(0, value)); }
     public static int Shields { get => Read("shields", 0); set => Write("shields", Mathf.Max(0, value)); }
     public static int Freezes { get => Read("freezes", 0); set => Write("freezes", Mathf.Max(0, value)); }
     public static int Teleports { get => Read("teleports", 0); set => Write("teleports", Mathf.Max(0, value)); }
@@ -71,7 +72,7 @@ public static class RunProgress
     // a new game, so the menu offers to start one instead of resuming it.
     public static bool Exists(Difficulty mode) =>
         Read(mode, "started", 0) != 0 || Read(mode, "level", 1) > 1
-        || Read(mode, "coins", 0) > 0 || AbilitiesOwned(mode) > 0;
+        || Read(mode, "coins", 0) > 0 || Read(mode, "moonshards", 0) > 0 || AbilitiesOwned(mode) > 0;
 
     public static int AbilitiesOwned(Difficulty mode) =>
         Read(mode, "shields", 0) + Read(mode, "freezes", 0)
@@ -84,7 +85,7 @@ public static class RunProgress
     // started over reads exactly like one that never existed.
     public static void Reset(Difficulty mode)
     {
-        foreach (string field in new[] { "level", "coins", "shields", "freezes", "teleports", "traps", "lives", "started" })
+        foreach (string field in new[] { "level", "coins", "moonshards", "shields", "freezes", "teleports", "traps", "lives", "started" })
             PlayerPrefs.DeleteKey(Key(mode, field));
         PlayerPrefs.Save();
     }
@@ -115,7 +116,7 @@ public static class RunProgress
     // that hand their counts here need to know nothing about it.
 
     private const string SandboxPrefix = "playtest.progress.";
-    private static readonly string[] Fields = { "level", "coins", "shields", "freezes", "teleports", "traps", "lives", "started" };
+    private static readonly string[] Fields = { "level", "coins", "moonshards", "shields", "freezes", "teleports", "traps", "lives", "started" };
 
     public static bool Sandboxed { get; private set; }
 

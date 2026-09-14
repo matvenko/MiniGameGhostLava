@@ -13,12 +13,15 @@ public class EconomyManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI walletText;
 
     public int TotalCoins { get; private set; }
+    public int TotalMoonshards { get; private set; }
 
     void Awake()
     {
         Instance = this;
         TotalCoins = RunProgress.Coins;
+        TotalMoonshards = RunProgress.Moonshards;
         UpdateText();
+        MoonshardHud.Create(this);
     }
 
     public void AddCoins(int amount)
@@ -26,6 +29,13 @@ public class EconomyManager : MonoBehaviour
         TotalCoins += amount;
         RunProgress.Coins = TotalCoins;
         UpdateText();
+    }
+
+    public void AddMoonshard()
+    {
+        TotalMoonshards++;
+        RunProgress.Moonshards = TotalMoonshards;
+        MoonshardHud.Refresh(this);
     }
 
     // Returns false without spending anything if the wallet can't cover it.
