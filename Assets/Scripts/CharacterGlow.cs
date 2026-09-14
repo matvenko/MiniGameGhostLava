@@ -7,6 +7,14 @@ using UnityEngine.Rendering;
 [DisallowMultipleComponent]
 public sealed class CharacterGlow : MonoBehaviour
 {
+    [Header("Ground Glow")]
+    [Tooltip("Brightness of the colored halo, independent of its size.")]
+    [SerializeField, Range(0f, 2f)] private float intensity = 0.684f;
+    [Tooltip("Halo size relative to the character's footprint.")]
+    [SerializeField, Range(1f, 5f)] private float radius = 1.368f;
+    [Tooltip("Higher values make the light fade faster toward its edge.")]
+    [SerializeField, Range(0.5f, 6f)] private float falloff = 2.2f;
+
     private Renderer[] bodies;
     private Material[][] materials;
     private Material aura;
@@ -23,6 +31,9 @@ public sealed class CharacterGlow : MonoBehaviour
     private static readonly int Tint = Shader.PropertyToID("_Tint");
     private static readonly int Strength = Shader.PropertyToID("_Strength");
     private static readonly int FloorY = Shader.PropertyToID("_FloorY");
+    private static readonly int Opacity = Shader.PropertyToID("_Opacity");
+    private static readonly int Spread = Shader.PropertyToID("_Spread");
+    private static readonly int Softness = Shader.PropertyToID("_Softness");
     private readonly RaycastHit[] groundHits = new RaycastHit[8];
 
     public static void Attach(GameObject character)
@@ -42,8 +53,8 @@ public sealed class CharacterGlow : MonoBehaviour
         bodies = found.ToArray();
         materials = new Material[bodies.Length][];
         for (int i = 0; i < bodies.Length; i++) materials[i] = bodies[i].sharedMaterials;
-        warden = GetComponentInChildren<WardenAppearance>(true);
-        hunter = GetComponentInChildren<SpectralHunterPalette>(true);
+        warden = GetComponentInChildren<WardenAppearance>();
+        hunter = GetComponentInChildren<SpectralHunterPalette>();
         aura = new Material(shader) { name = "Character halo (runtime)" };
         quad = new Mesh { name = "Character halo quad" };
         quad.vertices = new[] { new Vector3(-.5f,-.5f,0), new Vector3(.5f,-.5f,0),
@@ -138,6 +149,9 @@ public sealed class CharacterGlow : MonoBehaviour
         brightTint.a = 1f;
         aura.SetColor(Tint, brightTint);
         aura.SetFloat(Strength, visibility * pulse);
+        aura.SetFloat(Opacity, intensity);
+        aura.SetFloat(Spread, radius);
+        aura.SetFloat(Softness, falloff);
         // The glow lies flat on the ground under the body, lighting the floor
         // instead of fogging the character. Trailing wisps hang almost to the
         // floor, so measure the ground rather than trusting the body's lowest point.

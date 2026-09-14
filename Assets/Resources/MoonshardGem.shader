@@ -1,5 +1,9 @@
 Shader "MazeBoo/MoonshardGem"
 {
+    Properties
+    {
+        _Glow("Glow", Float) = 1.6
+    }
     SubShader
     {
         Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry" }
@@ -12,6 +16,9 @@ Shader "MazeBoo/MoonshardGem"
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            CBUFFER_START(UnityPerMaterial)
+                half _Glow;
+            CBUFFER_END
 
             struct Attributes
             {
@@ -50,11 +57,17 @@ Shader "MazeBoo/MoonshardGem"
                 // as the stone rocks, so the pattern never washes out.
                 half3 colour = input.facet * (.85h + .2h * diffuse);
                 colour += half3(.2h, .7h, .9h) * fresnel * .3h;
-                colour += half3(.8h, 1.0h, 1.0h) * sparkle * .45h;
+                // Bloom only catches what is brighter than 1, which the gold
+                // coin's emission and specular reach and a plain facet colour
+                // never did - so the coin glowed and the stone sat flat. Lifting
+                // the whole stone puts the pale and light facets over that line
+                // while the deep blues stay under it, and the cut still reads.
+                colour *= _Glow;
+                colour += half3(.8h, 1.0h, 1.0h) * sparkle * 1.6h;
                 // A crisp pale hairline along every facet edge, about a pixel wide.
                 float edge = min(input.bary.x, min(input.bary.y, input.bary.z));
                 float hairline = 1.0 - smoothstep(0.0, fwidth(edge) * 1.3, edge);
-                colour = lerp(colour, half3(.85h, 1.0h, 1.0h), hairline * .7h);
+                colour = lerp(colour, half3(.85h, 1.0h, 1.0h) * _Glow, hairline * .7h);
                 return half4(colour, 1.0h);
             }
             ENDHLSL

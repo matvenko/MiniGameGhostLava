@@ -45,8 +45,12 @@ Shader "MazeBoo/CharacterAura"
                 // under the board camera's tilt.
                 float floorY = _FloorY;
                 float3 camera = GetCameraPositionWS();
-                float3 ray = center - camera;
-                float3 pool = camera + ray * clamp((floorY - camera.y) / min(ray.y, -1e-4), 1, 1.5);
+                float3 ray = unity_OrthoParams.w > 0.5
+                    ? -UNITY_MATRIX_I_V._m02_m12_m22 : normalize(center - camera);
+                float3 pool = center;
+                if (ray.y < -0.05)
+                    pool += ray * ((floorY - center.y) / ray.y);
+                pool.y = floorY;
                 float extent = max(bodySize.x, bodySize.z) * _Spread;
                 float3 world = pool + float3(input.positionOS.x, 0, input.positionOS.y) * extent;
                 output.positionCS = TransformWorldToHClip(world);

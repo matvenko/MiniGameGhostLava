@@ -6,6 +6,10 @@ For the fox robot, use `01-fox-robot.png` as the three-quarter design reference 
 
 Gameplay constraint: the entire visible silhouette, including ears, side paws and animated tail, must fit within one board cell with a small margin in the normal idle and locomotion poses. Keep the segmented orange-and-cream tail short, compact and slightly curled. Verify against the actual Unity cell and gameplay camera before locking model scale; the concept image's grid is illustrative and does not establish world-unit measurements. Preserve the large face display's readability from above.
 
+## Overhead silhouette review for new concepts
+
+For every new character proposal, include an overhead silhouette check before preparing the final reconstruction views. The tail must project visibly behind or beside the body in the board plane; do not stand it vertically against the back, where it is foreshortened or occluded from the gameplay camera. Keep this visible extension short enough that the full animated silhouette can fit one cell. The face must remain directed upward and readable. New proposals may use different body shapes while retaining the floating animal–robot identity. Present alternative animal concepts for selection before producing a full multiview package for one design.
+
 ## Shop show-off animation
 
 Every playable character needs its own short, repeatable show-off animation in the shop. Tapping the character triggers a species-specific action that expresses its personality through its body, tail or ears and digital face. It must read clearly at shop-preview size, return smoothly to idle, and allow another tap without getting stuck. Treat this as a character-design requirement alongside the model and gameplay animations, not as a shared generic emote.

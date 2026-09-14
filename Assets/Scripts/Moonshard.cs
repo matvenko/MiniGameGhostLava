@@ -250,6 +250,7 @@ public sealed class Moonshard : MonoBehaviour
         var shader = Resources.Load<Shader>("MoonshardGem");
         if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
         gemMaterial = new Material(shader) { name = "Luminous cut gemstone" };
+        if (gemMaterial.HasProperty("_Glow")) gemMaterial.SetFloat("_Glow", 1.6f);
         return gemMaterial;
     }
 
@@ -257,7 +258,7 @@ public sealed class Moonshard : MonoBehaviour
     {
         if (haloMaterial != null) return haloMaterial;
         haloMaterial = new Material(Resources.Load<Shader>("MoonshardHalo")) { name = "Moonshard halo" };
-        haloMaterial.SetColor("_Color", new Color(.35f, .9f, 1f, .55f));
+        haloMaterial.SetColor("_Color", new Color(.35f, .9f, 1f, .7f));
         haloMaterial.SetFloat("_Power", 2.2f);
         haloMaterial.renderQueue = 3001;
         return haloMaterial;
