@@ -1,4 +1,4 @@
-Shader "MazeBoo/MoonshardHalo"
+Shader "MazeBoo/BooGemHalo"
 {
     Properties
     {

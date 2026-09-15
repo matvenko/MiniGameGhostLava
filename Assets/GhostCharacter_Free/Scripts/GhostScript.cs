@@ -21,6 +21,10 @@ public class GhostScript : MonoBehaviour
     [Tooltip("Optional visual rig; otherwise the original root Animator is used.")]
     [SerializeField] private Animator visualAnimator;
     [SerializeField] private Light visualLight;
+    [SerializeField] private GameObject foxVisualPrefab;
+    private GameObject wardenVisual, foxVisual;
+    private int activeCharacter = -1;
+    private float wardenLightIntensity, foxLightIntensity;
     private MaterialPropertyBlock _visualProperties;
     private float _lightIntensity;
     private bool _renderersVisible = true;
@@ -57,18 +61,66 @@ public class GhostScript : MonoBehaviour
 
     void Start()
     {
+        CharacterCollection.Changed += ApplySelectedCharacter;
         CharacterGlow.Attach(gameObject);
         Anim = visualAnimator != null ? visualAnimator : GetComponent<Animator>();
         _visualProperties = new MaterialPropertyBlock();
         _lightIntensity = visualLight != null ? visualLight.intensity : 0f;
+        wardenLightIntensity = _lightIntensity;
         _wardenMotion = GetComponentInChildren<WardenMotion>();
         _hasCaughtAnimation = Anim != null && Anim.HasState(0, CaughtState);
+        if (_wardenMotion != null) wardenVisual = _wardenMotion.gameObject;
+        ApplySelectedCharacter();
         Ctrl = this.GetComponent<CharacterController>();
         var hpObj = GameObject.Find("Canvas/HP");
         if (hpObj != null) HP_text = hpObj.GetComponent<Text>();
         if (HP_text != null) HP_text.text = "HP " + HP.ToString();
         spawnPosition = transform.position;
     }
+
+    private void ApplySelectedCharacter()
+    {
+        int selected = CharacterCollection.Selected;
+        if (wardenVisual == null) return;
+        if (selected == 1 && foxVisualPrefab == null) return;
+        if (selected == 1 && foxVisual == null)
+        {
+            foxVisual = Instantiate(foxVisualPrefab, wardenVisual.transform.parent, false);
+            foxVisual.name = "FoxRobot_PlayerVisual";
+            foreach (var part in foxVisual.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = wardenVisual.layer;
+            foxVisual.AddComponent<FoxAppearance>();
+            var light = foxVisual.GetComponentInChildren<Light>();
+            foxLightIntensity = light != null ? light.intensity : 0f;
+        }
+        if (activeCharacter != selected)
+        {
+            var state = Anim != null ? Anim.GetCurrentAnimatorStateInfo(0) : default;
+            wardenVisual.SetActive(selected == 0);
+            if (foxVisual != null) foxVisual.SetActive(selected == 1);
+            var visual = selected == 0 ? wardenVisual : foxVisual;
+            Anim = visualAnimator = visual.GetComponentInChildren<Animator>();
+            MeshR = visual.GetComponentsInChildren<Renderer>();
+            visualLight = visual.GetComponentInChildren<Light>();
+            _lightIntensity = selected == 0 ? wardenLightIntensity : foxLightIntensity;
+            _wardenMotion = visual.GetComponent<WardenMotion>();
+            _hasCaughtAnimation = Anim != null && Anim.HasState(0, CaughtState);
+            if (Anim != null) Anim.Play(Anim.HasState(0, state.fullPathHash) ? state.fullPathHash : IdleState, 0, state.normalizedTime % 1f);
+            if (_wardenMotion != null) _wardenMotion.SetIncapacitated(isDead);
+            activeCharacter = selected;
+            SetRenderersVisible(_renderersVisible);
+        }
+        if (selected == 0) CharacterCollection.Apply(wardenVisual.GetComponentInChildren<WardenAppearance>(true));
+        else foxVisual.GetComponent<FoxAppearance>().SetColor(CharacterCollection.SelectedColor(1));
+        // Match an in-progress blink or teleport without changing its timing.
+        if (_visualProperties == null) _visualProperties = new MaterialPropertyBlock();
+        foreach (var renderer in MeshR)
+        {
+            renderer.GetPropertyBlock(_visualProperties);
+            _visualProperties.SetFloat("_Dissolve", Dissolve_value);
+            renderer.SetPropertyBlock(_visualProperties);
+        }
+    }
+    private void OnDestroy() => CharacterCollection.Changed -= ApplySelectedCharacter;
 
     //---------------------------------------------------------------------
     // called by LavaHazard when the character walks into lava - every

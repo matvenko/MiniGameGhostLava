@@ -34,11 +34,11 @@ public static class RunProgress
     }
 
     public static int Coins { get => Read("coins", 0); set => Write("coins", Mathf.Max(0, value)); }
-    // Moonshards are the one thing here that is not part of a run. They are rare
+    // Boo Gems are the one thing here that is not part of a run. They are rare
     // enough that losing them to NEW GAME or leaving them behind in the other
     // mode would feel like being robbed, so there is a single vault for the whole
     // game: shared by both difficulties and never touched by Reset.
-    public static int Moonshards
+    public static int BooGems
     {
         get { MigrateVault(); return PlayerPrefs.GetInt(VaultKey, 0); }
         set { MigrateVault(); PlayerPrefs.SetInt(VaultKey, Mathf.Max(0, value)); PlayerPrefs.Save(); }
@@ -91,7 +91,7 @@ public static class RunProgress
     public static int CoinsOf(Difficulty mode) => Read(mode, "coins", 0);
 
     // What NEW GAME does. Deleting rather than zeroing, so a save that has been
-    // started over reads exactly like one that never existed. The moonshard
+    // started over reads exactly like one that never existed. The Boo Gem
     // vault is not on the list on purpose.
     public static void Reset(Difficulty mode)
     {
@@ -128,7 +128,7 @@ public static class RunProgress
     private const string SandboxPrefix = "playtest.progress.";
     private static readonly string[] Fields = { "level", "coins", "shields", "freezes", "teleports", "traps", "lives", "started" };
 
-    // The bot gets a copy of the vault as well, or every moonshard it found
+    // The bot gets a copy of the vault as well, or every Boo Gem it found
     // would land in the player's real one.
     private const string RealVaultKey = "vault.moonshards";
     private const string SandboxVaultKey = "playtest.vault.moonshards";
@@ -193,7 +193,7 @@ public static class RunProgress
         PlayerPrefs.Save();
     }
 
-    // Moonshards used to be kept per mode alongside the coins. Whatever either
+    // Boo Gems used to be kept per mode alongside the coins. Whatever either
     // mode had found is poured into the vault once, and the old keys go.
     private static bool _vaultMigrated;
 

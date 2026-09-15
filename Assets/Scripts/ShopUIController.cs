@@ -5,8 +5,8 @@ using TMPro;
 // Drives the Shop popup: refreshes the wallet balance and each item's
 // price/owned/buy-state - extra life, traps, freeze, teleport and shield
 // charges - and applies a purchase through ShopManager when that item's Buy
-// is clicked. The moonshard balance sits beside the coins, and two tabs switch
-// between the abilities list and the (not yet stocked) characters page.
+// is clicked. The Boo Gem balance sits beside the coins, and two tabs switch
+// between the abilities list and the permanent character collection.
 //
 // There are two ways in and closing has to undo whichever it was. From the pause
 // menu the game is already stopped and the pause card is only hidden, so closing
@@ -124,8 +124,7 @@ public class ShopUIController : MonoBehaviour
         Refresh();
     }
 
-    // Abilities are what the shop sells today; the Characters page is only a
-    // placeholder until there is someone to buy with moonshards.
+    // Each page owns its own content and refreshes when shown.
     private void ShowTab(bool abilities)
     {
         if (abilitiesPage != null) abilitiesPage.SetActive(abilities);
@@ -206,10 +205,11 @@ public class ShopUIController : MonoBehaviour
     // buy buttons say so without the shop being closed and reopened.
     public void Refresh()
     {
+        if (charactersPage != null && charactersPage.TryGetComponent<CharacterShopPage>(out var collection)) collection.Refresh();
         if (walletText != null && EconomyManager.Instance != null)
             walletText.text = EconomyManager.Instance.TotalCoins.ToString();
         if (gemsText != null && EconomyManager.Instance != null)
-            gemsText.text = EconomyManager.Instance.TotalMoonshards.ToString();
+            gemsText.text = EconomyManager.Instance.TotalBooGems.ToString();
 
         if (ShopManager.Instance == null) return;
 

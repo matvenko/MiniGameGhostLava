@@ -173,7 +173,7 @@ public class LoadingScreenController : MonoBehaviour
         Shape(sound.transform,"Speaker",new Vector2(-107,1),new Vector2(36,32),new Color(.92f,.86f,1),11);
         soundLabel=Label(sound.transform,"",new Vector2(20,0),new Vector2(220,40),18,new Color(.92f,.86f,1));
         RefreshSoundLabel();
-        BuildMoonshardVault();
+        BuildBooGemVault();
         BuildRecords();
         // Both cards are built after the record pill so they cover it: a card
         // that can be pressed through is not really a question.
@@ -205,23 +205,23 @@ public class LoadingScreenController : MonoBehaviour
         // of starting a run, so they sit out of the way in the top corners.
         design.Find("Sound control").GetComponent<RectTransform>().anchoredPosition=portrait?new Vector2(220,664):new Vector2(625,432);
         bestPill.anchoredPosition=portrait?new Vector2(-220,664):new Vector2(-625,432);
-        // The moonshard vault hangs under the sound switch: it belongs to neither
+        // The Boo Gem vault hangs under the sound switch: it belongs to neither
         // mode, so it stays out of the difficulty card.
         vaultPill.anchoredPosition=portrait?new Vector2(220,600):new Vector2(625,368);
     }
 
-    // The moonshards found across every game ever played. Read-only on the menu -
+    // The Boo Gems found across every game ever played. Read-only on the menu -
     // nothing here can spend them - so it is a plain pill, not a button.
     private RectTransform vaultPill;
 
-    private void BuildMoonshardVault()
+    private void BuildBooGemVault()
     {
-        vaultPill=Rounded(design,"Moonshard vault",Vector2.zero,new Vector2(300,52),new Color(.14f,.20f,.38f)).rectTransform;
-        var gem=Box(vaultPill,"Moonshard",new Vector2(-107,0),new Vector2(24,24),new Color(.55f,.86f,1f));
+        vaultPill=Rounded(design,"Boo Gem vault",Vector2.zero,new Vector2(300,52),new Color(.14f,.20f,.38f)).rectTransform;
+        var gem=Box(vaultPill,"Boo Gem",new Vector2(-107,0),new Vector2(24,24),new Color(.55f,.86f,1f));
         gem.rectTransform.localRotation=Quaternion.Euler(0,0,45);
-        Box(gem.rectTransform,"Moonshard table",Vector2.zero,new Vector2(10,10),new Color(.88f,.97f,1f));
-        int count=RunProgress.Moonshards;
-        Label(vaultPill,count+(count==1?" MOONSHARD":" MOONSHARDS"),new Vector2(20,0),new Vector2(220,40),18,new Color(.69f,.91f,1f));
+        Box(gem.rectTransform,"Boo Gem table",Vector2.zero,new Vector2(10,10),new Color(.88f,.97f,1f));
+        int count=RunProgress.BooGems;
+        Label(vaultPill,count+(count==1?" BOO GEM":" BOO GEMS"),new Vector2(20,0),new Vector2(220,40),18,new Color(.69f,.91f,1f));
     }
 
     // The mode is picked before the run starts and nowhere else, so it sits on
@@ -774,7 +774,7 @@ public class LoadingScreenController : MonoBehaviour
             + RunProgress.LevelOf(mode) + ", with " + RunProgress.LivesOf(mode) + " lives, "
             + RunProgress.CoinsOf(mode) + " coins and " + RunProgress.AbilitiesOwned(mode) + " abilities."
             + "\n\nStarting a new game puts every bit of that back to the beginning."
-            + " Your moonshards stay with you.";
+            + " Your Boo Gems stay with you.";
         startOverOverlay.gameObject.SetActive(true);
         PlayEffect(readySound);
     }

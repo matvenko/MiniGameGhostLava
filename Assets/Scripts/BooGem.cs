@@ -10,7 +10,7 @@ using Sample;
 // blue facets around it, a cyan halo on the ground, a soft shadow and two
 // four-point glints. It does not spin - from above a spinning cut only reads as
 // a turning outline - it bobs and rocks a few degrees so the facets shimmer.
-public sealed class Moonshard : MonoBehaviour
+public sealed class BooGem : MonoBehaviour
 {
     private const float Outer = .34f;   // centre to girdle corner
     private const float Table = .15f;   // centre to table corner
@@ -33,8 +33,8 @@ public sealed class Moonshard : MonoBehaviour
 
     // Every stone still out on the board, left the moment it is taken - the same
     // list the coins keep, for the HUD to see what it is covering.
-    private static readonly List<Moonshard> Uncollected = new List<Moonshard>();
-    public static IReadOnlyList<Moonshard> Active => Uncollected;
+    private static readonly List<BooGem> Uncollected = new List<BooGem>();
+    public static IReadOnlyList<BooGem> Active => Uncollected;
 
     private void OnEnable()
     {
@@ -48,10 +48,10 @@ public sealed class Moonshard : MonoBehaviour
 
     public static void Create(Vector3 position, Transform parent)
     {
-        var go = new GameObject("Moonshard");
+        var go = new GameObject("Boo Gem");
         go.transform.SetParent(parent, false);
         go.transform.position = position;
-        go.AddComponent<Moonshard>();
+        go.AddComponent<BooGem>();
     }
 
     // The camera looks down with up on the screen along world -Z and right
@@ -146,7 +146,7 @@ public sealed class Moonshard : MonoBehaviour
     {
         collected = true;
         Uncollected.Remove(this);
-        if (EconomyManager.Instance != null) EconomyManager.Instance.AddMoonshard();
+        if (EconomyManager.Instance != null) EconomyManager.Instance.AddBooGem();
         AudioManager.Play(GameSound.Reward);
         foreach (var g in glints) g.gameObject.SetActive(false);
         float elapsed = 0f;
@@ -221,7 +221,7 @@ public sealed class Moonshard : MonoBehaviour
             Face(edgeMid, outer[n], culet, i % 2 == 0 ? deep : blue, outward - Vector3.up);
         }
 
-        gemMesh = new Mesh { name = "Moonshard square cut diamond" };
+        gemMesh = new Mesh { name = "Boo Gem square cut diamond" };
         gemMesh.SetVertices(points);
         gemMesh.SetColors(colours);
         gemMesh.SetUVs(0, bary);
@@ -234,7 +234,7 @@ public sealed class Moonshard : MonoBehaviour
     private static Mesh QuadMesh()
     {
         if (quadMesh != null) return quadMesh;
-        quadMesh = new Mesh { name = "Moonshard quad" };
+        quadMesh = new Mesh { name = "Boo Gem quad" };
         quadMesh.vertices = new[] { new Vector3(-.5f,-.5f,0), new Vector3(.5f,-.5f,0),
             new Vector3(.5f,.5f,0), new Vector3(-.5f,.5f,0) };
         quadMesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
@@ -247,7 +247,7 @@ public sealed class Moonshard : MonoBehaviour
     private static Material GemMaterial()
     {
         if (gemMaterial != null) return gemMaterial;
-        var shader = Resources.Load<Shader>("MoonshardGem");
+        var shader = Resources.Load<Shader>("BooGem");
         if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
         gemMaterial = new Material(shader) { name = "Luminous cut gemstone" };
         if (gemMaterial.HasProperty("_Glow")) gemMaterial.SetFloat("_Glow", 1.6f);
@@ -257,7 +257,7 @@ public sealed class Moonshard : MonoBehaviour
     private static Material HaloMaterial()
     {
         if (haloMaterial != null) return haloMaterial;
-        haloMaterial = new Material(Resources.Load<Shader>("MoonshardHalo")) { name = "Moonshard halo" };
+        haloMaterial = new Material(Resources.Load<Shader>("BooGemHalo")) { name = "Boo Gem halo" };
         haloMaterial.SetColor("_Color", new Color(.35f, .9f, 1f, .7f));
         haloMaterial.SetFloat("_Power", 2.2f);
         haloMaterial.renderQueue = 3001;
@@ -267,7 +267,7 @@ public sealed class Moonshard : MonoBehaviour
     private static Material ShadowMaterial()
     {
         if (shadowMaterial != null) return shadowMaterial;
-        shadowMaterial = new Material(Resources.Load<Shader>("MoonshardHalo")) { name = "Moonshard shadow" };
+        shadowMaterial = new Material(Resources.Load<Shader>("BooGemHalo")) { name = "Boo Gem shadow" };
         shadowMaterial.SetColor("_Color", new Color(0f, .1f, 0f, .5f));
         shadowMaterial.SetFloat("_Power", 1.4f);
         shadowMaterial.renderQueue = 3000;
@@ -277,7 +277,7 @@ public sealed class Moonshard : MonoBehaviour
     private static Material GlintMaterial()
     {
         if (glintMaterial != null) return glintMaterial;
-        glintMaterial = new Material(Resources.Load<Shader>("CoinEffects/CoinGlint")) { name = "Moonshard glint" };
+        glintMaterial = new Material(Resources.Load<Shader>("CoinEffects/CoinGlint")) { name = "Boo Gem glint" };
         glintMaterial.renderQueue = 3002;
         return glintMaterial;
     }

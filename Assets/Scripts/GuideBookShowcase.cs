@@ -65,6 +65,19 @@ public class GuideBookShowcase : MonoBehaviour,
 
     void OnDisable() => Hide();
 
+    public void Configure(GameObject stage, Camera camera, Transform pivot, Transform model, int resolution = 512)
+    {
+        Hide();
+        slot = stage;
+        stageCamera = camera;
+        turntable = pivot;
+        subject = model;
+        textureSize = resolution;
+        _prepared = _framed = false;
+    }
+
+    void OnDestroy() => Hide();
+
     void LateUpdate()
     {
         bool onScreen = IsOnScreen();

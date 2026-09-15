@@ -11,19 +11,19 @@ public class EconomyManager : MonoBehaviour
     public static EconomyManager Instance { get; private set; }
 
     [SerializeField] private TextMeshProUGUI walletText;
-    // The purple pill the moonshard balance is drawn on (see MoonshardHud).
+    // The purple pill the Boo Gem balance is drawn on (see BooGemHud).
     [SerializeField] private Sprite crystalBar;
 
     public int TotalCoins { get; private set; }
-    public int TotalMoonshards { get; private set; }
+    public int TotalBooGems { get; private set; }
 
     void Awake()
     {
         Instance = this;
         TotalCoins = RunProgress.Coins;
-        TotalMoonshards = RunProgress.Moonshards;
+        TotalBooGems = RunProgress.BooGems;
         UpdateText();
-        MoonshardHud.Create(this, crystalBar, walletText);
+        BooGemHud.Create(this, crystalBar, walletText);
         if (walletText != null && walletText.canvas != null)
             HudCoinReveal.Create(walletText.canvas.rootCanvas);
     }
@@ -35,11 +35,11 @@ public class EconomyManager : MonoBehaviour
         UpdateText();
     }
 
-    public void AddMoonshard()
+    public void AddBooGem()
     {
-        TotalMoonshards++;
-        RunProgress.Moonshards = TotalMoonshards;
-        MoonshardHud.Refresh(this);
+        TotalBooGems++;
+        RunProgress.BooGems = TotalBooGems;
+        BooGemHud.Refresh(this);
     }
 
     // Returns false without spending anything if the wallet can't cover it.
@@ -49,6 +49,15 @@ public class EconomyManager : MonoBehaviour
         TotalCoins -= amount;
         RunProgress.Coins = TotalCoins;
         UpdateText();
+        return true;
+    }
+
+    public bool SpendBooGems(int amount)
+    {
+        if (amount <= 0 || amount > TotalBooGems) return false;
+        TotalBooGems -= amount;
+        RunProgress.BooGems = TotalBooGems;
+        BooGemHud.Refresh(this);
         return true;
     }
 

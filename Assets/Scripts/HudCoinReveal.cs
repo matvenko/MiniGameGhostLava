@@ -10,25 +10,25 @@ using UnityEngine.UI;
 // The character goes under it too: at the edge of the map the camera stops
 // following and the character walks on into the corner of the frame.
 //
-// So each piece of the HUD watches the character and the coins and moonshards
+// So each piece of the HUD watches the character and the coins and Boo Gems
 // still on the board, and while one of them is under it, thins out to let it
 // show through, then fills back in once it has moved on. Only the pieces actually over something
 // fade - the ability bar button by button - and only their alpha changes: a
 // faded button still takes a tap.
 //
-// Made at runtime, beside the moonshard pill, so the scene needs no new
+// Made at runtime, beside the Boo Gem pill, so the scene needs no new
 // component.
 public sealed class HudCoinReveal : MonoBehaviour
 {
     // The top row by name, and then every button in the ability bar on its own.
     private static readonly string[] Pieces =
-        { "Coins_Ui", "Wallet_Ui", "Level_Ui", "Ghosts_Ui", "Settings_Ui", "Moonshard balance" };
+        { "Coins_Ui", "Wallet_Ui", "Level_Ui", "Ghosts_Ui", "Settings_Ui", "Boo Gem balance" };
     private const string AbilityBar = "Abilities_Ui";
 
     private const float FadedAlpha = .35f;
     private const float FadeOutSeconds = .18f;
     private const float FadeInSeconds = .35f;
-    // A coin's disc and a moonshard's stone both reach about this far from their
+    // A coin's disc and a Boo Gem's stone both reach about this far from their
     // centre, in world units, with a little over for the shine.
     private const float ItemRadius = .3f;
     // The character's body as seen from above - wider than its collider, which
@@ -109,7 +109,7 @@ public sealed class HudCoinReveal : MonoBehaviour
             AddItem(player.transform.TransformPoint(player.center), PlayerRadius);
         foreach (var coin in Coin.Active)
             if (coin != null) AddItem(coin.transform.position, ItemRadius);
-        foreach (var shard in Moonshard.Active)
+        foreach (var shard in BooGem.Active)
             if (shard != null) AddItem(shard.transform.position, ItemRadius);
     }
 

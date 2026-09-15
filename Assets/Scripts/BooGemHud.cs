@@ -2,14 +2,14 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The moonshard balance: the purple crystal_bar pill on the top row, just left
+// The Boo Gem balance: the purple crystal_bar pill on the top row, just left
 // of the ghost (lives) pill. Made at runtime so existing scene layouts and their
 // prefab references do not need migration.
 //
 // The art is nine-sliced - the gem end and the round end stay whole and only the
 // dark field between them stretches - so the pill is exactly as wide as the
 // number in it needs, from "0" to a long hoard.
-public sealed class MoonshardHud : MonoBehaviour
+public sealed class BooGemHud : MonoBehaviour
 {
     // The painted part of the ghost pill beside it, not its whole rect, which
     // carries some air above and below.
@@ -19,7 +19,7 @@ public sealed class MoonshardHud : MonoBehaviour
     private const float LeftCap = 426f, RightCap = 180f;
     private const float MinField = 56f, Gap = 14f;
 
-    private static MoonshardHud instance;
+    private static BooGemHud instance;
     private RectTransform rect, ghosts;
     private Image image;
     private TextMeshProUGUI label;
@@ -34,9 +34,9 @@ public sealed class MoonshardHud : MonoBehaviour
         Canvas canvas = walletText.canvas.rootCanvas;
         TMP_FontAsset font = walletText.font;
 
-        var go = new GameObject("Moonshard balance", typeof(RectTransform));
+        var go = new GameObject("Boo Gem balance", typeof(RectTransform));
         go.transform.SetParent(canvas.transform, false);
-        instance = go.AddComponent<MoonshardHud>();
+        instance = go.AddComponent<BooGemHud>();
         instance.rect = (RectTransform)go.transform;
         instance.rect.anchorMin = instance.rect.anchorMax = instance.rect.pivot = new Vector2(1, 1);
         instance.scale = Height / art.rect.height;
@@ -72,7 +72,7 @@ public sealed class MoonshardHud : MonoBehaviour
     public static void Refresh(EconomyManager wallet)
     {
         if (instance == null || instance.label == null) return;
-        instance.label.text = wallet.TotalMoonshards.ToString();
+        instance.label.text = wallet.TotalBooGems.ToString();
         float field = Mathf.Max(MinField, instance.label.preferredWidth + 16f);
         instance.rect.sizeDelta = new Vector2((LeftCap + RightCap) * instance.scale + field, Height);
     }

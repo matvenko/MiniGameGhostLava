@@ -169659,6 +169659,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1820736210}
+  - component: {fileID: 1820736211}
   m_Layer: 0
   m_Name: CharactersPage
   m_TagString: Untagged
@@ -169686,6 +169687,27 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1820736211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1820736209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b074d4e755a6834aafb926f71b40613, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterShopPage
+  visualPrefab: {fileID: 8487233358178717768, guid: 5be52e02501a2e64fa78d16e9df77e7e, type: 3}
+  foxVisualPrefab: {fileID: 6751237776053718705, guid: 687f1f5b637b0284db68f5a52a5d3cab, type: 3}
+  skins:
+  - {fileID: 11400000, guid: a01fbfb6a9d110542a7829e68053cad0, type: 2}
+  - {fileID: 11400000, guid: 005e9043c31065a4ca66f1e559b8b203, type: 2}
+  - {fileID: 11400000, guid: cc813ed82f0ba0e4391586853f623da1, type: 2}
+  - {fileID: 11400000, guid: f12fb53c3b0d0a6458fdaa57191f7a4f, type: 2}
+  roundedPanel: {fileID: 21300000, guid: d2083c9fb81c8584fba75ae943570f9e, type: 3}
+  font: {fileID: 11400000, guid: cda6de6ce513be64fbae72f38b6dd70f, type: 2}
 --- !u!1 &1823226217
 GameObject:
   m_ObjectHideFlags: 0
@@ -199857,6 +199879,10 @@ PrefabInstance:
       propertyPath: visualAnimator
       value: 
       objectReference: {fileID: 1286851385}
+    - target: {fileID: 4524755726158905661, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
+      propertyPath: foxVisualPrefab
+      value: 
+      objectReference: {fileID: 6751237776053718705, guid: 687f1f5b637b0284db68f5a52a5d3cab, type: 3}
     - target: {fileID: 4524755726158905661, guid: 8ee08d04ad5df46fbb2e97260b63420b, type: 3}
       propertyPath: MeshR.Array.size
       value: 10

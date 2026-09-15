@@ -45,7 +45,7 @@ public class LevelManager : MonoBehaviour
     };
     [SerializeField] private float lavaDensity = 0.27f;
     [SerializeField] private float coinHeightOffset = 0.83f;
-    [SerializeField, Range(0f, 1f)] private float moonshardChancePerLevel = 0.045f;
+    [SerializeField, Range(0f, 1f), UnityEngine.Serialization.FormerlySerializedAs("moonshardChancePerLevel")] private float booGemChancePerLevel = 0.045f;
     [SerializeField] private GameObject friendlyGhost;
     [SerializeField] private int friendlyGhostFromLevel = 3;
     [SerializeField] private float friendlyGhostMinDistanceFromPlayer = 3f;
@@ -100,7 +100,7 @@ public class LevelManager : MonoBehaviour
     void Start()
     {
         int spawned = SpawnCoins(CoinsForLevel(_level));
-        SpawnMoonshard();
+        SpawnBooGem();
         if (RewardSystem.Instance != null) RewardSystem.Instance.ResetForNewLevel(spawned);
     }
 
@@ -153,7 +153,7 @@ public class LevelManager : MonoBehaviour
         if (enemySpawnManager != null) enemySpawnManager.SetLevel(_level);
 
         RespawnPlayerAndEnemies();
-        SpawnMoonshard();
+        SpawnBooGem();
     }
 
     // What the board is made of this level (see BoardThemes). Re-skins the tiles
@@ -533,9 +533,9 @@ public class LevelManager : MonoBehaviour
         return n;
     }
 
-    private void SpawnMoonshard()
+    private void SpawnBooGem()
     {
-        if (Random.value >= moonshardChancePerLevel) return;
+        if (Random.value >= booGemChancePerLevel) return;
         var blocks = GameObject.Find("Blocks");
         var coins = GameObject.Find("Coins");
         if (blocks == null || coins == null) return;
@@ -551,7 +551,7 @@ public class LevelManager : MonoBehaviour
         }
         if (free.Count == 0) return;
         var spot = free[Random.Range(0, free.Count)];
-        Moonshard.Create(spot.position + Vector3.up * coinHeightOffset, coins.transform);
+        BooGem.Create(spot.position + Vector3.up * coinHeightOffset, coins.transform);
     }
 
     private void RespawnPlayerAndEnemies()
